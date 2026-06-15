@@ -6,8 +6,10 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { useAuditLog } from "@/hooks/useAuditLog";
 import { ACCESS_LEVELS, PERMISSION_GROUPS, DEFAULT_STAGES_BY_SERVICE } from "@/data/usersAccess";
 import type { AccessLevel, RoleDef } from "@/data/usersAccess";
+import { copy } from "@/copy";
 
 interface Props {
   open: boolean;
@@ -26,6 +28,7 @@ interface Props {
 }
 
 export function RoleDetailSheet({ open, onOpenChange, role, userCount, services, permissions, scopedServices, stageAccess, onSave }: Props) {
+  const { logGovernance } = useAuditLog();
   const [perms, setPerms] = useState(permissions);
   const [scoped, setScoped] = useState(scopedServices);
   const [stages, setStages] = useState(stageAccess);
@@ -53,14 +56,15 @@ export function RoleDetailSheet({ open, onOpenChange, role, userCount, services,
 
   function attemptClose(v: boolean) {
     if (!v && dirty) {
-      if (!confirm("Discard unsaved changes?")) return;
+      if (!confirm(copy.roleDetailSheet.dialogs.discardChangesConfirm)) return;
     }
     onOpenChange(v);
   }
 
   function save() {
     onSave({ permissions: perms, scopedServices: scoped, stageAccess: stages });
-    toast({ title: "Role updated", description: `${role!.name} permissions saved.` });
+    toast({ title: copy.roleDetailSheet.toast.roleUpdatedTitle, description: `${role!.name} permissions saved.` });
+    logGovernance({ action: "Role permissions updated", entity: role!.name, entityType: "Role" });
     onOpenChange(false);
   }
 
@@ -73,7 +77,7 @@ export function RoleDetailSheet({ open, onOpenChange, role, userCount, services,
           <div className="flex items-center gap-3">
             <SheetTitle className="text-lg">{role.name}</SheetTitle>
             <Badge variant={isService ? "default" : "secondary"} className="text-[10px] uppercase tracking-wide">
-              {isService ? "Service" : "System"}
+              {isService ? copy.roleDetailSheet.header.serviceBadgeLabel : copy.roleDetailSheet.header.systemBadgeLabel}
             </Badge>
             <span className="text-xs text-muted-foreground ml-auto">{userCount} {userCount === 1 ? "user" : "users"} assigned</span>
           </div>
@@ -85,8 +89,8 @@ export function RoleDetailSheet({ open, onOpenChange, role, userCount, services,
             <>
               <section className="space-y-3">
                 <div>
-                  <h3 className="text-sm font-semibold">Service Assignment</h3>
-                  <p className="text-xs text-muted-foreground">Choose which services this role applies to.</p>
+                  <h3 className="text-sm font-semibold">{copy.roleDetailSheet.serviceAssignment.sectionHeading}</h3>
+                  <p className="text-xs text-muted-foreground">{copy.roleDetailSheet.serviceAssignment.sectionDescription}</p>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {services.map((s) => {
@@ -110,8 +114,8 @@ export function RoleDetailSheet({ open, onOpenChange, role, userCount, services,
               {scoped.length > 0 && (
                 <section className="space-y-3">
                   <div>
-                    <h3 className="text-sm font-semibold">Workflow Stage Access</h3>
-                    <p className="text-xs text-muted-foreground">Limit this role to specific stages per service.</p>
+                    <h3 className="text-sm font-semibold">{copy.roleDetailSheet.workflowStageAccess.sectionHeading}</h3>
+                    <p className="text-xs text-muted-foreground">{copy.roleDetailSheet.workflowStageAccess.sectionDescription}</p>
                   </div>
                   <div className="space-y-3">
                     {scoped.map((s) => {
@@ -139,8 +143,8 @@ export function RoleDetailSheet({ open, onOpenChange, role, userCount, services,
 
           <section className="space-y-3">
             <div>
-              <h3 className="text-sm font-semibold">Permissions</h3>
-              <p className="text-xs text-muted-foreground">Set the access level for each capability.</p>
+              <h3 className="text-sm font-semibold">{copy.roleDetailSheet.permissions.sectionHeading}</h3>
+              <p className="text-xs text-muted-foreground">{copy.roleDetailSheet.permissions.sectionDescription}</p>
             </div>
             <Accordion type="single" collapsible defaultValue={PERMISSION_GROUPS[0].key} className="border border-border rounded-md divide-y divide-border">
               {PERMISSION_GROUPS.map((g) => (
@@ -187,8 +191,8 @@ export function RoleDetailSheet({ open, onOpenChange, role, userCount, services,
         </div>
 
         <SheetFooter className="px-6 py-4 border-t border-border flex-row gap-2">
-          <Button variant="ghost" onClick={() => attemptClose(false)} className="flex-1">Cancel</Button>
-          <Button onClick={save} disabled={!dirty} className="flex-1">Save changes</Button>
+          <Button variant="ghost" onClick={() => attemptClose(false)} className="flex-1">{copy.roleDetailSheet.buttons.cancel}</Button>
+          <Button onClick={save} disabled={!dirty} className="flex-1">{copy.roleDetailSheet.buttons.saveChanges}</Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>

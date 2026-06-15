@@ -2,14 +2,15 @@ import React from "react";
 import { Building2, Globe, Briefcase, Languages, Palette, Image } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useOnboarding } from "@/contexts/OnboardingContext";
+import { copy } from "@/copy";
 
 const fields = [
-  { key: "orgName", label: "Organization Name", icon: Building2, fallback: "Not set" },
-  { key: "country", label: "Country", icon: Globe, fallback: "Not set" },
-  { key: "department", label: "Department", icon: Briefcase, fallback: "Not set" },
-  { key: "language", label: "Language", icon: Languages, fallback: "Not set" },
-  { key: "themeColor", label: "Theme Color", icon: Palette, fallback: "Not set" },
-  { key: "logoUrl", label: "Logo", icon: Image, fallback: "No logo uploaded" },
+  { key: "orgName", label: copy.organizationProfile.fieldLabels.orgName, icon: Building2, fallback: copy.organizationProfile.fallbackValues.notSet },
+  { key: "country", label: copy.organizationProfile.fieldLabels.country, icon: Globe, fallback: copy.organizationProfile.fallbackValues.notSet },
+  { key: "department", label: copy.organizationProfile.fieldLabels.department, icon: Briefcase, fallback: copy.organizationProfile.fallbackValues.notSet },
+  { key: "language", label: copy.organizationProfile.fieldLabels.language, icon: Languages, fallback: copy.organizationProfile.fallbackValues.notSet },
+  { key: "themeColor", label: copy.organizationProfile.fieldLabels.themeColor, icon: Palette, fallback: copy.organizationProfile.fallbackValues.notSet },
+  { key: "logoUrl", label: copy.organizationProfile.fieldLabels.logo, icon: Image, fallback: copy.organizationProfile.fallbackValues.noLogoUploaded },
 ] as const;
 
 const OrganizationProfile: React.FC = () => {
@@ -18,15 +19,15 @@ const OrganizationProfile: React.FC = () => {
   return (
     <div className="max-w-3xl mx-auto py-8 px-4 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Organization Profile</h1>
+        <h1 className="text-2xl font-bold text-foreground">{copy.organizationProfile.header.pageTitle}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Your organization details collected during onboarding.
+          {copy.organizationProfile.header.pageDescription}
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Details</CardTitle>
+          <CardTitle className="text-lg">{copy.organizationProfile.card.sectionTitle}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {fields.map(({ key, label, icon: Icon, fallback }) => {
@@ -46,7 +47,7 @@ const OrganizationProfile: React.FC = () => {
                       <span className="text-sm text-foreground">{value}</span>
                     </div>
                   ) : key === "logoUrl" && hasValue ? (
-                    <img src={value} alt="Organization logo" className="h-10 mt-1 rounded" />
+                    <img src={value} alt={copy.organizationProfile.imageAlt.orgLogo} className="h-10 mt-1 rounded" />
                   ) : (
                     <p className={`text-sm ${hasValue ? "text-foreground" : "text-muted-foreground italic"}`}>
                       {hasValue ? value : fallback}

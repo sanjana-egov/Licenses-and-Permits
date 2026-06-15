@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { usePreview } from "../PreviewContext";
 import CitizenScreenShell from "./_shell/CitizenScreenShell";
 import { Building2, CalendarDays, Store, ChevronRight, Search } from "lucide-react";
+import { copy } from "@/copy";
 
 interface CatalogueService {
   id: string;
@@ -16,12 +17,14 @@ const ServiceCatalogue: React.FC = () => {
   const [query, setQuery] = useState("");
 
   const services: CatalogueService[] = [
-    { id: "trade", title: serviceName, desc: "Required for businesses operating within municipal limits", icon: Store, active: true },
-    { id: "building", title: "Building Permit", desc: "Construction & occupancy approvals.", icon: Building2, active: false },
-    { id: "event", title: "Event Permit", desc: "Public gathering & temporary use.", icon: CalendarDays, active: false },
+    { id: "trade", title: serviceName, desc: copy.serviceCatalogue.serviceCards.tradeLicenseDescription, icon: Store, active: true },
+    { id: "building", title: copy.serviceCatalogue.serviceCards.buildingPermitTitle, desc: copy.serviceCatalogue.serviceCards.buildingPermitDescription, icon: Building2, active: false },
+    { id: "event", title: copy.serviceCatalogue.serviceCards.eventPermitTitle, desc: copy.serviceCatalogue.serviceCards.eventPermitDescription, icon: CalendarDays, active: false },
   ];
 
-  const filtered = services.filter((s) => s.title.toLowerCase().includes(query.toLowerCase()));
+  const filtered = services
+    .filter((s) => s.active)
+    .filter((s) => s.title.toLowerCase().includes(query.toLowerCase()));
 
   return (
     <CitizenScreenShell showHeaderActions>
@@ -31,13 +34,13 @@ const ServiceCatalogue: React.FC = () => {
           className="inline-block text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full mb-2"
           style={{ color: "#1D3557", backgroundColor: "#EAF2FB" }}
         >
-          Citizen Portal
+          {copy.serviceCatalogue.welcomeCard.portalBadge}
         </span>
         <h1 className="text-lg font-bold leading-tight" style={{ color: "#1D3557" }}>
-          Licenses &amp; Permits
+          {copy.serviceCatalogue.welcomeCard.heading}
         </h1>
         <p className="text-[12px] mt-1 leading-snug" style={{ color: "#363636" }}>
-          Browse services and apply, pay, or download from one place
+          {copy.serviceCatalogue.welcomeCard.subheading}
         </p>
       </div>
 
@@ -47,14 +50,14 @@ const ServiceCatalogue: React.FC = () => {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search applications"
+          placeholder={copy.serviceCatalogue.search.placeholder}
           className="w-full bg-white rounded-lg pl-9 pr-3 py-2.5 text-[12px] outline-none focus:ring-2"
           style={{ border: "1px solid #E0E0E0", color: "#363636" }}
         />
       </div>
 
       <p className="text-[10px] uppercase tracking-wider font-bold mb-2 px-1" style={{ color: "#6B7280" }}>
-        Available Services
+        {copy.serviceCatalogue.serviceList.sectionLabel}
       </p>
 
       <div className="space-y-2">
@@ -82,7 +85,7 @@ const ServiceCatalogue: React.FC = () => {
                   <p className="font-semibold text-[13px]" style={{ color: "#1D3557" }}>{s.title}</p>
                   {!s.active && (
                     <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-full font-semibold" style={{ backgroundColor: "#F5F7FA", color: "#6B7280" }}>
-                      Soon
+                      {copy.serviceCatalogue.badges.comingSoon}
                     </span>
                   )}
                 </div>
@@ -94,9 +97,6 @@ const ServiceCatalogue: React.FC = () => {
         })}
       </div>
 
-      <p className="text-center text-[10px] mt-6" style={{ color: "#6B7280" }}>
-        Powered by DIGIT Studio
-      </p>
     </CitizenScreenShell>
   );
 };

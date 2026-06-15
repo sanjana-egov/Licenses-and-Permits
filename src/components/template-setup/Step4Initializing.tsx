@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { copy } from "@/copy";
 
 interface Props {
   serviceName: string;
@@ -20,12 +21,12 @@ const Step4Initializing: React.FC<Props> = ({
     () =>
       [
         { label: `Creating ${serviceName} application`, skip: false },
-        { label: "Configuring modules", skip: false },
-        { label: "Preparing workflows", skip: false },
-        { label: "Setting up renewals", skip: !renewalEnabled },
-        { label: "Preparing document templates", skip: false },
-        { label: "Linking categories", skip: !hasCategories },
-        { label: "Generating citizen and employee experiences", skip: false },
+        { label: copy.step4Initializing.tasks.configuringModules, skip: false },
+        { label: copy.step4Initializing.tasks.preparingWorkflows, skip: false },
+        { label: copy.step4Initializing.tasks.settingUpRenewals, skip: !renewalEnabled },
+        { label: copy.step4Initializing.tasks.preparingDocumentTemplates, skip: false },
+        { label: copy.step4Initializing.tasks.linkingCategories, skip: !hasCategories },
+        { label: copy.step4Initializing.tasks.generatingExperiences, skip: false },
       ],
     [serviceName, renewalEnabled, hasCategories],
   );
@@ -47,10 +48,10 @@ const Step4Initializing: React.FC<Props> = ({
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-semibold text-foreground tracking-tight">
-          Setting up your workspace
+          {copy.step4Initializing.header.heading}
         </h1>
         <p className="text-base text-muted-foreground mt-2">
-          We're preparing everything based on your template.
+          {copy.step4Initializing.header.subheading}
         </p>
       </div>
 
@@ -90,7 +91,7 @@ const Step4Initializing: React.FC<Props> = ({
               >
                 {task.label}
                 {task.skip && (
-                  <span className="ml-2 text-xs uppercase tracking-wide">(skipped)</span>
+                  <span className="ml-2 text-xs uppercase tracking-wide">{copy.step4Initializing.taskStatus.skippedLabel}</span>
                 )}
               </span>
             </li>

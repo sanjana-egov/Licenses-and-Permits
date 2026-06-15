@@ -77,7 +77,7 @@ export const ACCESS_LEVELS: { value: AccessLevel; label: string }[] = [
 
 export const ROLES_SEED: RoleDef[] = [
   { id: "super_admin", name: "Super Admin", type: "system", description: "Org owner — only Super Admin can create or delete Admin accounts. All other permissions are identical to Admin." },
-  { id: "system_admin", name: "Admin", type: "system", description: "Full platform access — manage organization, billing, and all services." },
+  { id: "system_admin", name: "Administrator", type: "system", description: "Full platform access — manage organization, billing, and all services." },
   { id: "service_owner", name: "Service Owner", type: "service", description: "Configure and manage a specific service and its team. Can invite service-level users for their service." },
   { id: "service_designer", name: "Service Designer", type: "system", description: "Configure templates, forms, workflows, and branding for services." },
   { id: "document_verifier", name: "Document Verifier", type: "service", description: "Review and verify documents submitted by applicants." },
@@ -211,14 +211,14 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
 };
 
 export const USERS_SEED: UserRow[] = [
-  { id: "u1", name: "Tahera Ahmed", email: "tahera@gov.in", avatarColor: "primary", roleId: "super_admin", services: ["Platform"], status: "active", lastActiveISO: new Date(Date.now() - 1000 * 60 * 12).toISOString() },
-  { id: "u2", name: "Joanna Lee", email: "joanna@gov.in", avatarColor: "accent", roleId: "service_owner", services: ["Building Permit"], status: "active", lastActiveISO: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString() },
-  { id: "u3", name: "Rahul Verma", email: "rahul@gov.in", avatarColor: "warning", roleId: "field_inspector", services: ["Building Permit"], status: "invited", lastActiveISO: null },
-  { id: "u4", name: "Meera Iyer", email: "meera@gov.in", avatarColor: "success", roleId: "document_verifier", services: ["Trade License"], status: "active", lastActiveISO: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString() },
-  { id: "u5", name: "Arjun Patel", email: "arjun@gov.in", avatarColor: "primary", roleId: "approver", services: ["Trade License"], status: "active", lastActiveISO: new Date(Date.now() - 1000 * 60 * 60 * 50).toISOString() },
-  { id: "u6", name: "Sonal Gupta", email: "sonal@gov.in", avatarColor: "accent", roleId: "counter_operator", services: ["Trade License", "Building Permit", "Fire NOC"], status: "active", lastActiveISO: new Date(Date.now() - 1000 * 60 * 9).toISOString() },
-  { id: "u7", name: "David Kim", email: "david@gov.in", avatarColor: "warning", roleId: "viewer", services: ["Trade License"], status: "disabled", lastActiveISO: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12).toISOString() },
-  { id: "u8", name: "Priya Nair", email: "priya@gov.in", avatarColor: "success", roleId: "field_inspector", services: ["Fire NOC"], status: "invited", lastActiveISO: null },
+  { id: "u1", name: "Tahera Ahmed", email: "tahera@capetown.gov.za", avatarColor: "primary", roleId: "super_admin", services: ["Platform"], status: "active", lastActiveISO: new Date(Date.now() - 1000 * 60 * 12).toISOString() },
+  { id: "u2", name: "Joanna Lee", email: "joanna@capetown.gov.za", avatarColor: "accent", roleId: "service_owner", services: ["Building Permit"], status: "active", lastActiveISO: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString() },
+  { id: "u3", name: "Liam van der Berg", email: "liam@capetown.gov.za", avatarColor: "warning", roleId: "field_inspector", services: ["Building Permit"], status: "invited", lastActiveISO: null },
+  { id: "u4", name: "Amara Dlamini", email: "amara@capetown.gov.za", avatarColor: "success", roleId: "document_verifier", services: ["Trade License"], status: "active", lastActiveISO: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString() },
+  { id: "u5", name: "Stefan Botha", email: "stefan@capetown.gov.za", avatarColor: "primary", roleId: "approver", services: ["Trade License"], status: "active", lastActiveISO: new Date(Date.now() - 1000 * 60 * 60 * 50).toISOString() },
+  { id: "u6", name: "Naledi Khumalo", email: "naledi@capetown.gov.za", avatarColor: "accent", roleId: "counter_operator", services: ["Trade License", "Building Permit", "Fire NOC"], status: "active", lastActiveISO: new Date(Date.now() - 1000 * 60 * 9).toISOString() },
+  { id: "u7", name: "David Kim", email: "david@capetown.gov.za", avatarColor: "warning", roleId: "viewer", services: ["Trade License"], status: "disabled", lastActiveISO: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12).toISOString() },
+  { id: "u8", name: "Fatima Davids", email: "fatima@capetown.gov.za", avatarColor: "success", roleId: "field_inspector", services: ["Fire NOC"], status: "invited", lastActiveISO: null },
 ];
 
 export const DEFAULT_SERVICES = ["Trade License", "Building Permit", "Fire NOC"];
@@ -236,36 +236,36 @@ export const ACTIVITY_LOG_SEED: ActivityLogEntry[] = [
   {
     id: "al1",
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48 + 1000 * 60 * 32).toISOString(),
-    actor: "Tahera Ahmed", actorEmail: "tahera@gov.in",
-    action: "Invited", affectedUser: "Rahul Verma", affectedEmail: "rahul@gov.in",
+    actor: "Tahera Ahmed", actorEmail: "tahera@capetown.gov.za",
+    action: "Invited", affectedUser: "Liam van der Berg", affectedEmail: "liam@capetown.gov.za",
     role: "Field Inspector", service: "Trade License",
   },
   {
     id: "al2",
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 47 + 1000 * 60 * 10).toISOString(),
-    actor: "Tahera Ahmed", actorEmail: "tahera@gov.in",
-    action: "Role changed", affectedUser: "Meera Iyer", affectedEmail: "meera@gov.in",
+    actor: "Tahera Ahmed", actorEmail: "tahera@capetown.gov.za",
+    action: "Role changed", affectedUser: "Amara Dlamini", affectedEmail: "amara@capetown.gov.za",
     role: "Approver → Document Verifier", service: "Trade License",
   },
   {
     id: "al3",
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    actor: "Joanna Lee", actorEmail: "joanna@gov.in",
-    action: "Accepted invite", affectedUser: "Joanna Lee", affectedEmail: "joanna@gov.in",
+    actor: "Joanna Lee", actorEmail: "joanna@capetown.gov.za",
+    action: "Accepted invite", affectedUser: "Joanna Lee", affectedEmail: "joanna@capetown.gov.za",
     role: "Service Owner", service: "Building Permit",
   },
   {
     id: "al4",
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2 + 1000 * 60 * 45).toISOString(),
-    actor: "Tahera Ahmed", actorEmail: "tahera@gov.in",
-    action: "Disabled", affectedUser: "David Kim", affectedEmail: "david@gov.in",
+    actor: "Tahera Ahmed", actorEmail: "tahera@capetown.gov.za",
+    action: "Disabled", affectedUser: "David Kim", affectedEmail: "david@capetown.gov.za",
     role: "Viewer", service: null,
   },
   {
     id: "al5",
     timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-    actor: "Tahera Ahmed", actorEmail: "tahera@gov.in",
-    action: "Admin created", affectedUser: "Joanna Lee", affectedEmail: "joanna@gov.in",
+    actor: "Tahera Ahmed", actorEmail: "tahera@capetown.gov.za",
+    action: "Admin created", affectedUser: "Joanna Lee", affectedEmail: "joanna@capetown.gov.za",
     role: "Admin", service: null,
   },
 ];

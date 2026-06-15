@@ -29,6 +29,7 @@ import {
 import { loadFormSteps, saveFormSteps } from "@/lib/formStorage";
 import EmulatorFrame from "@/components/service-config/preview/EmulatorFrame";
 import FormPreview from "@/components/service-config/preview/FormPreview";
+import { copy } from "@/copy";
 
 /* ─── Field palette ─────────────────────────────────────── */
 
@@ -72,7 +73,7 @@ let fieldCounter = 1000;
 const createField = (type: WizardFieldType, label: string): WizardField => ({
   id: `field-${++fieldCounter}`,
   type,
-  label: label || "Untitled Field",
+  label: label || copy.formBuilder.defaults.untitledField,
   placeholder: "",
   helpText: "",
   required: false,
@@ -163,7 +164,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
   const addStep = () => {
     const sub: WizardSubScreen = {
       id: `sub-${Date.now()}`,
-      title: "New question",
+      title: copy.formBuilder.defaults.newQuestion,
       fields: [],
     };
     const step: WizardStep = {
@@ -179,7 +180,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
 
   const deleteStep = () => {
     if (steps.length <= 1) {
-      toast({ title: "Cannot delete the last step", variant: "destructive" });
+      toast({ title: copy.formBuilder.toasts.cannotDeleteLastStep, variant: "destructive" });
       return;
     }
     const idx = steps.findIndex((s) => s.id === activeStepId);
@@ -189,7 +190,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
     setActiveStepId(fallback.id);
     setActiveSubScreenId(fallback.subScreens[0]?.id ?? "");
     setSelectedFieldId(null);
-    toast({ title: "Step deleted" });
+    toast({ title: copy.formBuilder.toasts.stepDeleted });
   };
 
   /* ── Sub-screen helpers ── */
@@ -217,7 +218,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
   const addSubScreen = () => {
     const sub: WizardSubScreen = {
       id: `sub-${Date.now()}`,
-      title: "New question",
+      title: copy.formBuilder.defaults.newQuestion,
       fields: [],
     };
     setSteps((prev) =>
@@ -232,7 +233,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
   const deleteSubScreen = (subId: string) => {
     if (!activeStep) return;
     if (activeStep.subScreens.length <= 1) {
-      toast({ title: "Step needs at least one sub-screen", variant: "destructive" });
+      toast({ title: copy.formBuilder.toasts.stepNeedsAtLeastOneSubscreen, variant: "destructive" });
       return;
     }
     setSteps((prev) =>
@@ -319,7 +320,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
       ),
     );
     if (selectedFieldId === fieldId) setSelectedFieldId(null);
-    toast({ title: "Field deleted" });
+    toast({ title: copy.formBuilder.toasts.fieldDeleted });
   };
 
   // Delete / Backspace key removes the selected field (when not typing in an input).
@@ -369,7 +370,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
           className={`absolute top-2 right-2 p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-opacity ${
             isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
           }`}
-          title="Delete field"
+          title={copy.formBuilder.canvas.fieldDeleteTooltip}
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>
@@ -418,7 +419,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
         )}
         {field.type === "file" && (
           <div className="border-2 border-dashed border-muted-foreground/20 rounded-md p-3 text-center text-sm text-muted-foreground">
-            Click or drag to upload
+            {copy.formBuilder.canvas.fileUploadPrompt}
           </div>
         )}
         {field.helpText && (
@@ -445,7 +446,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
               {isSingleModule ? "Form" : `${moduleName} — Form`}
             </h1>
             <p className="text-xs text-muted-foreground">
-              Design the citizen application form for this flow
+              {copy.formBuilder.header.subtitle}
             </p>
           </div>
         </div>
@@ -455,10 +456,10 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
             size="sm"
             onClick={() => setShowPreview((v) => !v)}
             className="gap-1.5 h-8"
-            title="Toggle citizen mobile preview"
+            title={copy.formBuilder.header.togglePreviewTooltip}
           >
             <Smartphone className="h-3.5 w-3.5" />
-            {showPreview ? "Hide preview" : "Show preview"}
+            {showPreview ? copy.formBuilder.header.togglePreviewHide : copy.formBuilder.header.togglePreviewShow}
           </Button>
           <HelpCircle className="h-4 w-4" /> Help
         </div>
@@ -484,7 +485,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
           onClick={addStep}
           className="flex items-center gap-1 px-4 py-2.5 text-sm text-primary hover:bg-primary/5 whitespace-nowrap"
         >
-          <Plus className="h-3.5 w-3.5" /> Add Step
+          <Plus className="h-3.5 w-3.5" /> {copy.formBuilder.stepTabs.addStep}
         </button>
       </div>
 
@@ -493,11 +494,11 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
         {/* Left: Field Palette */}
         <div className="w-56 shrink-0 border-r bg-card flex flex-col">
           <div className="p-3 border-b">
-            <h3 className="text-sm font-semibold mb-2 text-foreground">Form Fields</h3>
+            <h3 className="text-sm font-semibold mb-2 text-foreground">{copy.formBuilder.fieldPalette.sectionHeading}</h3>
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
               <Input
-                placeholder="Search fields..."
+                placeholder={copy.formBuilder.fieldPalette.searchPlaceholder}
                 value={paletteSearch}
                 onChange={(e) => setPaletteSearch(e.target.value)}
                 className="pl-8 h-8 text-sm"
@@ -544,7 +545,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                   <h2 className="text-lg font-semibold text-foreground">{activeStep.name}</h2>
                 </div>
                 <Button variant="ghost" size="sm" onClick={addSubScreen}>
-                  <Plus className="h-3.5 w-3.5 mr-1" /> Add Sub-screen
+                  <Plus className="h-3.5 w-3.5 mr-1" /> {copy.formBuilder.canvas.addSubscreen}
                 </Button>
               </div>
 
@@ -566,12 +567,12 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                           <h3 className="text-base font-semibold text-foreground">{sub.title}</h3>
                           {sub.optional && (
                             <span className="text-[10px] uppercase tracking-wider bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
-                              Optional
+                              {copy.formBuilder.canvas.subScreenBadgeOptional}
                             </span>
                           )}
                           {sub.isMap && (
                             <span className="text-[10px] uppercase tracking-wider bg-accent/15 text-accent px-1.5 py-0.5 rounded inline-flex items-center gap-1">
-                              <MapPinned className="h-3 w-3" /> Map
+                              <MapPinned className="h-3 w-3" /> {copy.formBuilder.canvas.subScreenBadgeMap}
                             </span>
                           )}
                         </div>
@@ -582,7 +583,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                       <button
                         onClick={(e) => { e.stopPropagation(); deleteSubScreen(sub.id); }}
                         className="text-muted-foreground hover:text-destructive shrink-0"
-                        title="Delete sub-screen"
+                        title={copy.formBuilder.canvasNavigation.deleteSubscreenTooltip}
                       >
                         <X className="h-3.5 w-3.5" />
                       </button>
@@ -596,7 +597,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
 
                     {sub.isMap && (
                       <div className="mb-3 rounded-md border border-dashed border-muted-foreground/40 bg-muted/40 h-32 flex items-center justify-center text-xs text-muted-foreground">
-                        <MapPinned className="h-4 w-4 mr-1.5" /> Map placeholder (citizen drops a pin)
+                        <MapPinned className="h-4 w-4 mr-1.5" /> {copy.formBuilder.canvas.mapPlaceholder}
                       </div>
                     )}
 
@@ -604,8 +605,8 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                       {sub.fields.length === 0 && !sub.isMap && (
                         <p className="text-xs text-muted-foreground text-center py-4">
                           {isActiveSub
-                            ? "Click a field type on the left to add fields here"
-                            : "Click this sub-screen to add fields"}
+                            ? copy.formBuilder.canvas.emptyActiveSubscreen
+                            : copy.formBuilder.canvas.emptyInactiveSubscreen}
                         </p>
                       )}
                       {sub.fields.map((f) => renderCanvasField(f, sub.id))}
@@ -635,7 +636,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
           <div className="p-3 border-b">
             <div className="flex items-center gap-1.5">
               <h3 className="text-sm font-semibold text-foreground">
-                {selectedField ? "Field Properties" : "Sub-screen Properties"}
+                {selectedField ? copy.formBuilder.propertiesPanel.headingFieldProperties : copy.formBuilder.propertiesPanel.headingSubscreenProperties}
               </h3>
               <Info className="h-3.5 w-3.5 text-muted-foreground" />
             </div>
@@ -644,7 +645,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                 onClick={() => setSelectedFieldId(null)}
                 className="text-xs text-primary mt-1 hover:underline"
               >
-                ← Back to sub-screen
+                {copy.formBuilder.propertiesPanel.backToSubscreen}
               </button>
             )}
           </div>
@@ -657,7 +658,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                 rightTab === "elements" ? "border-primary text-primary" : "border-transparent text-muted-foreground"
               }`}
             >
-              Elements
+              {copy.formBuilder.propertiesPanel.tabElements}
             </button>
             <button
               onClick={() => setRightTab("logic")}
@@ -665,7 +666,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                 rightTab === "logic" ? "border-primary text-primary" : "border-transparent text-muted-foreground"
               }`}
             >
-              Logic
+              {copy.formBuilder.propertiesPanel.tabLogic}
             </button>
           </div>
 
@@ -675,13 +676,13 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                 /* ── Field-level properties ── */
                 <div className="p-3 space-y-4">
                   <div>
-                    <Label className="text-xs">Field Label</Label>
+                    <Label className="text-xs">{copy.formBuilder.fieldProperties.labelFieldLabel}</Label>
                     <Input value={selectedField.label}
                       onChange={(e) => updateField(selectedField.id, { label: e.target.value })}
                       className="mt-1 h-8 text-sm" />
                   </div>
                   <div>
-                    <Label className="text-xs">Field Type</Label>
+                    <Label className="text-xs">{copy.formBuilder.fieldProperties.labelFieldType}</Label>
                     <Select value={selectedField.type}
                       onValueChange={(v) => updateField(selectedField.id, { type: v as WizardFieldType })}>
                       <SelectTrigger className="mt-1 h-8 text-sm"><SelectValue /></SelectTrigger>
@@ -693,19 +694,19 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-xs">Placeholder</Label>
+                    <Label className="text-xs">{copy.formBuilder.fieldProperties.labelPlaceholder}</Label>
                     <Input value={selectedField.placeholder}
                       onChange={(e) => updateField(selectedField.id, { placeholder: e.target.value })}
                       className="mt-1 h-8 text-sm" />
                   </div>
                   <div>
-                    <Label className="text-xs">Help Text</Label>
+                    <Label className="text-xs">{copy.formBuilder.fieldProperties.labelHelpText}</Label>
                     <Input value={selectedField.helpText}
                       onChange={(e) => updateField(selectedField.id, { helpText: e.target.value })}
                       className="mt-1 h-8 text-sm" />
                   </div>
                   <Separator />
-                  <p className="text-xs font-semibold text-muted-foreground uppercase">Validation</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase">{copy.formBuilder.fieldProperties.sectionValidation}</p>
 
                   {fieldHasRules(selectedField) && (
                     <div className="flex flex-wrap gap-1">
@@ -739,13 +740,13 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                   )}
 
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs">Required</Label>
+                    <Label className="text-xs">{copy.formBuilder.fieldProperties.labelRequired}</Label>
                     <Switch checked={selectedField.required}
                       onCheckedChange={(v) => updateField(selectedField.id, { required: v })} />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <Label className="text-xs">Min Length</Label>
+                      <Label className="text-xs">{copy.formBuilder.fieldProperties.labelMinLength}</Label>
                       <Input type="number"
                         value={selectedField.validation?.minLength ?? ""}
                         onChange={(e) => updateFieldValidation(selectedField.id, {
@@ -754,7 +755,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                         className="mt-1 h-8 text-sm" />
                     </div>
                     <div>
-                      <Label className="text-xs">Max Length</Label>
+                      <Label className="text-xs">{copy.formBuilder.fieldProperties.labelMaxLength}</Label>
                       <Input type="number"
                         value={selectedField.validation?.maxLength ?? ""}
                         onChange={(e) => updateFieldValidation(selectedField.id, {
@@ -766,7 +767,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                   {selectedField.type === "number" && (
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <Label className="text-xs">Min Value</Label>
+                        <Label className="text-xs">{copy.formBuilder.fieldProperties.labelMinValue}</Label>
                         <Input type="number"
                           value={selectedField.validation?.min ?? ""}
                           onChange={(e) => updateFieldValidation(selectedField.id, {
@@ -775,7 +776,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                           className="mt-1 h-8 text-sm" />
                       </div>
                       <div>
-                        <Label className="text-xs">Max Value</Label>
+                        <Label className="text-xs">{copy.formBuilder.fieldProperties.labelMaxValue}</Label>
                         <Input type="number"
                           value={selectedField.validation?.max ?? ""}
                           onChange={(e) => updateFieldValidation(selectedField.id, {
@@ -786,20 +787,20 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                     </div>
                   )}
                   <div>
-                    <Label className="text-xs">Pattern (Regex)</Label>
+                    <Label className="text-xs">{copy.formBuilder.fieldProperties.labelPatternRegex}</Label>
                     <Input value={selectedField.validation?.pattern ?? ""}
                       onChange={(e) => updateFieldValidation(selectedField.id, { pattern: e.target.value || undefined })}
-                      className="mt-1 h-8 text-sm" placeholder="e.g. ^[A-Z]+" />
+                      className="mt-1 h-8 text-sm" placeholder={copy.formBuilder.fieldProperties.patternPlaceholder} />
                   </div>
                   <div>
-                    <Label className="text-xs">Pattern Message</Label>
+                    <Label className="text-xs">{copy.formBuilder.fieldProperties.labelPatternMessage}</Label>
                     <Input value={selectedField.validation?.patternMessage ?? ""}
                       onChange={(e) => updateFieldValidation(selectedField.id, { patternMessage: e.target.value || undefined })}
-                      className="mt-1 h-8 text-sm" placeholder="Shown when pattern fails" />
+                      className="mt-1 h-8 text-sm" placeholder={copy.formBuilder.fieldProperties.patternMessagePlaceholder} />
                   </div>
                   {selectedField.type === "date" && (
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs">Past date only</Label>
+                      <Label className="text-xs">{copy.formBuilder.fieldProperties.labelPastDateOnly}</Label>
                       <Switch checked={!!selectedField.validation?.pastDateOnly}
                         onCheckedChange={(v) => updateFieldValidation(selectedField.id, { pastDateOnly: v || undefined })} />
                     </div>
@@ -807,7 +808,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                   {selectedField.options && (
                     <>
                       <Separator />
-                      <p className="text-xs font-semibold text-muted-foreground uppercase">Options</p>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase">{copy.formBuilder.fieldProperties.sectionOptions}</p>
                       {selectedField.options.map((opt, i) => (
                         <div key={i} className="flex items-center gap-1">
                           <Input value={opt}
@@ -831,7 +832,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                         onClick={() => updateField(selectedField.id, {
                           options: [...(selectedField.options || []), `Option ${(selectedField.options?.length ?? 0) + 1}`],
                         })}>
-                        <Plus className="h-3 w-3 mr-1" /> Add Option
+                        <Plus className="h-3 w-3 mr-1" /> {copy.formBuilder.fieldProperties.addOptionButton}
                       </Button>
                     </>
                   )}
@@ -842,50 +843,50 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                     onClick={() => deleteField(selectedField.id)}
                     className="w-full text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
                   >
-                    <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Delete Field
+                    <Trash2 className="h-3.5 w-3.5 mr-1.5" /> {copy.formBuilder.fieldProperties.deleteFieldButton}
                   </Button>
                 </div>
               ) : (
                 /* ── Sub-screen + Step properties ── */
                 <div className="p-3 space-y-4">
                   <div>
-                    <Label className="text-xs">Step Name</Label>
+                    <Label className="text-xs">{copy.formBuilder.subscreenProperties.labelStepName}</Label>
                     <Input value={activeStep.name}
                       onChange={(e) => updateStep({ name: e.target.value })}
                       className="mt-1 h-8 text-sm" />
                   </div>
                   <Separator />
                   <div>
-                    <Label className="text-xs">Sub-screen Title</Label>
+                    <Label className="text-xs">{copy.formBuilder.subscreenProperties.labelSubscreenTitle}</Label>
                     <Input value={activeSubScreen.title}
                       onChange={(e) => updateSubScreen(activeSubScreen.id, { title: e.target.value })}
                       className="mt-1 h-8 text-sm" />
                   </div>
                   <div>
-                    <Label className="text-xs">Subtitle</Label>
+                    <Label className="text-xs">{copy.formBuilder.subscreenProperties.labelSubtitle}</Label>
                     <Textarea value={activeSubScreen.subtitle ?? ""}
                       onChange={(e) => updateSubScreen(activeSubScreen.id, { subtitle: e.target.value || undefined })}
                       className="mt-1 text-sm min-h-[50px]" />
                   </div>
                   <div>
-                    <Label className="text-xs">Helper Banner</Label>
+                    <Label className="text-xs">{copy.formBuilder.subscreenProperties.labelHelperBanner}</Label>
                     <Textarea value={activeSubScreen.helperBanner ?? ""}
                       onChange={(e) => updateSubScreen(activeSubScreen.id, { helperBanner: e.target.value || undefined })}
                       className="mt-1 text-sm min-h-[50px]"
-                      placeholder="Shown above fields as a helper banner" />
+                      placeholder={copy.formBuilder.subscreenProperties.helperBannerPlaceholder} />
                   </div>
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs">Optional sub-screen</Label>
+                    <Label className="text-xs">{copy.formBuilder.subscreenProperties.labelOptionalSubscreen}</Label>
                     <Switch checked={!!activeSubScreen.optional}
                       onCheckedChange={(v) => updateSubScreen(activeSubScreen.id, { optional: v || undefined })} />
                   </div>
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs">Map placeholder</Label>
+                    <Label className="text-xs">{copy.formBuilder.subscreenProperties.labelMapPlaceholder}</Label>
                     <Switch checked={!!activeSubScreen.isMap}
                       onCheckedChange={(v) => updateSubScreen(activeSubScreen.id, { isMap: v || undefined })} />
                   </div>
                   <Separator />
-                  <p className="text-xs font-semibold text-muted-foreground uppercase">Fields in this sub-screen</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase">{copy.formBuilder.subscreenProperties.sectionFieldsInSubscreen}</p>
                   <div className="space-y-1">
                     {activeSubScreen.fields.map((f) => (
                       <div key={f.id}
@@ -898,7 +899,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                           <GripVertical className="h-3 w-3 text-muted-foreground shrink-0" />
                           <span className="truncate">{f.label}</span>
                           {fieldHasRules(f) && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" title="Has validation or conditional logic" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" title={copy.formBuilder.subscreenProperties.validationTooltip} />
                           )}
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
@@ -910,14 +911,14 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                       </div>
                     ))}
                     {activeSubScreen.fields.length === 0 && (
-                      <p className="text-xs text-muted-foreground text-center py-4">No fields yet</p>
+                      <p className="text-xs text-muted-foreground text-center py-4">{copy.formBuilder.subscreenProperties.noFieldsYet}</p>
                     )}
                   </div>
                   <Separator />
                   <Button variant="outline" size="sm" onClick={deleteStep}
                     disabled={steps.length <= 1}
                     className="w-full text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive">
-                    <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Delete Step
+                    <Trash2 className="h-3.5 w-3.5 mr-1.5" /> {copy.formBuilder.subscreenProperties.deleteStepButton}
                   </Button>
                 </div>
               )
@@ -926,20 +927,20 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
               <div className="p-3 space-y-4">
                 {!selectedField ? (
                   <div className="text-sm text-muted-foreground text-center mt-8">
-                    <p className="font-medium mb-2 text-foreground">Conditional Logic</p>
-                    <p className="text-xs">Select a field to view or edit its visibility rules and dependent options.</p>
+                    <p className="font-medium mb-2 text-foreground">{copy.formBuilder.logicTab.emptyStateHeading}</p>
+                    <p className="text-xs">{copy.formBuilder.logicTab.emptyStateDescription}</p>
                   </div>
                 ) : (
                   <>
                     {/* Conditional visibility (within sub-screen scope) */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase">Conditional Visibility</p>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase">{copy.formBuilder.logicTab.sectionConditionalVisibility}</p>
                         {selectedField.showIf && (
                           <button
                             onClick={() => updateField(selectedField.id, { showIf: undefined })}
                             className="text-[10px] text-destructive hover:underline"
-                          >Clear</button>
+                          >{copy.formBuilder.logicTab.clearButton}</button>
                         )}
                       </div>
                       {selectedField.showIf ? (
@@ -952,7 +953,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                                 Show this field only when <strong>{parent?.label ?? selectedField.showIf.field}</strong> equals <strong>{selectedField.showIf.equals || "—"}</strong>.
                               </p>
                               <div>
-                                <Label className="text-xs">Depends on field</Label>
+                                <Label className="text-xs">{copy.formBuilder.logicTab.labelDependsOnField}</Label>
                                 <Select value={selectedField.showIf.field}
                                   onValueChange={(v) => updateField(selectedField.id, { showIf: { field: v, equals: selectedField.showIf!.equals } })}>
                                   <SelectTrigger className="mt-1 h-8 text-sm"><SelectValue /></SelectTrigger>
@@ -964,11 +965,11 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                                 </Select>
                               </div>
                               <div>
-                                <Label className="text-xs">Equals</Label>
+                                <Label className="text-xs">{copy.formBuilder.logicTab.labelEquals}</Label>
                                 {parentOpts.length > 0 ? (
                                   <Select value={selectedField.showIf.equals}
                                     onValueChange={(v) => updateField(selectedField.id, { showIf: { field: selectedField.showIf!.field, equals: v } })}>
-                                    <SelectTrigger className="mt-1 h-8 text-sm"><SelectValue placeholder="Choose value" /></SelectTrigger>
+                                    <SelectTrigger className="mt-1 h-8 text-sm"><SelectValue placeholder={copy.formBuilder.logicTab.chooseValuePlaceholder} /></SelectTrigger>
                                     <SelectContent>
                                       {parentOpts.map((opt) => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
                                     </SelectContent>
@@ -984,7 +985,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                         })()
                       ) : (
                         <div className="rounded-md border border-dashed border-border p-3 text-center">
-                          <p className="text-[11px] text-muted-foreground mb-2">No visibility rule set.</p>
+                          <p className="text-[11px] text-muted-foreground mb-2">{copy.formBuilder.logicTab.noVisibilityRuleSet}</p>
                           <Button variant="outline" size="sm" className="text-xs h-7"
                             disabled={activeSubScreen.fields.filter((x) => x.id !== selectedField.id).length === 0}
                             onClick={() => {
@@ -992,7 +993,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                               if (!first) return;
                               updateField(selectedField.id, { showIf: { field: first.id, equals: first.options?.[0] ?? "" } });
                             }}>
-                            <Plus className="h-3 w-3 mr-1" /> Add visibility rule
+                            <Plus className="h-3 w-3 mr-1" /> {copy.formBuilder.logicTab.addVisibilityRuleButton}
                           </Button>
                         </div>
                       )}
@@ -1003,10 +1004,10 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                     {selectedField.type === "dropdown" && (
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <p className="text-xs font-semibold text-muted-foreground uppercase">Dependent Options</p>
+                          <p className="text-xs font-semibold text-muted-foreground uppercase">{copy.formBuilder.logicTab.sectionDependentOptions}</p>
                           {selectedField.dependsOn && (
                             <button onClick={() => updateField(selectedField.id, { dependsOn: undefined, dependsValueMap: undefined })}
-                              className="text-[10px] text-destructive hover:underline">Clear</button>
+                              className="text-[10px] text-destructive hover:underline">{copy.formBuilder.logicTab.clearButton}</button>
                           )}
                         </div>
                         {selectedField.dependsOn ? (
@@ -1020,7 +1021,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                                   Options change based on <strong>{parent?.label ?? selectedField.dependsOn}</strong>.
                                 </p>
                                 <div>
-                                  <Label className="text-xs">Parent field</Label>
+                                  <Label className="text-xs">{copy.formBuilder.logicTab.labelParentField}</Label>
                                   <Select value={selectedField.dependsOn}
                                     onValueChange={(v) => updateField(selectedField.id, { dependsOn: v, dependsValueMap: {} })}>
                                     <SelectTrigger className="mt-1 h-8 text-sm"><SelectValue /></SelectTrigger>
@@ -1032,9 +1033,9 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                                   </Select>
                                 </div>
                                 <div className="space-y-1.5">
-                                  <Label className="text-xs">Options per parent value</Label>
+                                  <Label className="text-xs">{copy.formBuilder.logicTab.labelOptionsPerParentValue}</Label>
                                   {parentOpts.length === 0 && (
-                                    <p className="text-[10px] text-muted-foreground">Parent has no options yet.</p>
+                                    <p className="text-[10px] text-muted-foreground">{copy.formBuilder.logicTab.parentHasNoOptions}</p>
                                   )}
                                   {parentOpts.map((opt) => (
                                     <div key={opt} className="flex items-center gap-2">
@@ -1044,7 +1045,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                                           const next = { ...map, [opt]: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) };
                                           updateField(selectedField.id, { dependsValueMap: next });
                                         }}
-                                        placeholder="comma-separated"
+                                        placeholder={copy.formBuilder.logicTab.commaSeparatedPlaceholder}
                                         className="h-7 text-xs flex-1" />
                                     </div>
                                   ))}
@@ -1054,7 +1055,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                           })()
                         ) : (
                           <div className="rounded-md border border-dashed border-border p-3 text-center">
-                            <p className="text-[11px] text-muted-foreground mb-2">No dependent-options rule set.</p>
+                            <p className="text-[11px] text-muted-foreground mb-2">{copy.formBuilder.logicTab.noDependentOptionsRuleSet}</p>
                             <Button variant="outline" size="sm" className="text-xs h-7"
                               disabled={activeSubScreen.fields.filter((x) => x.id !== selectedField.id && x.type === "dropdown").length === 0}
                               onClick={() => {
@@ -1062,7 +1063,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
                                 if (!first) return;
                                 updateField(selectedField.id, { dependsOn: first.id, dependsValueMap: {} });
                               }}>
-                              <Plus className="h-3 w-3 mr-1" /> Add dependency
+                              <Plus className="h-3 w-3 mr-1" /> {copy.formBuilder.logicTab.addDependencyButton}
                             </Button>
                           </div>
                         )}
@@ -1078,7 +1079,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
         {/* Far right: Mobile emulator preview */}
         {showPreview && (
           <div className="w-[320px] shrink-0 border-l bg-muted/30 overflow-y-auto py-4 px-3 flex justify-center">
-            <EmulatorFrame device="mobile" label="Citizen view">
+            <EmulatorFrame device="mobile" label={copy.formBuilder.preview.emulatorLabel}>
               <FormPreview
                 stepName={activeStep.name}
                 stepIndex={activeStepIndex}
@@ -1097,16 +1098,16 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ moduleName, onBack }) => {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={onBack}>
-            <ArrowLeft className="h-4 w-4 mr-1" /> Back
+            <ArrowLeft className="h-4 w-4 mr-1" /> {copy.formBuilder.footer.backButton}
           </Button>
           <Button
             size="sm"
             onClick={() => {
               saveFormSteps(routeServiceId, moduleName, steps);
-              toast({ title: `${moduleName} form saved`, description: "Preview will reflect your changes." });
+              toast({ title: `${moduleName} form saved`, description: copy.formBuilder.toasts.formSavedDescription });
             }}
           >
-            <Save className="h-4 w-4 mr-1" /> Save Form
+            <Save className="h-4 w-4 mr-1" /> {copy.formBuilder.footer.saveFormButton}
           </Button>
         </div>
       </div>

@@ -307,7 +307,7 @@ const DEFAULT_SECTIONS: FormSectionConfig[] = [
         options: ["Individual", "Partnership", "Company"] },
       { id: "employees", type: "number", label: "Number of Employees", placeholder: "0", required: false,
         validation: { min: 0 } },
-      { id: "turnover", type: "number", label: "Annual Turnover (₹)", placeholder: "0", required: false,
+      { id: "turnover", type: "number", label: "Annual Turnover (R)", placeholder: "0", required: false,
         validation: { min: 0 } },
     ],
   },
@@ -609,7 +609,7 @@ export const PreviewProvider: React.FC<PreviewProviderProps> = ({ children, serv
 
 
   const fmtDateLocal = (ms: number) =>
-    new Date(ms).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+    new Date(ms).toLocaleDateString("en-ZA", { day: "2-digit", month: "short", year: "numeric" });
 
   const buildTokens = (app: PreviewApplication, meta: Record<string, string>) => ({
     applicantName:     app.formData?.fullName || "Applicant",
@@ -617,7 +617,7 @@ export const PreviewProvider: React.FC<PreviewProviderProps> = ({ children, serv
     applicationId:     app.applicationNumber || "",
     businessName:      app.formData?.businessName || "your business",
     applicationStatus: app.status || "",
-    amount:            app.demand?.total != null ? app.demand.total.toLocaleString("en-IN") : "",
+    amount:            app.demand?.total != null ? app.demand.total.toLocaleString("en-ZA") : "",
     licenseNumber:     app.license?.number || "",
     validTill:         app.license?.validTill ? fmtDateLocal(app.license.validTill) : "",
     actionBy:          meta.actionBy || "",
@@ -921,7 +921,7 @@ export const PreviewProvider: React.FC<PreviewProviderProps> = ({ children, serv
       };
       const baseTimeline = [
         ...app.timeline,
-        { state: app.status, actor: "Citizen", note: `Paid ₹${app.demand.total}`, at: paidAt },
+        { state: app.status, actor: "Citizen", note: `Paid R ${app.demand.total}`, at: paidAt },
       ];
       const updated: PreviewApplication = {
         ...app,

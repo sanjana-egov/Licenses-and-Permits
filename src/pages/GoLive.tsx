@@ -2,13 +2,16 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { useOnboarding } from "@/contexts/OnboardingContext";
+import { useAuditLog } from "@/hooks/useAuditLog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { ShieldCheck, Palette, Plug, Languages, Rocket, Check, Sparkles } from "lucide-react";
+import { ShieldCheck, Palette, Plug, Languages, Rocket, Check, Sparkles, MapPin } from "lucide-react";
 import RoleAccessSetup from "@/components/go-live/RoleAccessSetup";
+import BoundaryGoLiveStep from "@/components/go-live/BoundaryGoLiveStep";
 import GoLiveSuccess from "@/components/go-live/GoLiveSuccess";
+import { copy } from "@/copy";
 
 interface ChecklistItem {
   id: string;
@@ -21,16 +24,23 @@ interface ChecklistItem {
 
 const GoLive: React.FC = () => {
   const { state, updateService } = useOnboarding();
+  const { logDeployment } = useAuditLog();
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState<string | null>(null);
-  const [completedItems, setCompletedItems] = useState<string[]>([]);
+  const [completedItems, setCompletedItems] = useState<string[]>(() => {
+    const initial: string[] = [];
+    const activeHierarchies = (state.boundaryHierarchies || []).filter((h) => h.status === "active");
+    if (activeHierarchies.length > 0) initial.push("boundaries");
+    return initial;
+  });
   const [showSuccess, setShowSuccess] = useState(false);
   const [comingSoonFor, setComingSoonFor] = useState<string | null>(null);
 
   const activeService = state.services.find((s) => s.id === state.activeServiceId);
 
   const checklist: ChecklistItem[] = [
-    { id: "access", label: "User Access & Authentication", description: "Set access type and sign-in method per role", icon: ShieldCheck, required: true, component: RoleAccessSetup },
+    { id: "boundaries", label: copy.goLive.requiredItems.boundarySetupLabel, description: copy.goLive.requiredItems.boundarySetupDescription, icon: MapPin, required: true, component: BoundaryGoLiveStep },
+    { id: "access", label: copy.goLive.requiredItems.userAccessLabel, description: copy.goLive.requiredItems.userAccessDescription, icon: ShieldCheck, required: true, component: RoleAccessSetup },
   ];
 
   const requiredComplete = checklist.filter((item) => item.required).every((item) => completedItems.includes(item.id));
@@ -43,6 +53,12 @@ const GoLive: React.FC = () => {
   const handleGoLive = () => {
     if (activeService) {
       updateService(activeService.id, { isLive: true, status: "live" });
+      logDeployment({
+        action: "Service published",
+        entity: activeService.name,
+        entityType: "Service",
+        service: activeService.name,
+      });
     }
     setShowSuccess(true);
   };
@@ -69,20 +85,20 @@ const GoLive: React.FC = () => {
           }}
           className="gap-1 mb-6 -ml-2"
         >
-          <ArrowLeft className="h-4 w-4" /> Back
+          <ArrowLeft className="h-4 w-4" /> {copy.common.buttons.back}
         </Button>
         <div className="text-center mb-8 animate-slide-up">
           <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
             <Rocket className="h-7 w-7 text-accent" />
           </div>
-          <h2 className="text-2xl font-bold text-foreground mb-2">Ready to go live?</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-2">{copy.goLive.header.pageTitle}</h2>
           <p className="text-sm text-muted-foreground">
             {activeService ? `Launch "${activeService.name}" by completing the steps below.` : "Complete the required steps below, then launch your application."}
           </p>
         </div>
 
         <div className="space-y-3">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Required</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{copy.goLive.checklistSections.requiredSectionLabel}</p>
           {checklist.filter((c) => c.required).map((item) => {
             const Icon = item.icon;
             const isComplete = completedItems.includes(item.id);
@@ -99,20 +115,20 @@ const GoLive: React.FC = () => {
                     </div>
                   </div>
                   {isComplete ? (
-                    <Badge variant="outline" className="bg-accent/15 text-accent border-accent/30 text-xs">Done</Badge>
+                    <Badge variant="outline" className="bg-accent/15 text-accent border-accent/30 text-xs">{copy.common.badges.done}</Badge>
                   ) : (
-                    <Badge variant="outline" className="text-xs">Required</Badge>
+                    <Badge variant="outline" className="text-xs">{copy.common.badges.required}</Badge>
                   )}
                 </CardContent>
               </Card>
             );
           })}
 
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider pt-4">Optional</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider pt-4">{copy.goLive.checklistSections.optionalSectionLabel}</p>
           {[
-            { icon: Palette, label: "Customize Theme", description: "Brand colors and appearance", onClick: () => navigate("/config/branding") },
-            { icon: Plug, label: "Integrations", description: "Connect external applications", onClick: () => setComingSoonFor("Integrations") },
-            { icon: Languages, label: "Additional Languages", description: "Add more language support", onClick: () => setComingSoonFor("Additional Languages") },
+            { icon: Palette, label: copy.goLive.optionalItems.customizeThemeLabel, description: copy.goLive.optionalItems.customizeThemeDescription, onClick: () => navigate("/config/branding") },
+            { icon: Plug, label: copy.goLive.optionalItems.integrationsLabel, description: copy.goLive.optionalItems.integrationsDescription, onClick: () => setComingSoonFor("Integrations") },
+            { icon: Languages, label: copy.goLive.optionalItems.additionalLanguagesLabel, description: copy.goLive.optionalItems.additionalLanguagesDescription, onClick: () => setComingSoonFor("Additional Languages") },
           ].map((item) => (
             <Card key={item.label} className="cursor-pointer transition-all hover:shadow-md" onClick={item.onClick}>
               <CardContent className="p-4 flex items-center justify-between">
@@ -125,7 +141,7 @@ const GoLive: React.FC = () => {
                     <p className="text-xs text-muted-foreground">{item.description}</p>
                   </div>
                 </div>
-                <Badge variant="outline" className="text-xs text-muted-foreground">Optional</Badge>
+                <Badge variant="outline" className="text-xs text-muted-foreground">{copy.common.badges.optional}</Badge>
               </CardContent>
             </Card>
           ))}
@@ -137,7 +153,7 @@ const GoLive: React.FC = () => {
               <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center mb-2">
                 <Sparkles className="h-6 w-6 text-accent" />
               </div>
-              <DialogTitle>Coming soon</DialogTitle>
+              <DialogTitle>{copy.goLive.comingSoonDialog.dialogTitle}</DialogTitle>
               <DialogDescription>
                 {comingSoonFor} will be available in an upcoming release. Stay tuned!
               </DialogDescription>
@@ -147,10 +163,10 @@ const GoLive: React.FC = () => {
 
         <div className="mt-8">
           <Button onClick={handleGoLive} disabled={!requiredComplete} className="w-full bg-accent text-accent-foreground hover:bg-accent/90 gap-2 h-12 text-base">
-            <Rocket className="h-5 w-5" /> Go Live
+            <Rocket className="h-5 w-5" /> {copy.goLive.actions.goLiveButton}
           </Button>
           {!requiredComplete && (
-            <p className="text-xs text-center text-muted-foreground mt-2">Complete all required steps to enable Go Live</p>
+            <p className="text-xs text-center text-muted-foreground mt-2">{copy.goLive.actions.incompleteNotice}</p>
           )}
         </div>
       </div>

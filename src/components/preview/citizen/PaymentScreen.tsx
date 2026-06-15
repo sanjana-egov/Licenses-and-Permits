@@ -54,22 +54,22 @@ const PaymentScreen: React.FC = () => {
               app.demand.lines.map((line) => (
                 <div key={line.feeId} className="flex justify-between">
                   <dt className="text-muted-foreground">{line.name}</dt>
-                  <dd className="font-medium text-foreground">₹{line.amount.toLocaleString()}</dd>
+                  <dd className="font-medium text-foreground">R{line.amount.toLocaleString()}</dd>
                 </div>
               ))
             ) : (
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">License Fee</dt>
-                <dd className="font-medium text-foreground">₹{app.demand.fee.toLocaleString()}</dd>
+                <dd className="font-medium text-foreground">R{app.demand.fee.toLocaleString()}</dd>
               </div>
             )}
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Tax (10%)</dt>
-              <dd className="font-medium text-foreground">₹{app.demand.tax.toLocaleString()}</dd>
+              <dd className="font-medium text-foreground">R{app.demand.tax.toLocaleString()}</dd>
             </div>
             <div className="border-t pt-2 flex justify-between">
               <dt className="font-semibold text-foreground">Total</dt>
-              <dd className="font-bold text-accent text-base">₹{app.demand.total.toLocaleString()}</dd>
+              <dd className="font-bold text-accent text-base">R{app.demand.total.toLocaleString()}</dd>
             </div>
           </dl>
         </div>
@@ -94,7 +94,7 @@ const PaymentScreen: React.FC = () => {
           className="w-full bg-accent text-accent-foreground hover:bg-accent/90 gap-1.5"
         >
           <CreditCard className="h-4 w-4" />
-          {processing ? "Processing..." : `Pay ₹${app.demand.total.toLocaleString()}`}
+          {processing ? "Processing..." : `Pay R${app.demand.total.toLocaleString()}`}
         </Button>
       </div>
     </div>

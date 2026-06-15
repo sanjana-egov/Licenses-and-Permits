@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ArrowLeft, Plus, Search, User, Pencil, Trash2, Info } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useAuditLog } from "@/hooks/useAuditLog";
 import {
   useServiceRoles,
   isCitizenRole,
@@ -27,6 +28,7 @@ import RoleEditorDialog, {
   emptyRoleDraft,
   draftFromRole,
 } from "./RoleEditorDialog";
+import { copy } from "@/copy";
 
 
 interface Props {
@@ -46,6 +48,7 @@ const BANNER_PALETTE = [
 
 const RolesDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
   const { id: serviceId = "service" } = useParams();
+  const { logConfig } = useAuditLog();
   const [roles, setRoles] = useServiceRoles(serviceId, moduleName);
   const { issuance, renewal } = useServiceWorkflow(serviceId);
   const transitionCountByRole = useMemo(() => {
@@ -81,9 +84,9 @@ const RolesDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
       setRoles((prev) => prev.map((r) => r.id === draft.id ? {
         ...r, name: values.name, description: values.description, permissions: values.permissions,
       } : r));
-      toast({ title: "Role updated" });
+      toast({ title: copy.rolesDesigner.toasts.roleUpdated });
+      logConfig({ action: "Role updated", entity: values.name, entityType: "Role", module: "Roles", service: serviceId });
     } else {
-      // Generate a stable snake_case id from the name; suffix to avoid collisions.
       const base = values.name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || "role";
       let id = base; let i = 1;
       while (roles.some((r) => r.id === id)) { i += 1; id = `${base}_${i}`; }
@@ -91,7 +94,8 @@ const RolesDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
         ...prev,
         { id, name: values.name, description: values.description, permissions: values.permissions },
       ]);
-      toast({ title: "Role created" });
+      toast({ title: copy.rolesDesigner.toasts.roleCreated });
+      logConfig({ action: "Role created", entity: values.name, entityType: "Role", module: "Roles", service: serviceId });
     }
     setDraft(null);
   };
@@ -100,6 +104,7 @@ const RolesDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
     if (!pendingDelete) return;
     setRoles((prev) => prev.filter((r) => r.id !== pendingDelete.id));
     toast({ title: `Deleted "${pendingDelete.name}"` });
+    logConfig({ action: "Role deleted", entity: pendingDelete.name, entityType: "Role", module: "Roles", service: serviceId });
     setPendingDelete(null);
   };
 
@@ -113,11 +118,11 @@ const RolesDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1">
-            <h1 className="font-bold text-foreground">Roles Designer</h1>
-            <p className="text-xs text-muted-foreground">Define who can access and act on this service</p>
+            <h1 className="font-bold text-foreground">{copy.rolesDesigner.header.title}</h1>
+            <p className="text-xs text-muted-foreground">{copy.rolesDesigner.header.subtitle}</p>
           </div>
           <Button onClick={openCreate} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 gap-1.5">
-            <Plus className="h-4 w-4" /> Create New Role
+            <Plus className="h-4 w-4" /> {copy.rolesDesigner.header.createButtonLabel}
           </Button>
         </div>
       </header>
@@ -126,14 +131,14 @@ const RolesDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
         <div className="rounded-lg border border-accent/20 bg-accent/5 px-4 py-3 flex items-start gap-3">
           <Info className="h-4 w-4 text-accent mt-0.5 shrink-0" />
           <p className="text-sm text-foreground">
-            Changes to roles automatically flow into Workflow steps, the Service Preview and every related configuration.
+            {copy.rolesDesigner.notice.infoMessage}
           </p>
         </div>
 
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search role"
+            placeholder={copy.rolesDesigner.search.placeholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -142,7 +147,7 @@ const RolesDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
 
         {filtered.length === 0 ? (
           <div className="text-center text-sm text-muted-foreground py-12">
-            No roles match your search.
+            {copy.rolesDesigner.emptyState.noResultsMessage}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -182,7 +187,7 @@ const RolesDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold text-foreground text-sm">{role.name}</h3>
                         {role.isDefault && (
-                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Default</Badge>
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{copy.rolesDesigner.roleCard.defaultBadge}</Badge>
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5 min-h-[1rem]">
@@ -194,7 +199,7 @@ const RolesDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                         variant="outline"
                         className="text-[10px] px-2 py-0.5 bg-accent/5 text-accent border-accent/20 font-normal"
                       >
-                        {isCitizenRole(role) ? "Citizen" : "Employee"}
+                        {isCitizenRole(role) ? copy.rolesDesigner.roleCard.citizenTypeBadge : copy.rolesDesigner.roleCard.employeeTypeBadge}
                       </Badge>
                       {(() => {
                         const tx = transitionCountByRole[role.id] ?? 0;
@@ -203,7 +208,7 @@ const RolesDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                             variant="outline"
                             className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground border-border font-normal"
                           >
-                            {tx === 0 ? "No workflow steps" : `${tx} workflow step${tx > 1 ? "s" : ""}`}
+                            {tx === 0 ? copy.rolesDesigner.roleCard.noWorkflowStepsBadge : `${tx} workflow step${tx > 1 ? "s" : ""}`}
                           </Badge>
                         );
                       })()}
@@ -229,17 +234,16 @@ const RolesDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete role "{pendingDelete?.name}"?</AlertDialogTitle>
             <AlertDialogDescription>
-              Workflow steps assigned to this role will need to be reassigned manually.
-              This cannot be undone.
+              {copy.rolesDesigner.deleteDialog.description}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{copy.rolesDesigner.deleteDialog.cancelButton}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {copy.rolesDesigner.deleteDialog.confirmButton}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

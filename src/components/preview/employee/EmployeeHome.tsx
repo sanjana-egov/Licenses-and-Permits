@@ -21,6 +21,7 @@ import {
   CalendarDays,
   Store,
 } from "lucide-react";
+import { copy } from "@/copy";
 
 type Bucket = "pending" | "inProgress" | "approved" | "rejected";
 
@@ -32,10 +33,10 @@ const mapStateToBucket = (stateId: string): Bucket => {
 };
 
 const BUCKET_META: Record<Bucket, { label: string; dot: string; text: string; bg: string }> = {
-  pending:    { label: "Pending Review", dot: "bg-amber-500",   text: "text-amber-700",   bg: "bg-amber-50" },
-  inProgress: { label: "In Progress",    dot: "bg-sky-500",     text: "text-sky-700",     bg: "bg-sky-50" },
-  approved:   { label: "Approved",       dot: "bg-emerald-500", text: "text-emerald-700", bg: "bg-emerald-50" },
-  rejected:   { label: "Rejected",       dot: "bg-rose-500",    text: "text-rose-700",    bg: "bg-rose-50" },
+  pending:    { label: copy.employeeHome.statusBadges.pendingReview, dot: "bg-amber-500",   text: "text-amber-700",   bg: "bg-amber-50" },
+  inProgress: { label: copy.employeeHome.statusBadges.inProgress,    dot: "bg-sky-500",     text: "text-sky-700",     bg: "bg-sky-50" },
+  approved:   { label: copy.employeeHome.statusBadges.approved,       dot: "bg-emerald-500", text: "text-emerald-700", bg: "bg-emerald-50" },
+  rejected:   { label: copy.employeeHome.statusBadges.rejected,       dot: "bg-rose-500",    text: "text-rose-700",    bg: "bg-rose-50" },
 };
 
 const EmployeeHome: React.FC = () => {
@@ -81,7 +82,7 @@ const EmployeeHome: React.FC = () => {
   }> = [
     {
       key: "total",
-      label: "Total Applications",
+      label: copy.employeeHome.metricCards.totalApplications,
       value: stats.total,
       icon: FileText,
       iconColor: "text-primary",
@@ -89,7 +90,7 @@ const EmployeeHome: React.FC = () => {
     },
     {
       key: "pending",
-      label: "Pending Review",
+      label: copy.employeeHome.metricCards.pendingReview,
       value: stats.pending,
       icon: Clock,
       iconColor: "text-amber-600",
@@ -97,7 +98,7 @@ const EmployeeHome: React.FC = () => {
     },
     {
       key: "approved",
-      label: "Approved",
+      label: copy.employeeHome.metricCards.approved,
       value: stats.approved,
       icon: CheckCircle2,
       iconColor: "text-emerald-600",
@@ -105,7 +106,7 @@ const EmployeeHome: React.FC = () => {
     },
     {
       key: "rejected",
-      label: "Rejected",
+      label: copy.employeeHome.metricCards.rejected,
       value: stats.rejected,
       icon: XCircle,
       iconColor: "text-rose-600",
@@ -116,13 +117,13 @@ const EmployeeHome: React.FC = () => {
   const services = [
     {
       id: "trade",
-      title: serviceName || "Business License",
+      title: serviceName || copy.employeeHome.serviceCards.defaultServiceTitle,
       icon: Store,
       pending: stats.pending,
       active: true,
     },
-    { id: "building", title: "Building Permit", icon: Building2, pending: 0, active: false },
-    { id: "event", title: "Event Permit", icon: CalendarDays, pending: 0, active: false },
+    { id: "building", title: copy.employeeHome.serviceCards.buildingPermitTitle, icon: Building2, pending: 0, active: false },
+    { id: "event", title: copy.employeeHome.serviceCards.eventPermitTitle, icon: CalendarDays, pending: 0, active: false },
   ];
 
   return (
@@ -136,10 +137,10 @@ const EmployeeHome: React.FC = () => {
             {activeRoleName}
           </p>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            Licenses &amp; Permits
+            {copy.employeeHome.header.pageTitle}
           </h1>
           <p className="text-sm text-muted-foreground mt-1.5">
-            Review and process applications across services
+            {copy.employeeHome.header.pageSubtitle}
           </p>
         </div>
 
@@ -165,14 +166,14 @@ const EmployeeHome: React.FC = () => {
 
         {/* Services */}
         <p className="text-[11px] uppercase tracking-widest font-semibold text-muted-foreground mb-3">
-          Services
+          {copy.employeeHome.sectionLabels.services}
         </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
           {services.map((s) => {
             const Icon = s.icon;
             const subtitle = s.active
               ? `${s.pending} pending review`
-              : "No pending items";
+              : copy.employeeHome.serviceCards.noPendingSubtitle;
             return (
               <div
                 key={s.id}
@@ -217,13 +218,13 @@ const EmployeeHome: React.FC = () => {
         {/* Recent Activity */}
         <div className="flex items-center justify-between mb-3">
           <p className="text-[11px] uppercase tracking-widest font-semibold text-muted-foreground">
-            Recent Activity
+            {copy.employeeHome.sectionLabels.recentActivity}
           </p>
           <button
             onClick={() => setScreen({ type: "inbox" })}
             className="text-xs font-medium text-primary hover:underline"
           >
-            View inbox →
+            {copy.employeeHome.recentActivityTable.viewInboxLink}
           </button>
         </div>
 
@@ -231,19 +232,19 @@ const EmployeeHome: React.FC = () => {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-border">
-                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Application ID</TableHead>
-                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Applicant</TableHead>
-                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Service</TableHead>
-                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Status</TableHead>
-                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Last Updated</TableHead>
-                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground text-right">Action</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{copy.employeeHome.recentActivityTable.columnApplicationId}</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{copy.employeeHome.recentActivityTable.columnApplicant}</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{copy.employeeHome.recentActivityTable.columnService}</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{copy.employeeHome.recentActivityTable.columnStatus}</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{copy.employeeHome.recentActivityTable.columnLastUpdated}</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground text-right">{copy.employeeHome.recentActivityTable.columnAction}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {recentRows.length === 0 ? (
                 <TableRow className="hover:bg-transparent">
                   <TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-10">
-                    No recent activity yet.
+                    {copy.employeeHome.recentActivityTable.emptyState}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -283,7 +284,7 @@ const EmployeeHome: React.FC = () => {
                           }}
                           className="text-sm font-medium text-primary hover:underline"
                         >
-                          {isReview ? "Review" : "View"}
+                          {isReview ? copy.employeeHome.recentActivityTable.actionReview : copy.employeeHome.recentActivityTable.actionView}
                         </button>
                       </TableCell>
                     </TableRow>

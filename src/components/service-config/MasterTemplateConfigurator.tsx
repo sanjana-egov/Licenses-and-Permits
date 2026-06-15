@@ -1,26 +1,46 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
+import React, { useEffect, useState } from "react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Upload, FileSpreadsheet, X, Lock, FileCheck, RefreshCw, Download, Plus } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Upload,
+  FileSpreadsheet,
+  X,
+  Lock,
+  FileCheck,
+  RefreshCw,
+  Download,
+  Plus,
+  Check,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   useOnboarding,
   type ServiceItem,
   type TemplateSetup,
   type RenewalPolicy,
-  type WorkflowScope,
 } from "@/contexts/OnboardingContext";
 import { toast } from "@/hooks/use-toast";
 import { parseCategoriesCsv, parseSubcategoriesCsv } from "@/lib/csvParse";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { seedFormSteps, saveFormSteps } from "@/lib/formStorage";
-import Step4RenewalPolicy, {
-  type RenewalPolicyState,
-} from "@/components/template-setup/Step4RenewalPolicy";
-import Step5WorkflowScope from "@/components/template-setup/Step5WorkflowScope";
+import type { RenewalPolicyState } from "@/components/template-setup/Step4RenewalPolicy";
 
 interface Props {
   open: boolean;
@@ -28,8 +48,9 @@ interface Props {
   service: ServiceItem;
 }
 
-const CATEGORIES_SAMPLE_CSV =
-  "Category Name\nRetail\nManufacturing\nHospitality\n";
+type EntryMode = "manual" | "csv";
+
+const CATEGORIES_SAMPLE_CSV = "Category Name\nRetail\nManufacturing\nHospitality\n";
 const SUBCATEGORIES_SAMPLE_CSV =
   "Subcategory Name,Parent Category\nRestaurant,Hospitality\nBakery,Retail\nGarment Factory,Manufacturing\n";
 
@@ -45,7 +66,10 @@ const downloadSample = (filename: string, csv: string) => {
   URL.revokeObjectURL(url);
 };
 
-const YesNo: React.FC<{ value: boolean; onChange: (v: boolean) => void }> = ({ value, onChange }) => (
+const YesNo: React.FC<{ value: boolean; onChange: (v: boolean) => void }> = ({
+  value,
+  onChange,
+}) => (
   <div className="inline-flex rounded-md border border-input p-0.5 bg-background">
     {[
       { v: true, label: "Yes" },
@@ -57,7 +81,9 @@ const YesNo: React.FC<{ value: boolean; onChange: (v: boolean) => void }> = ({ v
         onClick={() => onChange(o.v)}
         className={cn(
           "px-4 py-1 text-sm rounded-sm transition-colors",
-          value === o.v ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground",
+          value === o.v
+            ? "bg-accent text-accent-foreground"
+            : "text-muted-foreground hover:text-foreground",
         )}
       >
         {o.label}
@@ -66,62 +92,69 @@ const YesNo: React.FC<{ value: boolean; onChange: (v: boolean) => void }> = ({ v
   </div>
 );
 
-const UploadField: React.FC<{
-  id: string;
-  fileName?: string;
-  itemCount: number;
-  itemLabel: string;
-  sampleFilename: string;
-  sampleCsv: string;
-  onFile: (file: File) => Promise<void> | void;
-  onClear: () => void;
-}> = ({ id, fileName, itemCount, itemLabel, sampleFilename, sampleCsv, onFile, onClear }) => (
-  <div className="space-y-2">
-    {fileName ? (
-      <div className="flex items-center gap-3 p-3 rounded-md border border-accent/30 bg-accent/5">
-        <FileSpreadsheet className="h-4 w-4 text-accent shrink-0" />
-        <div className="min-w-0 flex-1">
-          <div className="text-sm font-medium text-foreground truncate">{fileName}</div>
-          <div className="text-xs text-muted-foreground">
-            {itemCount > 0 ? `${itemCount} ${itemLabel} parsed` : "No rows parsed"}
-          </div>
-        </div>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClear}>
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-    ) : (
-      <label
-        htmlFor={id}
-        className="flex items-center justify-center gap-2 p-4 rounded-md border-2 border-dashed border-input hover:border-accent/50 hover:bg-muted/30 cursor-pointer transition-colors text-sm"
-      >
-        <Upload className="h-4 w-4 text-muted-foreground" />
-        <span className="text-accent font-medium">Upload file</span>
-        <span className="text-muted-foreground">CSV</span>
-        <input
-          id={id}
-          type="file"
-          accept=".csv,.xlsx,.xls"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) void onFile(f);
-            e.target.value = "";
-          }}
-        />
-      </label>
-    )}
-    {!fileName && (
+const ModeTabs: React.FC<{ mode: EntryMode; setMode: (m: EntryMode) => void }> = ({
+  mode,
+  setMode,
+}) => (
+  <div className="inline-flex rounded-md border border-input p-0.5 bg-muted/30 text-xs">
+    {(["manual", "csv"] as EntryMode[]).map((m) => (
       <button
+        key={m}
         type="button"
-        onClick={() => downloadSample(sampleFilename, sampleCsv)}
-        className="inline-flex items-center gap-1 text-xs text-accent underline-offset-2 hover:underline"
+        onClick={() => setMode(m)}
+        className={cn(
+          "px-3 py-1 rounded-sm transition-colors font-medium",
+          mode === m
+            ? "bg-background text-foreground shadow-sm"
+            : "text-muted-foreground hover:text-foreground",
+        )}
       >
-        <Download className="h-3.5 w-3.5" />
-        Download sample
+        {m === "manual" ? "Enter manually" : "Upload CSV"}
       </button>
-    )}
+    ))}
   </div>
+);
+
+const MonthsInput: React.FC<{ value: number; onChange: (n: number) => void }> = ({
+  value,
+  onChange,
+}) => (
+  <div className="flex items-center gap-2">
+    <Input
+      type="number"
+      min={1}
+      value={Number.isFinite(value) && value > 0 ? value : ""}
+      onChange={(e) => {
+        const n = parseInt(e.target.value, 10);
+        onChange(Number.isFinite(n) && n > 0 ? n : 0);
+      }}
+      className="h-8 w-24"
+    />
+    <span className="text-sm text-muted-foreground">months</span>
+  </div>
+);
+
+type RenewalMode = "global" | "by_category" | "by_subcategory";
+
+const ModeBtn: React.FC<{
+  active: boolean;
+  label: string;
+  description: string;
+  onClick: () => void;
+}> = ({ active, label, description, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={cn(
+      "text-left px-3 py-2 rounded-md border text-xs transition-all",
+      active
+        ? "border-accent bg-accent/5 ring-1 ring-accent"
+        : "border-input hover:border-accent/40 hover:bg-muted/20",
+    )}
+  >
+    <div className="font-medium text-foreground">{label}</div>
+    <div className="text-muted-foreground mt-0.5">{description}</div>
+  </button>
 );
 
 const arraysEqual = <T,>(a: T[] = [], b: T[] = []) =>
@@ -139,28 +172,26 @@ const MasterTemplateConfigurator: React.FC<Props> = ({ open, onOpenChange, servi
     perCategory: {},
     perSubcategory: {},
   };
-  const initialScope: WorkflowScope = service.workflowScope ?? "shared";
 
   const [name, setName] = useState(service.name);
   const [renewalEnabled, setRenewalEnabled] = useState(initialRenewal);
   const [setup, setSetup] = useState<TemplateSetup>(initialSetup);
   const [policy, setPolicy] = useState<RenewalPolicyState>(initialPolicy);
-  const [scope, setScope] = useState<WorkflowScope>(initialScope);
-  const [newCategory, setNewCategory] = useState("");
 
-  const addCategory = () => {
-    const trimmed = newCategory.trim();
-    if (!trimmed) return;
-    const exists = (setup.categoriesList ?? []).some(
-      (c) => c.toLowerCase() === trimmed.toLowerCase(),
-    );
-    if (exists) {
-      toast({ title: "Category already exists", variant: "destructive" });
-      return;
-    }
-    setSetup((s) => ({ ...s, categoriesList: [...(s.categoriesList ?? []), trimmed] }));
-    setNewCategory("");
-  };
+  // Entry modes
+  const [catMode, setCatMode] = useState<EntryMode>("manual");
+  const [subMode, setSubMode] = useState<EntryMode>("manual");
+
+  // CSV pending (parsed but not yet confirmed)
+  const [catPending, setCatPending] = useState<string[] | null>(null);
+  const [catFileName, setCatFileName] = useState("");
+  const [subPending, setSubPending] = useState<{ name: string; parent: string }[] | null>(null);
+  const [subFileName, setSubFileName] = useState("");
+
+  // Manual entry inputs
+  const [newCategory, setNewCategory] = useState("");
+  const [newSubName, setNewSubName] = useState("");
+  const [newSubParent, setNewSubParent] = useState("");
 
   useEffect(() => {
     if (open) {
@@ -175,7 +206,15 @@ const MasterTemplateConfigurator: React.FC<Props> = ({ open, onOpenChange, servi
           perSubcategory: {},
         },
       );
-      setScope(service.workflowScope ?? "shared");
+      setCatMode("manual");
+      setSubMode("manual");
+      setCatPending(null);
+      setCatFileName("");
+      setSubPending(null);
+      setSubFileName("");
+      setNewCategory("");
+      setNewSubName("");
+      setNewSubParent("");
     }
   }, [open, service]);
 
@@ -190,36 +229,117 @@ const MasterTemplateConfigurator: React.FC<Props> = ({ open, onOpenChange, servi
     if (!setup.hasSubcategories && policy.mode === "by_subcategory") {
       setPolicy((p) => ({ ...p, mode: "global", perSubcategory: {} }));
     }
-    if (!setup.hasCategories && scope !== "shared") {
-      setScope("shared");
-    }
   }, [setup.hasCategories, setup.hasSubcategories]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleCategoriesFile = async (f: File) => {
+  // ── Category helpers ────────────────────────────────────────────────────────
+
+  const handleCatFile = async (f: File) => {
+    setCatFileName(f.name);
     try {
       const list = await parseCategoriesCsv(f);
-      setSetup((s) => ({ ...s, categoriesFileName: f.name, categoriesList: list }));
+      setCatPending(list);
     } catch {
       toast({ title: "Could not parse file", description: "Use the sample CSV format.", variant: "destructive" });
+      setCatPending([]);
     }
   };
 
-  const handleSubcategoriesFile = async (f: File) => {
+  const confirmCats = () => {
+    if (!catPending) return;
+    setSetup((s) => ({
+      ...s,
+      categoriesList: catPending,
+      categoriesFileName: catFileName,
+      subcategoriesList: (s.subcategoriesList ?? []).filter((sub) =>
+        catPending.includes(sub.parent),
+      ),
+    }));
+    setCatPending(null);
+  };
+
+  const addCategory = () => {
+    const t = newCategory.trim();
+    if (!t) return;
+    if (categoriesList.some((c) => c.toLowerCase() === t.toLowerCase())) {
+      toast({ title: "Category already exists", variant: "destructive" });
+      return;
+    }
+    setSetup((s) => ({ ...s, categoriesList: [...(s.categoriesList ?? []), t] }));
+    setNewCategory("");
+  };
+
+  const removeCategory = (c: string) => {
+    setSetup((s) => ({
+      ...s,
+      categoriesList: (s.categoriesList ?? []).filter((x) => x !== c),
+      subcategoriesList: (s.subcategoriesList ?? []).filter((sub) => sub.parent !== c),
+    }));
+  };
+
+  // ── Subcategory helpers ─────────────────────────────────────────────────────
+
+  const handleSubFile = async (f: File) => {
+    setSubFileName(f.name);
     try {
       const list = await parseSubcategoriesCsv(f);
-      setSetup((s) => ({ ...s, subcategoriesFileName: f.name, subcategoriesList: list }));
+      setSubPending(list);
     } catch {
       toast({ title: "Could not parse file", description: "Use the sample CSV format.", variant: "destructive" });
+      setSubPending([]);
     }
   };
 
-  const canSave = useMemo(() => {
+  const confirmSubs = () => {
+    if (!subPending) return;
+    setSetup((s) => ({ ...s, subcategoriesList: subPending, subcategoriesFileName: subFileName }));
+    setSubPending(null);
+  };
+
+  const addSubcategory = () => {
+    const name = newSubName.trim();
+    const parent = newSubParent.trim();
+    if (!name || !parent) return;
+    if (subcategoriesList.some((s) => s.name === name && s.parent === parent)) {
+      toast({ title: "Subcategory already exists", variant: "destructive" });
+      return;
+    }
+    setSetup((s) => ({
+      ...s,
+      subcategoriesList: [...(s.subcategoriesList ?? []), { name, parent }],
+    }));
+    setNewSubName("");
+    setNewSubParent("");
+  };
+
+  const removeSubcategory = (name: string, parent: string) => {
+    setSetup((s) => ({
+      ...s,
+      subcategoriesList: (s.subcategoriesList ?? []).filter(
+        (sub) => !(sub.name === name && sub.parent === parent),
+      ),
+    }));
+  };
+
+  // ── Renewal policy helpers ──────────────────────────────────────────────────
+
+  const setRenewalMode = (mode: RenewalMode) => setPolicy((p) => ({ ...p, mode }));
+  const setGlobal = (n: number) => setPolicy((p) => ({ ...p, globalMonths: n }));
+  const setCatValue = (cat: string, n: number) =>
+    setPolicy((p) => ({ ...p, perCategory: { ...p.perCategory, [cat]: n } }));
+  const setSubValue = (key: string, n: number) =>
+    setPolicy((p) => ({ ...p, perSubcategory: { ...p.perSubcategory, [key]: n } }));
+
+  // ── Save validation ─────────────────────────────────────────────────────────
+
+  const canSave = (() => {
     if (!name.trim()) return false;
     if (setup.hasCategories && categoriesList.length === 0) return false;
-    if (setup.hasCategories && setup.hasSubcategories && subcategoriesList.length === 0) return false;
-    if (renewalEnabled && (!policy.globalMonths || policy.globalMonths <= 0) && policy.mode === "global") return false;
+    if (setup.hasCategories && setup.hasSubcategories && subcategoriesList.length === 0)
+      return false;
+    if (renewalEnabled && policy.mode === "global" && (!policy.globalMonths || policy.globalMonths <= 0))
+      return false;
     return true;
-  }, [name, setup, categoriesList.length, subcategoriesList.length, renewalEnabled, policy]);
+  })();
 
   const handleSave = () => {
     const trimmed = name.trim();
@@ -241,21 +361,19 @@ const MasterTemplateConfigurator: React.FC<Props> = ({ open, onOpenChange, servi
           mode: policy.mode,
           globalMonths: policy.globalMonths || 12,
           perCategory: setup.hasCategories ? policy.perCategory : {},
-          perSubcategory: setup.hasCategories && setup.hasSubcategories ? policy.perSubcategory : {},
+          perSubcategory:
+            setup.hasCategories && setup.hasSubcategories ? policy.perSubcategory : {},
         }
       : undefined;
-
-    const cleanScope: WorkflowScope = setup.hasCategories ? scope : "shared";
 
     updateService(service.id, {
       name: trimmed,
       customModules,
       templateSetup: cleanSetup,
       renewalPolicy: cleanPolicy,
-      workflowScope: cleanScope,
+      workflowScope: "shared",
     });
 
-    // Re-seed form schemas only when category lists actually changed
     const prevCats = service.templateSetup?.categoriesList ?? [];
     const prevSubs = (service.templateSetup?.subcategoriesList ?? []).map(
       (s) => `${s.parent}::${s.name}`,
@@ -287,21 +405,23 @@ const MasterTemplateConfigurator: React.FC<Props> = ({ open, onOpenChange, servi
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8">
-          {/* Service Name */}
+
+          {/* ── Service Name ──────────────────────────────────────────────── */}
           <div className="space-y-2">
             <Label htmlFor="svc-name">Service name</Label>
             <Input id="svc-name" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
 
-          {/* Modules */}
+          {/* ── Modules ───────────────────────────────────────────────────── */}
           <div className="space-y-3">
             <div>
               <h3 className="text-sm font-semibold text-foreground">Modules</h3>
               <p className="text-xs text-muted-foreground mt-0.5">System-supported journeys.</p>
             </div>
             <div className="rounded-md border border-border divide-y">
+              {/* Issuance */}
               <div className="flex items-center gap-3 p-3 bg-muted/30">
-                <FileCheck className="h-4 w-4 text-accent" />
+                <FileCheck className="h-4 w-4 text-accent shrink-0" />
                 <div className="flex-1">
                   <div className="text-sm font-medium text-foreground flex items-center gap-2">
                     Issuance
@@ -311,18 +431,131 @@ const MasterTemplateConfigurator: React.FC<Props> = ({ open, onOpenChange, servi
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3">
-                <RefreshCw className={cn("h-4 w-4", renewalEnabled ? "text-accent" : "text-muted-foreground")} />
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-foreground">Renewal</div>
-                  <p className="text-xs text-muted-foreground">Allow citizens to renew existing licenses.</p>
+
+              {/* Renewal toggle */}
+              <div>
+                <div className="flex items-center gap-3 p-3">
+                  <RefreshCw
+                    className={cn(
+                      "h-4 w-4 shrink-0",
+                      renewalEnabled ? "text-accent" : "text-muted-foreground",
+                    )}
+                  />
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-foreground">Renewal</div>
+                    <p className="text-xs text-muted-foreground">
+                      Allow citizens to renew existing licenses.
+                    </p>
+                  </div>
+                  <Switch checked={renewalEnabled} onCheckedChange={setRenewalEnabled} />
                 </div>
-                <Switch checked={renewalEnabled} onCheckedChange={setRenewalEnabled} />
+
+                {/* Inline renewal fields */}
+                {renewalEnabled && (
+                  <div className="mx-3 mb-3 pt-3 border-t border-border space-y-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                      Renewal validity
+                    </p>
+
+                    {!setup.hasCategories && (
+                      <div className="space-y-1.5">
+                        <p className="text-xs text-muted-foreground">
+                          How long after issuance should renewal be allowed?
+                        </p>
+                        <MonthsInput value={policy.globalMonths} onChange={setGlobal} />
+                      </div>
+                    )}
+
+                    {setup.hasCategories && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-muted-foreground">
+                          How does renewal validity vary?
+                        </p>
+                        <div
+                          className={cn(
+                            "grid gap-2",
+                            setup.hasSubcategories ? "grid-cols-3" : "grid-cols-2",
+                          )}
+                        >
+                          <ModeBtn
+                            active={policy.mode === "global"}
+                            label="Same for all"
+                            description="One duration"
+                            onClick={() => setRenewalMode("global")}
+                          />
+                          <ModeBtn
+                            active={policy.mode === "by_category"}
+                            label="By category"
+                            description="Per category"
+                            onClick={() => setRenewalMode("by_category")}
+                          />
+                          {setup.hasSubcategories && (
+                            <ModeBtn
+                              active={policy.mode === "by_subcategory"}
+                              label="By subcategory"
+                              description="Per subcategory"
+                              onClick={() => setRenewalMode("by_subcategory")}
+                            />
+                          )}
+                        </div>
+
+                        {policy.mode === "global" && (
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground">Validity period</p>
+                            <MonthsInput value={policy.globalMonths} onChange={setGlobal} />
+                          </div>
+                        )}
+
+                        {policy.mode === "by_category" && categoriesList.length > 0 && (
+                          <div className="rounded-md border border-border overflow-hidden">
+                            <div className="grid grid-cols-[1fr_auto] px-3 py-1.5 bg-muted/30 text-xs font-semibold text-muted-foreground">
+                              <span>Category</span><span>Months</span>
+                            </div>
+                            <div className="divide-y divide-border">
+                              {categoriesList.map((c) => (
+                                <div key={c} className="grid grid-cols-[1fr_auto] items-center px-3 py-1.5 gap-3">
+                                  <span className="text-sm text-foreground">{c}</span>
+                                  <MonthsInput
+                                    value={policy.perCategory[c] ?? 12}
+                                    onChange={(n) => setCatValue(c, n)}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {policy.mode === "by_subcategory" && subcategoriesList.length > 0 && (
+                          <div className="rounded-md border border-border overflow-hidden">
+                            <div className="grid grid-cols-[1fr_1fr_auto] px-3 py-1.5 bg-muted/30 text-xs font-semibold text-muted-foreground">
+                              <span>Subcategory</span><span>Parent</span><span>Months</span>
+                            </div>
+                            <div className="divide-y divide-border">
+                              {subcategoriesList.map((s) => {
+                                const k = `${s.parent}::${s.name}`;
+                                return (
+                                  <div key={k} className="grid grid-cols-[1fr_1fr_auto] items-center px-3 py-1.5 gap-3">
+                                    <span className="text-sm text-foreground">{s.name}</span>
+                                    <span className="text-xs text-muted-foreground">{s.parent}</span>
+                                    <MonthsInput
+                                      value={policy.perSubcategory[k] ?? 12}
+                                      onChange={(n) => setSubValue(k, n)}
+                                    />
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Structure */}
+          {/* ── Structure ─────────────────────────────────────────────────── */}
           <div className="space-y-3">
             <div>
               <h3 className="text-sm font-semibold text-foreground">Structure</h3>
@@ -330,7 +563,9 @@ const MasterTemplateConfigurator: React.FC<Props> = ({ open, onOpenChange, servi
                 Categories and subcategories for license classification.
               </p>
             </div>
+
             <div className="rounded-md border border-border divide-y">
+              {/* Categories */}
               <div className="p-3 space-y-3">
                 <div className="flex items-center justify-between gap-4">
                   <div className="text-sm font-medium text-foreground">Categories enabled</div>
@@ -341,29 +576,159 @@ const MasterTemplateConfigurator: React.FC<Props> = ({ open, onOpenChange, servi
                         ...s,
                         hasCategories: v,
                         hasSubcategories: v ? s.hasSubcategories : false,
-                        categoriesFileName: v ? s.categoriesFileName : undefined,
                         categoriesList: v ? s.categoriesList : undefined,
-                        subcategoriesFileName: v ? s.subcategoriesFileName : undefined,
                         subcategoriesList: v ? s.subcategoriesList : undefined,
                       }))
                     }
                   />
                 </div>
+
                 {setup.hasCategories && (
-                  <UploadField
-                    id="cat-upload-edit"
-                    fileName={setup.categoriesFileName}
-                    itemCount={categoriesList.length}
-                    itemLabel="categories"
-                    sampleFilename="license-categories-sample.csv"
-                    sampleCsv={CATEGORIES_SAMPLE_CSV}
-                    onFile={handleCategoriesFile}
-                    onClear={() =>
-                      setSetup((s) => ({ ...s, categoriesFileName: undefined, categoriesList: [] }))
-                    }
-                  />
+                  <div className="space-y-2 pt-1 border-t border-border">
+                    <ModeTabs mode={catMode} setMode={setCatMode} />
+
+                    {catMode === "manual" ? (
+                      /* Manual entry */
+                      <>
+                        <div className="flex gap-2">
+                          <Input
+                            value={newCategory}
+                            onChange={(e) => setNewCategory(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") { e.preventDefault(); addCategory(); }
+                            }}
+                            placeholder="Add category…"
+                            className="h-8"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 shrink-0"
+                            onClick={addCategory}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        {categoriesList.length > 0 && (
+                          <div className="space-y-1">
+                            {categoriesList.map((c) => (
+                              <div
+                                key={c}
+                                className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-1.5"
+                              >
+                                <span className="text-sm text-foreground">{c}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => removeCategory(c)}
+                                  className="text-muted-foreground hover:text-destructive transition-colors"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    ) : catPending !== null ? (
+                      /* CSV pending confirmation */
+                      <div className="space-y-2">
+                        <div className="rounded-md border border-border overflow-hidden">
+                          <div className="px-3 py-2 bg-muted/30 text-xs font-semibold text-foreground">
+                            {catPending.length} categories parsed from {catFileName}
+                          </div>
+                          <div className="divide-y divide-border max-h-40 overflow-y-auto">
+                            {catPending.map((c) => (
+                              <div key={c} className="flex items-center justify-between px-3 py-1.5">
+                                <span className="text-sm text-foreground">{c}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setCatPending(catPending.filter((x) => x !== c))}
+                                  className="text-muted-foreground hover:text-destructive transition-colors"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => { setCatPending(null); setCatFileName(""); }}
+                          >
+                            Re-upload
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={confirmCats}
+                            disabled={catPending.length === 0}
+                            className="gap-1.5"
+                          >
+                            <Check className="h-3.5 w-3.5" /> Confirm
+                          </Button>
+                        </div>
+                      </div>
+                    ) : categoriesList.length > 0 ? (
+                      /* Confirmed from CSV */
+                      <div className="flex items-center justify-between rounded-md border border-accent/30 bg-accent/5 px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <FileSpreadsheet className="h-4 w-4 text-accent shrink-0" />
+                          <span className="text-sm font-medium text-foreground">{catFileName || "Uploaded file"}</span>
+                          <span className="text-xs text-muted-foreground">· {categoriesList.length} categories</span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => {
+                            setCatFileName("");
+                            setSetup((s) => ({ ...s, categoriesList: [], subcategoriesList: [] }));
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      /* Dropzone */
+                      <div className="space-y-1.5">
+                        <label
+                          htmlFor="mc-cat-upload"
+                          className="flex items-center justify-center gap-2 p-4 rounded-md border-2 border-dashed border-input hover:border-accent/50 hover:bg-muted/30 cursor-pointer transition-colors text-sm"
+                        >
+                          <Upload className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-accent font-medium">Upload file</span>
+                          <span className="text-muted-foreground">CSV</span>
+                          <input
+                            id="mc-cat-upload"
+                            type="file"
+                            accept=".csv"
+                            className="hidden"
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) void handleCatFile(f);
+                              e.target.value = "";
+                            }}
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => downloadSample("license-categories-sample.csv", CATEGORIES_SAMPLE_CSV)}
+                          className="inline-flex items-center gap-1 text-xs text-accent underline-offset-2 hover:underline"
+                        >
+                          <Download className="h-3.5 w-3.5" /> Download sample
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
+
+              {/* Subcategories */}
               {setup.hasCategories && (
                 <div className="p-3 space-y-3">
                   <div className="flex items-center justify-between gap-4">
@@ -374,144 +739,178 @@ const MasterTemplateConfigurator: React.FC<Props> = ({ open, onOpenChange, servi
                         setSetup((s) => ({
                           ...s,
                           hasSubcategories: v,
-                          subcategoriesFileName: v ? s.subcategoriesFileName : undefined,
                           subcategoriesList: v ? s.subcategoriesList : undefined,
                         }))
                       }
                     />
                   </div>
+
                   {setup.hasSubcategories && (
-                    <UploadField
-                      id="sub-upload-edit"
-                      fileName={setup.subcategoriesFileName}
-                      itemCount={subcategoriesList.length}
-                      itemLabel="subcategories"
-                      sampleFilename="license-subcategories-sample.csv"
-                      sampleCsv={SUBCATEGORIES_SAMPLE_CSV}
-                      onFile={handleSubcategoriesFile}
-                      onClear={() =>
-                        setSetup((s) => ({
-                          ...s,
-                          subcategoriesFileName: undefined,
-                          subcategoriesList: [],
-                        }))
-                      }
-                    />
+                    <div className="space-y-2 pt-1 border-t border-border">
+                      <ModeTabs mode={subMode} setMode={setSubMode} />
+
+                      {subMode === "manual" ? (
+                        <>
+                          <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
+                            <Input
+                              value={newSubName}
+                              onChange={(e) => setNewSubName(e.target.value)}
+                              placeholder="Subcategory name"
+                              className="h-8"
+                            />
+                            <Select value={newSubParent} onValueChange={setNewSubParent}>
+                              <SelectTrigger className="h-8">
+                                <SelectValue placeholder="Parent category" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {categoriesList.map((c) => (
+                                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 shrink-0"
+                              onClick={addSubcategory}
+                              disabled={!newSubName.trim() || !newSubParent}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          {subcategoriesList.length > 0 && (
+                            <div className="space-y-1">
+                              {subcategoriesList.map((s) => (
+                                <div
+                                  key={`${s.parent}::${s.name}`}
+                                  className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-1.5"
+                                >
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span className="text-sm text-foreground">{s.name}</span>
+                                    <span className="text-xs text-muted-foreground">under {s.parent}</span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => removeSubcategory(s.name, s.parent)}
+                                    className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                                  >
+                                    <X className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      ) : subPending !== null ? (
+                        <div className="space-y-2">
+                          <div className="rounded-md border border-border overflow-hidden">
+                            <div className="px-3 py-2 bg-muted/30 text-xs font-semibold text-foreground">
+                              {subPending.length} subcategories parsed from {subFileName}
+                            </div>
+                            <div className="divide-y divide-border max-h-40 overflow-y-auto">
+                              {subPending.map((s) => (
+                                <div
+                                  key={`${s.parent}::${s.name}`}
+                                  className="flex items-center justify-between px-3 py-1.5"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm text-foreground">{s.name}</span>
+                                    <span className="text-xs text-muted-foreground">under {s.parent}</span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setSubPending(
+                                        subPending.filter(
+                                          (x) => !(x.name === s.name && x.parent === s.parent),
+                                        ),
+                                      )
+                                    }
+                                    className="text-muted-foreground hover:text-destructive transition-colors"
+                                  >
+                                    <X className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => { setSubPending(null); setSubFileName(""); }}
+                            >
+                              Re-upload
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={confirmSubs}
+                              disabled={subPending.length === 0}
+                              className="gap-1.5"
+                            >
+                              <Check className="h-3.5 w-3.5" /> Confirm
+                            </Button>
+                          </div>
+                        </div>
+                      ) : subcategoriesList.length > 0 ? (
+                        <div className="flex items-center justify-between rounded-md border border-accent/30 bg-accent/5 px-3 py-2">
+                          <div className="flex items-center gap-2">
+                            <FileSpreadsheet className="h-4 w-4 text-accent shrink-0" />
+                            <span className="text-sm font-medium text-foreground">{subFileName || "Uploaded file"}</span>
+                            <span className="text-xs text-muted-foreground">· {subcategoriesList.length} subcategories</span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => {
+                              setSubFileName("");
+                              setSetup((s) => ({ ...s, subcategoriesList: [] }));
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-1.5">
+                          <label
+                            htmlFor="mc-sub-upload"
+                            className="flex items-center justify-center gap-2 p-4 rounded-md border-2 border-dashed border-input hover:border-accent/50 hover:bg-muted/30 cursor-pointer transition-colors text-sm"
+                          >
+                            <Upload className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-accent font-medium">Upload file</span>
+                            <span className="text-muted-foreground">CSV</span>
+                            <input
+                              id="mc-sub-upload"
+                              type="file"
+                              accept=".csv"
+                              className="hidden"
+                              onChange={(e) => {
+                                const f = e.target.files?.[0];
+                                if (f) void handleSubFile(f);
+                                e.target.value = "";
+                              }}
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => downloadSample("license-subcategories-sample.csv", SUBCATEGORIES_SAMPLE_CSV)}
+                            className="inline-flex items-center gap-1 text-xs text-accent underline-offset-2 hover:underline"
+                          >
+                            <Download className="h-3.5 w-3.5" /> Download sample
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
             </div>
-            {setup.hasCategories && categoriesList.length > 0 && (
-              <div className="rounded-md border border-border overflow-hidden">
-                <div className="px-3 py-2 bg-muted/30 text-xs font-semibold text-foreground">
-                  Trades ({categoriesList.length} categories
-                  {setup.hasSubcategories ? `, ${subcategoriesList.length} subcategories` : ""})
-                </div>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="h-9">Category</TableHead>
-                      <TableHead className="h-9">Subcategory</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {categoriesList.map((cat) => {
-                      const subs = setup.hasSubcategories
-                        ? subcategoriesList.filter((s) => s.parent === cat)
-                        : [];
-                      if (subs.length === 0) {
-                        return (
-                          <TableRow key={cat}>
-                            <TableCell className="py-2 text-sm">{cat}</TableCell>
-                            <TableCell className="py-2 text-sm text-muted-foreground">—</TableCell>
-                          </TableRow>
-                        );
-                      }
-                      return subs.map((s, i) => (
-                        <TableRow key={`${cat}-${s.name}`}>
-                          <TableCell className="py-2 text-sm">{i === 0 ? cat : ""}</TableCell>
-                          <TableCell className="py-2 text-sm">{s.name}</TableCell>
-                        </TableRow>
-                      ));
-                    })}
-                    <TableRow>
-                      <TableCell className="py-2">
-                        <Input
-                          value={newCategory}
-                          onChange={(e) => setNewCategory(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              addCategory();
-                            }
-                          }}
-                          placeholder="Add category…"
-                          className="h-8"
-                        />
-                      </TableCell>
-                      <TableCell className="py-2">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={addCategory}
-                          aria-label="Add category"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-            )}
           </div>
-
-          {/* Renewal Policy */}
-          {renewalEnabled && (
-            <div className="space-y-3">
-              <div>
-                <h3 className="text-sm font-semibold text-foreground">Renewal policy</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  How long licenses stay valid before renewal is required.
-                </p>
-              </div>
-              <div className="rounded-md border border-border p-4">
-                <Step4RenewalPolicy
-                  categories={categoriesList}
-                  subcategories={subcategoriesList}
-                  policy={policy}
-                  setPolicy={setPolicy}
-                  onContinue={() => {}}
-                  hideHeader
-                  hideContinue
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Workflow Scope */}
-          {setup.hasCategories && categoriesList.length > 0 && (
-            <div className="space-y-3">
-              <div>
-                <h3 className="text-sm font-semibold text-foreground">Workflow scope</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Whether all categories share one workflow or each has its own.
-                </p>
-              </div>
-              <div className="rounded-md border border-border p-4">
-                <Step5WorkflowScope
-                  value={scope}
-                  onChange={setScope}
-                  categoryCount={categoriesList.length}
-                  onContinue={() => {}}
-                  hideHeader
-                  hideContinue
-                />
-              </div>
-            </div>
-          )}
         </div>
 
         <SheetFooter className="px-6 py-4 border-t bg-background gap-2">

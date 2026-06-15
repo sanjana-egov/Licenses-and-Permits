@@ -23,6 +23,7 @@ import {
   FileText, AlertCircle, Sparkles, MapPin, Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
+import { copy } from "@/copy";
 
 // ─── Helpers ─────────────────────────────────────
 const todayISO = () => new Date().toISOString().slice(0, 10);
@@ -249,7 +250,7 @@ const ApplicationForm: React.FC = () => {
 
   const handleNext = () => {
     if (isReview) {
-      if (!declaration) { toast.error("Please confirm the declaration"); return; }
+      if (!declaration) { toast.error(copy.applicationForm.toasts.declarationRequired); return; }
       const result = isRenewal && parentApp
         ? submitRenewal(parentApp.id, formData, docs)
         : submitApplication(formData, docs);
@@ -265,7 +266,7 @@ const ApplicationForm: React.FC = () => {
       const t = { ...touched };
       visibleFieldIds.forEach(id => { t[id] = true; });
       setTouched(t);
-      toast.error("Please complete required fields", { description: "Some fields need attention before continuing." });
+      toast.error(copy.applicationForm.toasts.requiredFieldsError, { description: copy.applicationForm.toasts.requiredFieldsDescription });
       return;
     }
     setStepIndex(i => i + 1);
@@ -335,7 +336,7 @@ const ApplicationForm: React.FC = () => {
           disabled={disabled}
         >
           <SelectTrigger className="bg-white" onBlur={() => setTouched(t => ({ ...t, [field.id]: true }))}>
-            <SelectValue placeholder={disabled ? field.placeholder : (field.placeholder || "Select...")} />
+            <SelectValue placeholder={disabled ? field.placeholder : (field.placeholder || copy.applicationForm.dropdown.defaultPlaceholder)} />
           </SelectTrigger>
           <SelectContent className="bg-popover z-50">
             {opts.map((opt) => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
@@ -395,16 +396,16 @@ const ApplicationForm: React.FC = () => {
               onClick={() => { addMockDoc(field.label); setTouched(t => ({ ...t, [field.id]: true })); }}
               className="border-2 border-dashed rounded-lg p-2.5 text-center text-[11px] flex items-center justify-center gap-1.5"
               style={{ borderColor: "#1D3557", color: "#1D3557", backgroundColor: "#EAF2FB" }}>
-              <FileUp className="h-3.5 w-3.5" /> Upload New
+              <FileUp className="h-3.5 w-3.5" /> {copy.applicationForm.fileUpload.uploadNewButton}
             </button>
             <button type="button"
               onClick={() => { setPickerField(field.label); setTouched(t => ({ ...t, [field.id]: true })); }}
               className="border-2 border-dashed rounded-lg p-2.5 text-center text-[11px] flex items-center justify-center gap-1.5"
               style={{ borderColor: "#F4A261", color: "#A0522D", backgroundColor: "#FFF3E5" }}>
-              <FolderOpen className="h-3.5 w-3.5" /> My Documents
+              <FolderOpen className="h-3.5 w-3.5" /> {copy.applicationForm.fileUpload.myDocumentsButton}
             </button>
           </div>
-          <p className="text-[10px] mt-1" style={{ color: "#6B7280" }}>PDF / JPG / PNG · max 5 MB</p>
+          <p className="text-[10px] mt-1" style={{ color: "#6B7280" }}>{copy.applicationForm.fileUpload.fileTypeHint}</p>
           <div className="mt-2 space-y-1">
             {docs.filter((d) => d.type === field.label).map((d) => {
               const idx = docs.findIndex((x) => x.id === d.id);
@@ -414,7 +415,7 @@ const ApplicationForm: React.FC = () => {
                     <span className="truncate">{d.name}</span>
                     {d.reused && (
                       <span className="inline-flex items-center gap-0.5 text-[9px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full font-semibold shrink-0">
-                        <Repeat className="h-2.5 w-2.5" /> Reused
+                        <Repeat className="h-2.5 w-2.5" /> {copy.applicationForm.fileUpload.reusedBadge}
                       </span>
                     )}
                   </span>
@@ -466,7 +467,7 @@ const ApplicationForm: React.FC = () => {
     <div className="space-y-2">
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={handleBack} className="gap-1 flex-1">
-          <ArrowLeft className="h-3.5 w-3.5" /> Back
+          <ArrowLeft className="h-3.5 w-3.5" /> {copy.applicationForm.wizardFooter.backButton}
         </Button>
         <Button
           size="sm"
@@ -474,12 +475,12 @@ const ApplicationForm: React.FC = () => {
           className="flex-1 gap-1 text-white"
           style={{ backgroundColor: "#F4A261" }}
         >
-          Next <ArrowRight className="h-3.5 w-3.5" />
+          {copy.applicationForm.wizardFooter.nextButton} <ArrowRight className="h-3.5 w-3.5" />
         </Button>
       </div>
       {sub?.optional && (
         <button onClick={handleSkip} className="w-full text-[11px] text-center" style={{ color: "#6B7280" }}>
-          Skip for now
+          {copy.applicationForm.wizardFooter.skipLink}
         </button>
       )}
     </div>
@@ -496,17 +497,17 @@ const ApplicationForm: React.FC = () => {
           className="mt-0.5"
         />
         <span className="text-[11px] leading-snug" style={{ color: "#1D3557" }}>
-          I confirm that all the details provided are correct
+          {copy.applicationForm.reviewFooter.declarationCheckbox}
         </span>
       </label>
       {!scrolledToBottom && (
         <p className="text-[10px] text-center" style={{ color: "#6B7280" }}>
-          Scroll to the bottom to confirm
+          {copy.applicationForm.reviewFooter.scrollToBottomHint}
         </p>
       )}
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={handleBack} className="gap-1 flex-1">
-          <ArrowLeft className="h-3.5 w-3.5" /> Back
+          <ArrowLeft className="h-3.5 w-3.5" /> {copy.applicationForm.reviewFooter.backButton}
         </Button>
         <Button
           size="sm"
@@ -515,7 +516,7 @@ const ApplicationForm: React.FC = () => {
           className="flex-1 gap-1 text-white disabled:opacity-50"
           style={{ backgroundColor: "#1D3557" }}
         >
-          Submit <ArrowRight className="h-3.5 w-3.5" />
+          {copy.applicationForm.reviewFooter.submitButton} <ArrowRight className="h-3.5 w-3.5" />
         </Button>
       </div>
     </div>
@@ -533,17 +534,17 @@ const ApplicationForm: React.FC = () => {
       <>
         <CitizenScreenShell
           onBack={handleBack}
-          backLabel="Back"
-          progress={<WizardProgress step={totalSteps} total={totalSteps} stepName="Review" />}
+          backLabel={copy.applicationForm.navigation.backLabel}
+          progress={<WizardProgress step={totalSteps} total={totalSteps} stepName={copy.applicationForm.wizardProgress.reviewStepName} />}
           footer={reviewFooter}
         >
           <div ref={reviewScrollRef} className="h-full">
             <div className="bg-white rounded-xl shadow-sm p-4 mb-3" style={{ border: "1px solid #E0E0E0" }}>
               <h2 className="text-base font-bold leading-snug" style={{ color: "#1D3557" }}>
-                Review your application
+                {copy.applicationForm.reviewScreen.heading}
               </h2>
               <p className="text-[11px] mt-1" style={{ color: "#6B7280" }}>
-                Check each section carefully before submitting.
+                {copy.applicationForm.reviewScreen.subheading}
               </p>
             </div>
 
@@ -562,12 +563,12 @@ const ApplicationForm: React.FC = () => {
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "#1D3557" }}>{sec.name}</p>
                       <button onClick={() => setStepIndex(editIdx)} className="text-[10px] font-medium inline-flex items-center gap-1" style={{ color: "#F4A261" }}>
-                        <Pencil className="h-3 w-3" /> Edit
+                        <Pencil className="h-3 w-3" /> {copy.applicationForm.reviewScreen.editButton}
                       </button>
                     </div>
                     {isDocs ? (
                       docs.length === 0 ? (
-                        <p className="text-[11px]" style={{ color: "#6B7280" }}>No documents uploaded.</p>
+                        <p className="text-[11px]" style={{ color: "#6B7280" }}>{copy.applicationForm.reviewScreen.noDocumentsUploaded}</p>
                       ) : (
                         <ul className="text-[11px] space-y-0.5">
                           {docs.map((d) => (
@@ -575,7 +576,7 @@ const ApplicationForm: React.FC = () => {
                               • {d.type} — {d.name}
                               {d.reused && (
                                 <span className="inline-flex items-center gap-0.5 text-[9px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full font-semibold">
-                                  <Repeat className="h-2.5 w-2.5" /> Reused
+                                  <Repeat className="h-2.5 w-2.5" /> {copy.applicationForm.reviewScreen.reusedBadge}
                                 </span>
                               )}
                             </li>
@@ -583,7 +584,7 @@ const ApplicationForm: React.FC = () => {
                         </ul>
                       )
                     ) : visibleFields.length === 0 ? (
-                      <p className="text-[11px]" style={{ color: "#6B7280" }}>No details provided.</p>
+                      <p className="text-[11px]" style={{ color: "#6B7280" }}>{copy.applicationForm.reviewScreen.noDetailsProvided}</p>
                     ) : (
                       <dl className="grid grid-cols-2 gap-y-1 text-[11px]">
                         {visibleFields.map((f) => (
@@ -605,14 +606,14 @@ const ApplicationForm: React.FC = () => {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <FolderOpen className="h-4 w-4 text-indigo-500" /> Pick from My Documents
+                <FolderOpen className="h-4 w-4 text-indigo-500" /> {copy.applicationForm.documentPickerDialog.dialogTitle}
               </DialogTitle>
               <DialogDescription>
                 Select a document to attach as <span className="font-semibold">{pickerField}</span>.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setPickerField(null)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setPickerField(null)}>{copy.applicationForm.documentPickerDialog.cancelButton}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -627,7 +628,7 @@ const ApplicationForm: React.FC = () => {
     <>
       <CitizenScreenShell
         onBack={handleBack}
-        backLabel="Back"
+        backLabel={copy.applicationForm.navigation.backLabel}
         progress={<WizardProgress step={sub.step} total={totalSteps} stepName={sub.stepName} />}
         footer={wizardFooter}
       >
@@ -635,9 +636,9 @@ const ApplicationForm: React.FC = () => {
           <div className="mb-2 flex items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-[10px]"
             style={{ backgroundColor: "#FFF3E5", border: "1px solid #F4A261", color: "#A0522D" }}>
             <span className="flex items-center gap-1.5">
-              <Sparkles className="h-3 w-3" /> Draft restored — continue where you left off.
+              <Sparkles className="h-3 w-3" /> {copy.applicationForm.draftBanner.draftRestoredMessage}
             </span>
-            <button onClick={discardDraft} className="underline font-medium">Discard</button>
+            <button onClick={discardDraft} className="underline font-medium">{copy.applicationForm.draftBanner.discardButton}</button>
           </div>
         )}
 
@@ -664,7 +665,7 @@ const ApplicationForm: React.FC = () => {
 
           {sub.isMap ? (
             <div className="space-y-3">
-              <Input placeholder="Search by pincode or area" className="bg-white" />
+              <Input placeholder={copy.applicationForm.mapSubScreen.searchPlaceholder} className="bg-white" />
               <div className="relative h-44 rounded-lg overflow-hidden flex items-center justify-center"
                 style={{ backgroundColor: "#EAF2FB", border: "1px dashed #1D3557" }}>
                 <div className="absolute inset-0 opacity-40"
@@ -675,7 +676,7 @@ const ApplicationForm: React.FC = () => {
                   }} />
                 <div className="relative text-center">
                   <MapPin className="h-7 w-7 mx-auto" style={{ color: "#F4A261" }} />
-                  <p className="text-[10px] mt-1" style={{ color: "#1D3557" }}>Long press to drop a pin</p>
+                  <p className="text-[10px] mt-1" style={{ color: "#1D3557" }}>{copy.applicationForm.mapSubScreen.dropPinHint}</p>
                 </div>
               </div>
               <Button
@@ -683,7 +684,7 @@ const ApplicationForm: React.FC = () => {
                 className="w-full text-white"
                 style={{ backgroundColor: "#1D3557" }}
               >
-                Confirm Location
+                {copy.applicationForm.mapSubScreen.confirmLocationButton}
               </Button>
             </div>
           ) : (
@@ -700,7 +701,7 @@ const ApplicationForm: React.FC = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <FolderOpen className="h-4 w-4 text-indigo-500" /> Pick from My Documents
+              <FolderOpen className="h-4 w-4 text-indigo-500" /> {copy.applicationForm.documentPickerDialog.dialogTitle}
             </DialogTitle>
             <DialogDescription>
               Select a document to attach as <span className="font-semibold">{pickerField}</span>.
@@ -709,7 +710,7 @@ const ApplicationForm: React.FC = () => {
           <div className="max-h-[50vh] overflow-y-auto space-y-2">
             {userDocuments.length === 0 ? (
               <p className="text-sm text-muted-foreground py-6 text-center">
-                You haven't uploaded any documents yet. Visit "My Documents" from the home screen to add some.
+                {copy.applicationForm.documentPickerDialog.emptyState}
               </p>
             ) : (
               userDocuments.map((d) => (
@@ -730,7 +731,7 @@ const ApplicationForm: React.FC = () => {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPickerField(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setPickerField(null)}>{copy.applicationForm.documentPickerDialog.cancelButton}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

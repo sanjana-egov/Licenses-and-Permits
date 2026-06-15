@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useOnboarding, ServiceItem } from "@/contexts/OnboardingContext";
+import { useHelp } from "@/contexts/HelpContext";
 import { ServiceOwnerSetup } from "@/components/onboarding/ServiceOwnerSetup";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,29 +30,29 @@ import {
   Sparkles,
   Trash2,
   UserPlus,
-  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { copy } from "@/copy";
 
 const statusConfig: Record<string, { label: string; className: string; stripe: string }> = {
   draft: {
-    label: "Draft",
+    label: copy.dashboard.statusBadges.draft,
     className: "bg-warning/15 text-warning border-warning/30",
     stripe: "bg-warning",
   },
   published: {
-    label: "Published",
+    label: copy.dashboard.statusBadges.published,
     className: "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700",
     stripe: "bg-blue-400",
   },
   live: {
-    label: "Live",
+    label: copy.dashboard.statusBadges.live,
     className:
       "bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700 shadow-[0_0_12px_-2px_hsl(var(--accent)/0.4)]",
     stripe: "bg-green-500",
   },
   assigned: {
-    label: "Assigned",
+    label: copy.dashboard.statusBadges.assigned,
     className: "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700",
     stripe: "bg-blue-400",
   },
@@ -94,7 +95,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
             <p className="text-xs text-muted-foreground mt-1">
               {service.customModules.length > 0
                 ? `${service.customModules.length} flow${service.customModules.length > 1 ? "s" : ""}`
-                : "From template"}
+                : copy.dashboard.serviceCard.fromTemplate}
             </p>
           </div>
         </div>
@@ -118,19 +119,6 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        {/* Owner chips for assigned services */}
-        {isAssigned && service.assignedOwners && service.assignedOwners.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-3">
-            {service.assignedOwners.map((o) => (
-              <span
-                key={o.email}
-                className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800"
-              >
-                <Users className="h-3 w-3" /> {o.name}
-              </span>
-            ))}
-          </div>
-        )}
 
         {/* Module chips */}
         {!isAssigned && service.customModules.length > 0 && (
@@ -156,33 +144,33 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
                 className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90"
                 onClick={onSetup}
               >
-                Set up <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                {copy.dashboard.serviceCard.setUpButton} <ArrowRight className="h-3.5 w-3.5 ml-1" />
               </Button>
             ) : (
               <Button variant="outline" size="sm" className="flex-1" disabled>
-                Awaiting setup
+                {copy.dashboard.serviceCard.awaitingSetup}
               </Button>
             )
           ) : service.isLive ? (
             <>
               <Button variant="outline" size="sm" className="flex-1" onClick={onView}>
-                <Eye className="h-3.5 w-3.5 mr-1" /> View
+                <Eye className="h-3.5 w-3.5 mr-1" /> {copy.dashboard.serviceCard.viewButton}
               </Button>
               <Button variant="outline" size="sm" className="flex-1" onClick={onEdit}>
-                <Settings className="h-3.5 w-3.5 mr-1" /> Edit
+                <Settings className="h-3.5 w-3.5 mr-1" /> {copy.dashboard.serviceCard.editButton}
               </Button>
             </>
           ) : (
             <>
               <Button variant="outline" size="sm" className="flex-1" onClick={onConfigure}>
-                <Settings className="h-3.5 w-3.5 mr-1" /> Configure
+                <Settings className="h-3.5 w-3.5 mr-1" /> {copy.dashboard.serviceCard.configureButton}
               </Button>
               <Button
                 size="sm"
                 className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90"
                 onClick={onGoLive}
               >
-                <Rocket className="h-3.5 w-3.5 mr-1" /> Go Live
+                <Rocket className="h-3.5 w-3.5 mr-1" /> {copy.dashboard.serviceCard.goLiveButton}
               </Button>
             </>
           )}
@@ -195,8 +183,63 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
 const Dashboard: React.FC = () => {
   const { state, setActiveService, deleteService } = useOnboarding();
   const navigate = useNavigate();
+  const { registerPage } = useHelp();
   const currentRole = state.currentUserRole || "super_admin";
   const isServiceOwner = currentRole === "service_owner";
+
+  useEffect(() => {
+    registerPage({
+      pageId: "dashboard",
+      pageName: "Dashboard",
+      path: "/dashboard",
+      tourSteps: [
+        {
+          targetId: "dashboard-header",
+          title: "Your command centre",
+          content: "Manage all your DIGIT Certificates services from first draft through to going live and monitoring citizen applications.",
+          placement: "bottom",
+        },
+        {
+          targetId: "dashboard-metrics",
+          title: "Service metrics at a glance",
+          content: "Track how many services are in draft, live, or assigned to service owners — updated in real time as your team configures services.",
+          placement: "bottom",
+        },
+        {
+          targetId: "dashboard-add-service",
+          title: "Start a new service",
+          content: "Browse the template catalogue — Business License, Trade Permit, Building Permit, and more — to create and configure a new citizen-facing service.",
+          placement: "bottom",
+        },
+        {
+          targetId: "dashboard-service-list",
+          title: "Your services",
+          content: "Each card shows the current status. Click Configure to set up forms, fees, and workflows, or Go Live to publish it when it's ready.",
+          placement: "top",
+        },
+      ],
+      onThisPageLinks: [
+        {
+          icon: LayoutTemplate,
+          title: "Create a new service",
+          subtext: "Browse the template catalogue",
+          action: () => navigate("/services"),
+        },
+        {
+          icon: Rocket,
+          title: "Go Live checklist",
+          subtext: "Launch a configured service to citizens",
+          action: () => navigate("/go-live"),
+        },
+        {
+          icon: Building2,
+          title: "Organisation profile",
+          subtext: "Update your org name and details",
+          action: () => navigate("/setup/organization"),
+        },
+      ],
+    });
+  }, [registerPage, navigate]);
 
   const [pendingDelete, setPendingDelete] = useState<ServiceItem | null>(null);
   const [confirmText, setConfirmText] = useState("");
@@ -244,10 +287,10 @@ const Dashboard: React.FC = () => {
   const serviceOwnerFirstService = isServiceOwner && ownerOwnServices.length > 0 ? ownerOwnServices[0] : null;
 
   const metricCards = [
-    { label: "Total Services", value: metrics.total, icon: Building2, iconBg: "bg-primary/10", iconColor: "text-primary" },
-    { label: "Drafts", value: metrics.drafts, icon: PenLine, iconBg: "bg-warning/15", iconColor: "text-warning" },
-    { label: "Live", value: metrics.live, icon: Rocket, iconBg: "bg-green-500/10", iconColor: "text-green-600 dark:text-green-400", pulse: metrics.live > 0 },
-    { label: "Assigned", value: metrics.assigned, icon: UserPlus, iconBg: "bg-blue-500/10", iconColor: "text-blue-600 dark:text-blue-400" },
+    { label: copy.dashboard.metrics.totalServices, value: metrics.total, icon: Building2, iconBg: "bg-primary/10", iconColor: "text-primary" },
+    { label: copy.dashboard.metrics.drafts, value: metrics.drafts, icon: PenLine, iconBg: "bg-warning/15", iconColor: "text-warning" },
+    { label: copy.dashboard.metrics.live, value: metrics.live, icon: Rocket, iconBg: "bg-green-500/10", iconColor: "text-green-600 dark:text-green-400", pulse: metrics.live > 0 },
+    { label: copy.dashboard.metrics.assigned, value: metrics.assigned, icon: UserPlus, iconBg: "bg-blue-500/10", iconColor: "text-blue-600 dark:text-blue-400" },
   ];
 
   return (
@@ -261,14 +304,14 @@ const Dashboard: React.FC = () => {
     >
       <div className="max-w-6xl mx-auto px-6 py-8 relative">
         {/* Welcome */}
-        <div className="mb-6">
+        <div className="mb-6" data-tour-id="dashboard-header">
           <h1 className="text-3xl font-bold text-foreground tracking-tight max-w-2xl">
-            {isServiceOwner ? "Your Services" : "Configure and Launch Licenses and Permits"}
+            {isServiceOwner ? copy.dashboard.header.titleServiceOwner : copy.dashboard.header.titleAdmin}
           </h1>
           <p className="text-sm text-muted-foreground mt-1.5 max-w-2xl">
             {isServiceOwner
-              ? "Configure and manage the services you own."
-              : "Configure Licenses and Permits applications to manage end-to-end delivery of service to the citizen."}
+              ? copy.dashboard.header.subtitleServiceOwner
+              : copy.dashboard.header.subtitleAdmin}
           </p>
         </div>
 
@@ -286,7 +329,7 @@ const Dashboard: React.FC = () => {
 
         {/* Metrics row (non-service-owner only) */}
         {!isServiceOwner && state.services.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8" data-tour-id="dashboard-metrics">
             {metricCards.map((m) => {
               const Icon = m.icon;
               return (
@@ -321,13 +364,13 @@ const Dashboard: React.FC = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-xs font-medium text-accent mb-2">
-                  Get Started
+                  {copy.dashboard.emptyState.getStartedBadge}
                 </div>
                 <h2 className="text-xl md:text-2xl font-semibold text-foreground">
-                  Set up your first application
+                  {copy.dashboard.emptyState.heading}
                 </h2>
                 <p className="text-sm text-muted-foreground mt-1.5 max-w-md">
-                  Choose from a ready-made template to launch in minutes.
+                  {copy.dashboard.emptyState.description}
                 </p>
               </div>
               <Button
@@ -335,7 +378,7 @@ const Dashboard: React.FC = () => {
                 onClick={() => navigate("/services")}
                 className="bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg shadow-accent/20 gap-2 self-start md:self-auto"
               >
-                <LayoutTemplate className="h-4 w-4" /> Choose Template
+                <LayoutTemplate className="h-4 w-4" /> {copy.dashboard.emptyState.chooseTemplateButton}
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
@@ -350,14 +393,14 @@ const Dashboard: React.FC = () => {
               <section>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2.5">
-                    <h2 className="text-lg font-semibold text-foreground">My Services</h2>
+                    <h2 className="text-lg font-semibold text-foreground">{copy.dashboard.sections.myServicesHeading}</h2>
                     <Badge variant="secondary" className="rounded-full">{myServices.length}</Badge>
                   </div>
-                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => navigate("/services")}>
-                    <LayoutTemplate className="h-3.5 w-3.5" /> Add service
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => navigate("/services")} data-tour-id="dashboard-add-service">
+                    <LayoutTemplate className="h-3.5 w-3.5" /> {copy.dashboard.sections.addServiceButton}
                   </Button>
                 </div>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3" data-tour-id="dashboard-service-list">
                   {myServices.map((s) => (
                     <ServiceCard
                       key={s.id}
@@ -377,9 +420,9 @@ const Dashboard: React.FC = () => {
             {assignedServices.length > 0 && (
               <section>
                 <div className="flex items-center gap-2.5 mb-4">
-                  <h2 className="text-lg font-semibold text-foreground">Assigned</h2>
+                  <h2 className="text-lg font-semibold text-foreground">{copy.dashboard.sections.assignedHeading}</h2>
                   <Badge variant="secondary" className="rounded-full">{assignedServices.length}</Badge>
-                  <span className="text-xs text-muted-foreground">— waiting for owners to set up</span>
+                  <span className="text-xs text-muted-foreground">{copy.dashboard.sections.assignedSubtext}</span>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {assignedServices.map((s) => (
@@ -400,9 +443,9 @@ const Dashboard: React.FC = () => {
             {/* Empty my-services with add prompt */}
             {myServices.length === 0 && (
               <div className="rounded-xl border border-dashed border-border py-8 text-center">
-                <p className="text-sm text-muted-foreground mb-3">You haven't created any services yet.</p>
+                <p className="text-sm text-muted-foreground mb-3">{copy.dashboard.sections.noServicesYet}</p>
                 <Button variant="outline" size="sm" onClick={() => navigate("/services")}>
-                  <LayoutTemplate className="h-3.5 w-3.5 mr-1.5" /> Browse templates
+                  <LayoutTemplate className="h-3.5 w-3.5 mr-1.5" /> {copy.dashboard.sections.browseTemplatesButton}
                 </Button>
               </div>
             )}
@@ -416,7 +459,7 @@ const Dashboard: React.FC = () => {
             {ownerAssignedServices.length > 0 && (
               <section>
                 <div className="flex items-center gap-2.5 mb-4">
-                  <h2 className="text-lg font-semibold text-foreground">Assigned to you</h2>
+                  <h2 className="text-lg font-semibold text-foreground">{copy.dashboard.sections.assignedToYouHeading}</h2>
                   <Badge variant="secondary" className="rounded-full">{ownerAssignedServices.length}</Badge>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -441,7 +484,7 @@ const Dashboard: React.FC = () => {
             {ownerOwnServices.length > 0 && (
               <section>
                 <div className="flex items-center gap-2.5 mb-4">
-                  <h2 className="text-lg font-semibold text-foreground">My Services</h2>
+                  <h2 className="text-lg font-semibold text-foreground">{copy.dashboard.sections.myServicesHeading}</h2>
                   <Badge variant="secondary" className="rounded-full">{ownerOwnServices.length}</Badge>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -488,7 +531,7 @@ const Dashboard: React.FC = () => {
             </div>
           )}
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{copy.common.buttons.cancel}</AlertDialogCancel>
             <AlertDialogAction
               disabled={pendingDelete?.isLive ? confirmText !== pendingDelete.name : false}
               onClick={() => {
@@ -501,7 +544,7 @@ const Dashboard: React.FC = () => {
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {copy.common.buttons.delete}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

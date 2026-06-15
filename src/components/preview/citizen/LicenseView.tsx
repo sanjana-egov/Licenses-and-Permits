@@ -5,7 +5,7 @@ import { Download, ArrowLeft, QrCode, RefreshCw } from "lucide-react";
 import { downloadLicensePdf } from "@/lib/licensePdf";
 
 const fmt = (ts: number) =>
-  new Date(ts).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  new Date(ts).toLocaleDateString("en-ZA", { day: "2-digit", month: "short", year: "numeric" });
 
 const LicenseView: React.FC = () => {
   const { screen, applications, setScreen, serviceName } = usePreview();
@@ -49,7 +49,7 @@ const LicenseView: React.FC = () => {
               <span className="bg-slate-700" />
             </div>
             <p className="text-[10px] tracking-[0.2em] font-semibold text-slate-700 uppercase">
-              Government of India
+              City of Cape Town
             </p>
             <p className="text-[10px] text-slate-500 -mt-1">
               Department of Municipal Administration

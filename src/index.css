@@ -13,8 +13,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 213 50% 15%;
 
-    --primary: 174 58% 28%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 174 72% 34%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 210 30% 95%;
     --secondary-foreground: 213 55% 24%;
@@ -22,7 +22,7 @@
     --muted: 210 20% 96%;
     --muted-foreground: 215 16% 47%;
 
-    --accent: 174 58% 28%;
+    --accent: 174 72% 34%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -30,7 +30,7 @@
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 174 58% 28%;
+    --ring: 174 72% 34%;
 
     --radius: 0.75rem;
 
@@ -113,6 +113,10 @@
     animation: checkmark 0.3s ease-out forwards;
   }
 
+  .animate-slide-in-right {
+    animation: slideInRight 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
   @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -126,5 +130,10 @@
   @keyframes checkmark {
     from { opacity: 0; transform: scale(0.5); }
     to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(100%); }
+    to { opacity: 1; transform: translateX(0); }
   }
 }

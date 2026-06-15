@@ -14,6 +14,7 @@ export const countries: CountryDefault[] = [
   { name: "United Arab Emirates", currency: "AED", currencySymbol: "د.إ", phoneCode: "+971" },
   { name: "Saudi Arabia", currency: "SAR", currencySymbol: "﷼", phoneCode: "+966" },
   { name: "Singapore", currency: "SGD", currencySymbol: "S$", phoneCode: "+65" },
+  { name: "South Africa", currency: "ZAR", currencySymbol: "R", phoneCode: "+27" },
 ];
 
 export interface CurrencyOption {
@@ -34,6 +35,7 @@ export const currencies: CurrencyOption[] = [
   { code: "SGD", symbol: "S$", label: "Singapore Dollar (SGD)" },
   { code: "JPY", symbol: "¥", label: "Japanese Yen (JPY)" },
   { code: "CNY", symbol: "¥", label: "Chinese Yuan (CNY)" },
+  { code: "ZAR", symbol: "R", label: "South African Rand (ZAR)" },
 ];
 
 export const phoneCodes: string[] = [

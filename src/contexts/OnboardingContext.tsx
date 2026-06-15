@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import { type StoredAuditEvent, makeAuditId, roleToActor } from "@/lib/auditHelpers";
 
 export type ApprovalLevel = "single" | "two-level" | "multi-level";
 export type AvailabilityScope = "entire_state" | "cities" | "districts" | "departments" | "custom";
@@ -76,6 +77,7 @@ export interface ServiceItem {
   authMethod: AuthMethod;
   roleAccess?: RoleAccessConfig[];
   assignedOwners?: { name: string; email: string }[];
+  boundaryHierarchyId?: string;
   subdomain?: string;
   branding?: BrandingConfig;
   templateSetup?: TemplateSetup;
@@ -163,6 +165,13 @@ export interface OnboardingState {
   // Boundary hierarchies configured for this org
   boundaryHierarchies: BoundaryHierarchy[];
   isBoundarySetupSkipped: boolean;
+  // Real audit events captured from user actions
+  auditEvents: StoredAuditEvent[];
+  // Regional format settings
+  dateFormat: string;
+  financialYearStart: string;
+  // Active notification channels (email, sms, push)
+  activeNotificationChannels: string[];
 }
 
 const initialState: OnboardingState = {
@@ -205,6 +214,10 @@ const initialState: OnboardingState = {
   usersWhoResetPassword: [],
   boundaryHierarchies: [],
   isBoundarySetupSkipped: false,
+  auditEvents: [],
+  dateFormat: "DD/MM/YYYY",
+  financialYearStart: "April (Apr – Mar)",
+  activeNotificationChannels: ["email"],
 };
 
 interface OnboardingContextType {
@@ -225,6 +238,7 @@ interface OnboardingContextType {
   signOut: () => void;
   addBoundaryHierarchy: (h: BoundaryHierarchy) => void;
   updateBoundaryHierarchy: (id: string, patch: Partial<BoundaryHierarchy>) => void;
+  addAuditEvent: (event: Omit<StoredAuditEvent, "id" | "timestamp">) => void;
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
@@ -287,19 +301,83 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setState(initialState);
   }, []);
 
+  const addAuditEvent = useCallback((event: Omit<StoredAuditEvent, "id" | "timestamp">) => {
+    setState((prev) => {
+      const full: StoredAuditEvent = {
+        ...event,
+        id: makeAuditId(event.category),
+        timestamp: new Date().toISOString(),
+      };
+      return { ...prev, auditEvents: [full, ...(prev.auditEvents ?? [])] };
+    });
+  }, []);
+
   const addService = useCallback((service: ServiceItem) => {
-    setState((prev) => ({
-      ...prev,
-      services: [...prev.services, service],
-      activeServiceId: service.id,
-    }));
+    setState((prev) => {
+      const event: StoredAuditEvent = {
+        id: makeAuditId("governance"),
+        timestamp: new Date().toISOString(),
+        category: "governance",
+        action: "Service created",
+        actor: roleToActor(prev.currentUserRole),
+        entity: service.name,
+        entityType: "Service",
+        result: "success",
+        after: { name: service.name, templateId: service.templateId },
+      };
+      return {
+        ...prev,
+        services: [...prev.services, service],
+        activeServiceId: service.id,
+        auditEvents: [event, ...(prev.auditEvents ?? [])],
+      };
+    });
   }, []);
 
   const updateService = useCallback((id: string, updates: Partial<ServiceItem>) => {
-    setState((prev) => ({
-      ...prev,
-      services: prev.services.map((s) => (s.id === id ? { ...s, ...updates } : s)),
-    }));
+    setState((prev) => {
+      const svc = prev.services.find((s) => s.id === id);
+      const newEvents: StoredAuditEvent[] = [];
+      if (svc) {
+        if ("status" in updates && updates.status !== svc.status) {
+          const action = updates.status === "live"
+            ? "Service published"
+            : `Service ${updates.status}`;
+          newEvents.push({
+            id: makeAuditId("governance"),
+            timestamp: new Date().toISOString(),
+            category: "governance",
+            action,
+            actor: roleToActor(prev.currentUserRole),
+            entity: svc.name,
+            entityType: "Service",
+            service: svc.name,
+            result: "success",
+            before: { status: svc.status },
+            after: { status: updates.status },
+          });
+        }
+        if ("boundaryHierarchyId" in updates && updates.boundaryHierarchyId !== svc.boundaryHierarchyId) {
+          newEvents.push({
+            id: makeAuditId("governance"),
+            timestamp: new Date().toISOString(),
+            category: "governance",
+            action: "Boundary assigned to service",
+            actor: roleToActor(prev.currentUserRole),
+            entity: svc.name,
+            entityType: "Service",
+            service: svc.name,
+            result: "success",
+            after: { boundaryHierarchyId: updates.boundaryHierarchyId },
+          });
+        }
+      }
+      return {
+        ...prev,
+        services: prev.services.map((s) => (s.id === id ? { ...s, ...updates } : s)),
+        auditEvents: [...newEvents, ...(prev.auditEvents ?? [])],
+      };
+    });
   }, []);
 
   const deleteService = useCallback((id: string) => {
@@ -340,7 +418,25 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, []);
 
   const updatePlatformBranding = useCallback((branding: BrandingConfig) => {
-    setState((prev) => ({ ...prev, platformBranding: branding }));
+    setState((prev) => {
+      const event: StoredAuditEvent = {
+        id: makeAuditId("config"),
+        timestamp: new Date().toISOString(),
+        category: "config",
+        action: "Platform branding updated",
+        actor: roleToActor(prev.currentUserRole),
+        entity: "Workspace theme",
+        entityType: "Branding",
+        module: "Branding",
+        result: "success",
+        after: { primaryColor: branding.primaryColor, font: branding.font },
+      };
+      return {
+        ...prev,
+        platformBranding: branding,
+        auditEvents: [event, ...(prev.auditEvents ?? [])],
+      };
+    });
   }, []);
 
   const completeServiceOwnerStep = useCallback((serviceId: string, step: number) => {
@@ -353,32 +449,91 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const addBoundaryHierarchy = useCallback((h: BoundaryHierarchy) => {
     setState((prev) => {
-      // First hierarchy becomes default automatically
       const isFirst = prev.boundaryHierarchies.length === 0;
       const updated = isFirst ? { ...h, isDefault: true } : h;
-      return { ...prev, boundaryHierarchies: [...prev.boundaryHierarchies, updated] };
+      const event: StoredAuditEvent = {
+        id: makeAuditId("governance"),
+        timestamp: new Date().toISOString(),
+        category: "governance",
+        action: "Boundary hierarchy created",
+        actor: roleToActor(prev.currentUserRole),
+        entity: h.name,
+        entityType: "BoundaryHierarchy",
+        result: "success",
+        after: { name: h.name, source: h.source, dataMode: h.dataMode, isDefault: updated.isDefault },
+      };
+      return {
+        ...prev,
+        boundaryHierarchies: [...prev.boundaryHierarchies, updated],
+        auditEvents: [event, ...(prev.auditEvents ?? [])],
+      };
     });
   }, []);
 
   const updateBoundaryHierarchy = useCallback((id: string, patch: Partial<BoundaryHierarchy>) => {
-    setState((prev) => ({
-      ...prev,
-      boundaryHierarchies: prev.boundaryHierarchies.map((h) =>
-        h.id === id ? { ...h, ...patch } : h
-      ),
-    }));
+    setState((prev) => {
+      const h = prev.boundaryHierarchies.find((x) => x.id === id);
+      const newEvents: StoredAuditEvent[] = [];
+      if (h) {
+        if ("status" in patch && patch.status !== h.status) {
+          newEvents.push({
+            id: makeAuditId("governance"),
+            timestamp: new Date().toISOString(),
+            category: "governance",
+            action: patch.status === "active" ? "Hierarchy activated" : "Hierarchy deactivated",
+            actor: roleToActor(prev.currentUserRole),
+            entity: h.name,
+            entityType: "BoundaryHierarchy",
+            result: "success",
+            before: { status: h.status },
+            after: { status: patch.status },
+          });
+        }
+        if ("isDefault" in patch && patch.isDefault && !h.isDefault) {
+          newEvents.push({
+            id: makeAuditId("governance"),
+            timestamp: new Date().toISOString(),
+            category: "governance",
+            action: "Default hierarchy changed",
+            actor: roleToActor(prev.currentUserRole),
+            entity: h.name,
+            entityType: "BoundaryHierarchy",
+            result: "success",
+            after: { isDefault: true },
+          });
+        }
+      }
+      return {
+        ...prev,
+        boundaryHierarchies: prev.boundaryHierarchies.map((x) => (x.id === id ? { ...x, ...patch } : x)),
+        auditEvents: [...newEvents, ...(prev.auditEvents ?? [])],
+      };
+    });
   }, []);
 
   const signOut = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      isLoggedIn: false,
-      isPasswordReset: false,
-      isOnboardingComplete: false,
-      onboardingStep: 0,
-      email: "",
-      currentUserRole: "super_admin",
-    }));
+    setState((prev) => {
+      const event: StoredAuditEvent = {
+        id: makeAuditId("governance"),
+        timestamp: new Date().toISOString(),
+        category: "governance",
+        action: "User signed out",
+        actor: roleToActor(prev.currentUserRole),
+        entity: prev.email || "Admin",
+        entityType: "User",
+        result: "success",
+      };
+      return {
+        ...prev,
+        isLoggedIn: false,
+        isPasswordReset: false,
+        isOnboardingComplete: false,
+        onboardingStep: 0,
+        email: "",
+        currentUserRole: "super_admin",
+        auditEvents: [event, ...(prev.auditEvents ?? [])],
+      };
+    });
   }, []);
 
   return (
@@ -386,7 +541,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       state, updateState, nextStep, prevStep, goToStep, resetOnboarding,
       addService, updateService, deleteService, setActiveService, getActiveService,
       updateActiveServiceBranding, updatePlatformBranding, completeServiceOwnerStep, signOut,
-      addBoundaryHierarchy, updateBoundaryHierarchy,
+      addBoundaryHierarchy, updateBoundaryHierarchy, addAuditEvent,
     }}>
       {children}
     </OnboardingContext.Provider>

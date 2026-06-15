@@ -7,14 +7,9 @@ import {
   Lock,
   Palette,
   Languages,
-  Bell,
   Plug,
   ClipboardList,
-  HelpCircle,
-  Settings,
   LogOut,
-  Shield,
-  UserCog,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -58,8 +53,6 @@ const configItems = [
 
 const utilItems = [
   { title: "Audit Log", url: "/audit-log", icon: ClipboardList },
-  { title: "Help & Support", url: "/help", icon: HelpCircle },
-  { title: "Settings", url: "/settings", icon: Settings },
 ];
 
 function NavGroup({ label, items }: { label: string; items: typeof mainItems }) {

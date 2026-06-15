@@ -178,197 +178,170 @@ const TemplateDetailView: React.FC<Props> = ({ template, onUseTemplate, onBack }
             </div>
           </div>
 
-          {/* How it works */}
-          {template.howItWorks && template.howItWorks.length > 0 && (
-            <div className="mb-8">
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
-                How it works
-              </h2>
-              <div className="flex items-center gap-1 overflow-x-auto pb-1">
-                {template.howItWorks.map((step, i) => {
-                  const SIcon = step.icon;
-                  return (
-                    <React.Fragment key={step.label}>
-                      <div className="flex flex-col items-center gap-1.5 px-2 shrink-0">
-                        <div className="w-10 h-10 rounded-full bg-accent/10 border border-accent/15 flex items-center justify-center">
-                          <SIcon className="h-4 w-4 text-accent" />
+          {/* Unified blueprint panel */}
+          <div className="rounded-xl border border-border bg-card overflow-hidden">
+
+            {/* How it works — header band */}
+            {template.howItWorks && template.howItWorks.length > 0 && (
+              <div className="px-6 py-5 bg-muted/30 border-b border-border">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground mb-4">
+                  How it works
+                </p>
+                <div className="flex items-center">
+                  {template.howItWorks.map((step, i) => {
+                    const SIcon = step.icon;
+                    return (
+                      <React.Fragment key={step.label}>
+                        <div className="flex flex-col items-center gap-2 shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-card border-2 border-primary/25 flex items-center justify-center shadow-sm">
+                            <SIcon className="h-4 w-4 text-primary" />
+                          </div>
+                          <span className="text-xs font-medium text-foreground">{step.label}</span>
                         </div>
-                        <span className="text-xs font-medium text-foreground">{step.label}</span>
-                      </div>
-                      {i < template.howItWorks!.length - 1 && (
-                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Flows + Roles */}
-          {(template.flows?.length || roles.length > 0) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-              {template.flows && template.flows.length > 0 && (
-                <Card className="p-5">
-                  <div className="flex items-center justify-between mb-3 gap-2">
-                    <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Flows
-                    </h2>
-                    <Button variant="outline" size="sm" className="h-7 text-xs">Modify Flows</Button>
-                  </div>
-                  <div className="space-y-3">
-                    {template.flows.map((flow) => (
-                      <div key={flow.name}>
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <span className="text-sm font-medium text-foreground">{flow.name}</span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                            {flow.steps.length} steps
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                          {flow.steps.map((s) => (
-                            <span
-                              key={s}
-                              className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground"
-                            >
-                              {s}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              )}
-
-              {roles.length > 0 && (
-                <Card className="p-5">
-                  <div className="flex items-center justify-between mb-3 gap-2">
-                    <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Roles
-                    </h2>
-                    <Button variant="outline" size="sm" className="h-7 text-xs">Add/Edit Roles</Button>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {roles.map((r) => (
-                      <Tooltip key={r.id}>
-                        <TooltipTrigger asChild>
-                          <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-accent/10 text-accent border border-accent/15 cursor-help">
-                            <Users className="h-3 w-3" />
-                            {r.name}
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">{r.description}</TooltipContent>
-                      </Tooltip>
-                    ))}
-                  </div>
-                </Card>
-              )}
-            </div>
-          )}
-
-          {/* Forms + Notifications */}
-          {(template.forms?.length || template.notifications?.length) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-              {template.forms && template.forms.length > 0 && (
-                <Card className="p-5">
-                  <div className="flex items-center justify-between mb-3 gap-2">
-                    <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Forms
-                    </h2>
-                    <Button variant="outline" size="sm" className="h-7 text-xs">Add/Edit Fields</Button>
-                  </div>
-                  <div className="space-y-3">
-                    {template.forms.map((f) => (
-                      <div key={f.name}>
-                        <div className="text-sm font-medium text-foreground mb-1.5">{f.name}</div>
-                        <div className="flex flex-wrap gap-1">
-                          {f.groups.map((g) => (
-                            <span
-                              key={g}
-                              className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground"
-                            >
-                              {g}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              )}
-
-              {template.notifications && template.notifications.length > 0 && (
-                <Card className="p-5">
-                  <div className="flex items-center justify-between mb-3 gap-2">
-                    <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Notifications
-                    </h2>
-                    <Button variant="outline" size="sm" className="h-7 text-xs">Add/Edit Notifications</Button>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {template.notifications.map((n) => (
-                      <span
-                        key={n}
-                        className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground"
-                      >
-                        <Bell className="h-3 w-3" />
-                        {n}
-                      </span>
-                    ))}
-                  </div>
-                </Card>
-              )}
-            </div>
-          )}
-
-          {/* Payments */}
-          {template.payments && template.payments.length > 0 && (
-            <Card className="p-5 mb-6">
-              <div className="flex items-center justify-between mb-3 gap-2">
-                <div className="flex items-center gap-2">
-                  <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
-                  <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Payments
-                  </h2>
+                        {i < template.howItWorks!.length - 1 && (
+                          <div className="flex-1 h-px bg-border mx-2 mb-5 min-w-[12px]" />
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </div>
-                <Button variant="outline" size="sm" className="h-7 text-xs">Edit Payment Logic</Button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {template.payments.map((p) => (
-                  <div key={p.stage}>
-                    <div className="text-sm font-medium text-foreground mb-1.5">{p.stage}</div>
-                    <div className="flex flex-wrap gap-1">
-                      {p.fees.map((f) => (
-                        <span
-                          key={f}
-                          className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground"
-                        >
-                          {f}
+            )}
+
+            {/* Flows | Roles */}
+            {(template.flows?.length || roles.length > 0) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border border-b border-border">
+                {template.flows && template.flows.length > 0 && (
+                  <div className="px-6 py-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Flows</span>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs px-2 text-muted-foreground hover:text-foreground">Modify Flows</Button>
+                    </div>
+                    <div className="space-y-4">
+                      {template.flows.map((flow) => (
+                        <div key={flow.name}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-sm font-medium text-foreground">{flow.name}</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{flow.steps.length} steps</span>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1">
+                            {flow.steps.map((s, si) => (
+                              <React.Fragment key={s}>
+                                <span className="text-xs px-2 py-0.5 rounded-md bg-primary/8 text-primary/80 border border-primary/12">{s}</span>
+                                {si < flow.steps.length - 1 && <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />}
+                              </React.Fragment>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {roles.length > 0 && (
+                  <div className="px-6 py-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Roles</span>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs px-2 text-muted-foreground hover:text-foreground">Add/Edit Roles</Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {roles.map((r) => (
+                        <Tooltip key={r.id}>
+                          <TooltipTrigger asChild>
+                            <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-muted/60 text-foreground border border-border/60 cursor-help hover:bg-muted transition-colors">
+                              <Users className="h-3 w-3 text-muted-foreground" />
+                              {r.name}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">{r.description}</TooltipContent>
+                        </Tooltip>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Forms | Notifications */}
+            {(template.forms?.length || template.notifications?.length) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border border-b border-border">
+                {template.forms && template.forms.length > 0 && (
+                  <div className="px-6 py-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Forms</span>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs px-2 text-muted-foreground hover:text-foreground">Add/Edit Fields</Button>
+                    </div>
+                    <div className="space-y-3">
+                      {template.forms.map((f) => (
+                        <div key={f.name}>
+                          <div className="text-sm font-medium text-foreground mb-1.5">{f.name}</div>
+                          <div className="flex flex-wrap gap-1">
+                            {f.groups.map((g) => (
+                              <span key={g} className="text-xs px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground">{g}</span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {template.notifications && template.notifications.length > 0 && (
+                  <div className="px-6 py-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Notifications</span>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs px-2 text-muted-foreground hover:text-foreground">Add/Edit Notifications</Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {template.notifications.map((n) => (
+                        <span key={n} className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-muted/60 text-foreground border border-border/60">
+                          <Bell className="h-3 w-3 text-amber-500" />
+                          {n}
                         </span>
                       ))}
                     </div>
                   </div>
-                ))}
+                )}
               </div>
-            </Card>
-          )}
+            )}
 
-          {/* Customize */}
-          <Card className="p-5">
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-2 mr-2">
-                <Sliders className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Customize
-                </span>
+            {/* Payments */}
+            {template.payments && template.payments.length > 0 && (
+              <div className="px-6 py-5 border-b border-border">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-1.5">
+                    <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Payments</span>
+                  </div>
+                  <Button variant="ghost" size="sm" className="h-7 text-xs px-2 text-muted-foreground hover:text-foreground">Edit Payment Logic</Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {template.payments.map((p) => (
+                    <div key={p.stage}>
+                      <div className="text-sm font-medium text-foreground mb-1.5">{p.stage}</div>
+                      <div className="flex flex-wrap gap-1">
+                        {p.fees.map((f) => (
+                          <span key={f} className="text-xs px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground">{f}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Customize — footer band */}
+            <div className="px-6 py-4 bg-muted/20 flex items-center gap-2.5 flex-wrap">
+              <div className="flex items-center gap-1.5 mr-1">
+                <Sliders className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Customize</span>
               </div>
               {customizeChips.map((c) => {
                 const CIcon = c.icon;
                 return (
                   <Tooltip key={c.label}>
                     <TooltipTrigger asChild>
-                      <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-muted text-foreground cursor-help">
+                      <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-background text-muted-foreground border border-border cursor-help hover:border-primary/40 hover:text-primary transition-colors">
                         <CIcon className="h-3 w-3" />
                         {c.label}
                       </span>
@@ -378,7 +351,7 @@ const TemplateDetailView: React.FC<Props> = ({ template, onUseTemplate, onBack }
                 );
               })}
             </div>
-          </Card>
+          </div>
         </div>
       </div>
 

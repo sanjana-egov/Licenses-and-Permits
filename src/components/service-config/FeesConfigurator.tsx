@@ -40,6 +40,7 @@ import {
   Info,
   X,
 } from "lucide-react";
+import { copy } from "@/copy";
 
 // ── Types ──────────────────────────────────────────────
 
@@ -115,7 +116,7 @@ const emptyFee = (stages: string[]): Fee => ({
   code: "",
   type: "fixed",
   amount: 0,
-  currency: "INR",
+  currency: "ZAR",
   slabs: [{ id: uid(), conditionLabel: "", amount: 0 }],
   conditionField: CONDITION_FIELDS[0],
   conditionOperator: "=",
@@ -217,14 +218,14 @@ const FeesConfigurator: React.FC<Props> = ({ moduleName, onBack }) => {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="font-bold text-foreground text-lg">Fees</h1>
+              <h1 className="font-bold text-foreground text-lg">{copy.feesConfigurator.header.pageTitle}</h1>
               <p className="text-xs text-muted-foreground">
                 Business License &gt; {moduleName}
               </p>
             </div>
           </div>
           <Button onClick={openCreate} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 gap-1.5">
-            <Plus className="h-4 w-4" /> Add Fee
+            <Plus className="h-4 w-4" /> {copy.feesConfigurator.header.addFeeButton}
           </Button>
         </div>
       </header>
@@ -234,7 +235,7 @@ const FeesConfigurator: React.FC<Props> = ({ moduleName, onBack }) => {
         <div className="rounded-lg border border-accent/20 bg-accent/5 px-4 py-3 flex items-start gap-3">
           <Info className="h-4 w-4 text-accent mt-0.5 shrink-0" />
           <p className="text-sm text-muted-foreground">
-            Define fee components for this service. These fees will be used in payment configuration.
+            {copy.feesConfigurator.infoNotice.helperText}
           </p>
         </div>
 
@@ -242,10 +243,10 @@ const FeesConfigurator: React.FC<Props> = ({ moduleName, onBack }) => {
         {fees.length === 0 ? (
           <div className="text-center py-20">
             <DollarSign className="h-10 w-10 mx-auto text-muted-foreground/40 mb-4" />
-            <h3 className="font-semibold text-foreground mb-1">No fees configured</h3>
-            <p className="text-sm text-muted-foreground mb-6">Add your first fee to get started.</p>
+            <h3 className="font-semibold text-foreground mb-1">{copy.feesConfigurator.emptyState.heading}</h3>
+            <p className="text-sm text-muted-foreground mb-6">{copy.feesConfigurator.emptyState.description}</p>
             <Button onClick={openCreate} className="bg-accent text-accent-foreground hover:bg-accent/90 gap-1.5">
-              <Plus className="h-4 w-4" /> Add First Fee
+              <Plus className="h-4 w-4" /> {copy.feesConfigurator.emptyState.addFirstFeeButton}
             </Button>
           </div>
         ) : (
@@ -272,7 +273,7 @@ const FeesConfigurator: React.FC<Props> = ({ moduleName, onBack }) => {
                               : "bg-muted text-muted-foreground"
                           }`}
                         >
-                          {fee.status === "active" ? "Active" : "Draft"}
+                          {fee.status === "active" ? copy.feesConfigurator.feeCard.statusActive : copy.feesConfigurator.feeCard.statusDraft}
                         </Badge>
                       </div>
                     </div>
@@ -282,15 +283,15 @@ const FeesConfigurator: React.FC<Props> = ({ moduleName, onBack }) => {
                       <p className="text-xs text-muted-foreground mt-0.5">Type: {meta.label}</p>
                       {fee.type === "fixed" && (
                         <p className="text-xs text-muted-foreground">
-                          Amount: {fee.currency || "INR"} {fee.amount?.toLocaleString()}
+                          Amount: {fee.currency || "ZAR"} {fee.amount?.toLocaleString()}
                         </p>
                       )}
-                      
+
                     </div>
 
                     <div className="flex gap-1 pt-1">
                       <Button variant="outline" size="sm" className="flex-1 text-xs gap-1" onClick={() => openEdit(fee)}>
-                        <Pencil className="h-3 w-3" /> Edit
+                        <Pencil className="h-3 w-3" /> {copy.feesConfigurator.feeCard.editButton}
                       </Button>
                       <Button variant="outline" size="sm" className="text-xs gap-1" onClick={() => duplicateFee(fee)}>
                         <Copy className="h-3 w-3" />
@@ -311,15 +312,15 @@ const FeesConfigurator: React.FC<Props> = ({ moduleName, onBack }) => {
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>{editingFee ? "Edit Fee" : "Create Fee"}</SheetTitle>
+            <SheetTitle>{editingFee ? copy.feesConfigurator.sheet.editTitle : copy.feesConfigurator.sheet.createTitle}</SheetTitle>
           </SheetHeader>
 
           <div className="space-y-5 py-4">
             {/* Fee Name */}
             <div className="space-y-1.5">
-              <Label>Fee Name</Label>
+              <Label>{copy.feesConfigurator.form.feeNameLabel}</Label>
               <Input
-                placeholder="e.g. Application Fee"
+                placeholder={copy.feesConfigurator.form.feeNamePlaceholder}
                 value={draft.name}
                 onChange={(e) => updateDraft({ name: e.target.value })}
               />
@@ -327,18 +328,18 @@ const FeesConfigurator: React.FC<Props> = ({ moduleName, onBack }) => {
 
             {/* Fee Code */}
             <div className="space-y-1.5">
-              <Label>Fee Code</Label>
+              <Label>{copy.feesConfigurator.form.feeCodeLabel}</Label>
               <Input
                 value={draft.code}
                 onChange={(e) => updateDraft({ code: e.target.value })}
                 className="font-mono text-xs"
               />
-              <p className="text-[11px] text-muted-foreground">Auto-generated from name. Editable.</p>
+              <p className="text-[11px] text-muted-foreground">{copy.feesConfigurator.form.feeCodeHint}</p>
             </div>
 
             {/* Fee Type */}
             <div className="space-y-1.5">
-              <Label>Fee Type</Label>
+              <Label>{copy.feesConfigurator.form.feeTypeLabel}</Label>
               <Select value={draft.type} onValueChange={(v) => updateDraft({ type: v as FeeType })}>
                 <SelectTrigger>
                   <SelectValue />
@@ -357,10 +358,10 @@ const FeesConfigurator: React.FC<Props> = ({ moduleName, onBack }) => {
             {/* ── Type-specific fields ── */}
             {draft.type === "fixed" && (
               <div className="space-y-3 rounded-lg border p-4">
-                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">Fixed Fee</h4>
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">{copy.feesConfigurator.fixedFeeSection.sectionHeading}</h4>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label>Amount</Label>
+                    <Label>{copy.feesConfigurator.fixedFeeSection.amountLabel}</Label>
                     <Input
                       type="number"
                       min={0}
@@ -369,15 +370,15 @@ const FeesConfigurator: React.FC<Props> = ({ moduleName, onBack }) => {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Currency</Label>
-                    <Select value={draft.currency || "INR"} onValueChange={(v) => updateDraft({ currency: v })}>
+                    <Label>{copy.feesConfigurator.fixedFeeSection.currencyLabel}</Label>
+                    <Select value={draft.currency || "ZAR"} onValueChange={(v) => updateDraft({ currency: v })}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="INR">₹ INR</SelectItem>
-                        <SelectItem value="USD">$ USD</SelectItem>
-                        <SelectItem value="EUR">€ EUR</SelectItem>
+                        <SelectItem value="INR">{copy.feesConfigurator.fixedFeeSection.currencyINR}</SelectItem>
+                        <SelectItem value="USD">{copy.feesConfigurator.fixedFeeSection.currencyUSD}</SelectItem>
+                        <SelectItem value="EUR">{copy.feesConfigurator.fixedFeeSection.currencyEUR}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -387,12 +388,12 @@ const FeesConfigurator: React.FC<Props> = ({ moduleName, onBack }) => {
 
             {draft.type === "slab" && (
               <div className="space-y-3 rounded-lg border p-4">
-                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">Slab Configuration</h4>
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">{copy.feesConfigurator.slabSection.sectionHeading}</h4>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-xs">Condition</TableHead>
-                      <TableHead className="text-xs">Amount</TableHead>
+                      <TableHead className="text-xs">{copy.feesConfigurator.slabSection.conditionColumnHeader}</TableHead>
+                      <TableHead className="text-xs">{copy.feesConfigurator.slabSection.amountColumnHeader}</TableHead>
                       <TableHead className="text-xs w-10" />
                     </TableRow>
                   </TableHeader>
@@ -402,7 +403,7 @@ const FeesConfigurator: React.FC<Props> = ({ moduleName, onBack }) => {
                         <TableCell className="py-1.5">
                           <Input
                             className="h-8 text-xs"
-                            placeholder="e.g. 0–100 sq ft"
+                            placeholder={copy.feesConfigurator.slabSection.conditionPlaceholder}
                             value={slab.conditionLabel}
                             onChange={(e) => updateSlab(slab.id, { conditionLabel: e.target.value })}
                           />
@@ -426,17 +427,17 @@ const FeesConfigurator: React.FC<Props> = ({ moduleName, onBack }) => {
                   </TableBody>
                 </Table>
                 <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={addSlab}>
-                  <Plus className="h-3 w-3" /> Add Slab
+                  <Plus className="h-3 w-3" /> {copy.feesConfigurator.slabSection.addSlabButton}
                 </Button>
               </div>
             )}
 
             {draft.type === "conditional" && (
               <div className="space-y-3 rounded-lg border p-4">
-                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">Condition</h4>
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">{copy.feesConfigurator.conditionalSection.sectionHeading}</h4>
                 <div className="grid grid-cols-3 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-[11px]">Field</Label>
+                    <Label className="text-[11px]">{copy.feesConfigurator.conditionalSection.fieldLabel}</Label>
                     <Select value={draft.conditionField || CONDITION_FIELDS[0]} onValueChange={(v) => updateDraft({ conditionField: v })}>
                       <SelectTrigger className="h-8 text-xs">
                         <SelectValue />
@@ -449,7 +450,7 @@ const FeesConfigurator: React.FC<Props> = ({ moduleName, onBack }) => {
                     </Select>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[11px]">Operator</Label>
+                    <Label className="text-[11px]">{copy.feesConfigurator.conditionalSection.operatorLabel}</Label>
                     <Select value={draft.conditionOperator || "="} onValueChange={(v) => updateDraft({ conditionOperator: v })}>
                       <SelectTrigger className="h-8 text-xs font-mono">
                         <SelectValue />
@@ -462,17 +463,17 @@ const FeesConfigurator: React.FC<Props> = ({ moduleName, onBack }) => {
                     </Select>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[11px]">Value</Label>
+                    <Label className="text-[11px]">{copy.feesConfigurator.conditionalSection.valueLabel}</Label>
                     <Input
                       className="h-8 text-xs"
-                      placeholder="e.g. Restaurant"
+                      placeholder={copy.feesConfigurator.conditionalSection.valuePlaceholder}
                       value={draft.conditionValue || ""}
                       onChange={(e) => updateDraft({ conditionValue: e.target.value })}
                     />
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Fee Amount</Label>
+                  <Label>{copy.feesConfigurator.conditionalSection.feeAmountLabel}</Label>
                   <Input
                     type="number"
                     min={0}
@@ -485,18 +486,18 @@ const FeesConfigurator: React.FC<Props> = ({ moduleName, onBack }) => {
 
             {draft.type === "formula" && (
               <div className="space-y-3 rounded-lg border p-4">
-                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">Formula</h4>
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">{copy.feesConfigurator.formulaSection.sectionHeading}</h4>
                 <div className="space-y-1.5">
-                  <Label>Expression</Label>
+                  <Label>{copy.feesConfigurator.formulaSection.expressionLabel}</Label>
                   <Input
                     className="font-mono text-xs"
-                    placeholder="e.g. Area × Rate"
+                    placeholder={copy.feesConfigurator.formulaSection.expressionPlaceholder}
                     value={draft.formula || ""}
                     onChange={(e) => updateDraft({ formula: e.target.value })}
                   />
                 </div>
                 <div>
-                  <p className="text-[11px] text-muted-foreground mb-1.5">Available variables:</p>
+                  <p className="text-[11px] text-muted-foreground mb-1.5">{copy.feesConfigurator.formulaSection.availableVariablesLabel}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {FORMULA_VARIABLES.map((v) => (
                       <Badge key={v} variant="secondary" className="text-[10px] cursor-pointer hover:bg-accent hover:text-accent-foreground" onClick={() => updateDraft({ formula: (draft.formula || "") + ` ${v}` })}>
@@ -513,15 +514,15 @@ const FeesConfigurator: React.FC<Props> = ({ moduleName, onBack }) => {
             {/* Mandatory toggle */}
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <p className="text-sm font-medium text-foreground">Mandatory Fee</p>
-                <p className="text-[11px] text-muted-foreground">This fee must be paid to proceed</p>
+                <p className="text-sm font-medium text-foreground">{copy.feesConfigurator.mandatoryToggle.label}</p>
+                <p className="text-[11px] text-muted-foreground">{copy.feesConfigurator.mandatoryToggle.description}</p>
               </div>
               <Switch checked={draft.mandatory} onCheckedChange={(v) => updateDraft({ mandatory: v })} />
             </div>
 
             {/* Save */}
             <Button onClick={saveFee} className="w-full bg-accent text-accent-foreground hover:bg-accent/90 gap-1.5" disabled={!draft.name.trim()}>
-              Save Fee
+              {copy.feesConfigurator.saveButton.label}
             </Button>
           </div>
         </SheetContent>

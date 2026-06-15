@@ -2,6 +2,10 @@ import React, { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { usePreview, type PreviewRole } from "./PreviewContext";
 import { User, Bell, Briefcase, RotateCcw, MessageSquare } from "lucide-react";
 import NotificationsPanel from "./NotificationsPanel";
@@ -29,6 +33,7 @@ const PreviewSidebar: React.FC = () => {
     workflowTransitions,
   } = usePreview();
   const [notifOpen, setNotifOpen] = useState(false);
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
 
   // Split roles into Citizen vs Employee buckets by permission.
   const { citizenRoles, employeeRoles } = useMemo(() => {
@@ -156,10 +161,30 @@ const PreviewSidebar: React.FC = () => {
       </div>
 
       <div className="p-4 border-t shrink-0 space-y-2">
-        <Button onClick={resetDemo} variant="outline" className="w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/10">
+        <Button onClick={() => setResetConfirmOpen(true)} variant="outline" className="w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/10">
           <RotateCcw className="h-4 w-4" /> Reset Demo
         </Button>
       </div>
+
+      <AlertDialog open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset demo?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will delete all demo applications, documents, and notifications. Are you sure?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { resetDemo(); setResetConfirmOpen(false); }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Reset
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <NotificationsPanel open={notifOpen} onOpenChange={setNotifOpen} />
       <MessagesDrawer

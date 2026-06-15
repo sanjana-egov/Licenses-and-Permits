@@ -2,6 +2,7 @@ import React from "react";
 import { usePreview } from "../PreviewContext";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, Download, ChevronRight, RefreshCw } from "lucide-react";
+import { copy } from "@/copy";
 
 const statusTone = (status: string): string => {
   if (status === "License Issued") return "bg-green-100 text-green-700 border-green-300";
@@ -25,22 +26,22 @@ const MyApplications: React.FC = () => {
           <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
           <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
         </span>
-        DIGIT <span className="text-white/60 ml-1">| dev</span>
+        {copy.myApplications.header.brandName} <span className="text-white/60 ml-1">{copy.myApplications.header.brandEnv}</span>
       </div>
 
       <div className="px-4 py-2 text-xs">
-        <button onClick={() => setScreen({ type: "home" })} className="text-accent hover:underline">Home</button>
-        <span className="mx-1 text-muted-foreground">/</span>
-        <span className="text-muted-foreground">My Applications</span>
+        <button onClick={() => setScreen({ type: "home" })} className="text-accent hover:underline">{copy.myApplications.breadcrumb.homeLink}</button>
+        <span className="mx-1 text-muted-foreground">{copy.myApplications.breadcrumb.separator}</span>
+        <span className="text-muted-foreground">{copy.myApplications.breadcrumb.currentPage}</span>
       </div>
 
       <div className="px-4 pb-4">
-        <h2 className="font-bold text-foreground mb-4">My Applications</h2>
+        <h2 className="font-bold text-foreground mb-4">{copy.myApplications.pageTitle.heading}</h2>
         {applications.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground text-sm">
-            No applications yet.
+            {copy.myApplications.emptyState.noApplicationsMessage}
             <button onClick={() => setScreen({ type: "apply" })} className="block mx-auto mt-3 text-accent hover:underline text-xs">
-              Start a new application →
+              {copy.myApplications.emptyState.startNewApplicationLink}
             </button>
           </div>
         ) : (
@@ -61,10 +62,10 @@ const MyApplications: React.FC = () => {
                         ? "bg-purple-100 text-purple-700"
                         : "bg-blue-100 text-blue-700"
                     }`}>
-                      {app.type === "RENEWAL" ? "Renewal" : "New"}
+                      {app.type === "RENEWAL" ? copy.myApplications.applicationCard.renewalTypeBadge : copy.myApplications.applicationCard.newTypeBadge}
                     </span>
                     <p className="text-sm font-semibold text-foreground truncate flex-1">
-                      {app.formData.f5 || "Business"}
+                      {app.formData.f5 || copy.myApplications.applicationCard.defaultBusinessName}
                     </p>
                   </div>
                   <div className="flex items-center justify-between mt-2">
@@ -80,7 +81,7 @@ const MyApplications: React.FC = () => {
                     onClick={() => setScreen({ type: "payment", applicationId: app.id })}
                     className="w-full bg-warning text-warning-foreground text-xs font-semibold py-2 flex items-center justify-center gap-1.5 hover:opacity-90"
                   >
-                    <CreditCard className="h-3.5 w-3.5" /> Pay Now — ₹{app.demand?.total ?? 0}
+                    <CreditCard className="h-3.5 w-3.5" /> Pay Now — R{app.demand?.total ?? 0}
                   </button>
                 )}
                 {app.license && (
@@ -89,14 +90,14 @@ const MyApplications: React.FC = () => {
                       onClick={() => setScreen({ type: "license", applicationId: app.id })}
                       className="w-full bg-green-600 text-white text-xs font-semibold py-2 flex items-center justify-center gap-1.5 hover:bg-green-700"
                     >
-                      <Download className="h-3.5 w-3.5" /> Download License
+                      <Download className="h-3.5 w-3.5" /> {copy.myApplications.buttons.downloadLicense}
                     </button>
                     {app.type === "NEW" && app.currentStateId === "s6" && (
                       <button
                         onClick={() => setScreen({ type: "renew", parentLicenseId: app.id })}
                         className="w-full bg-purple-600 text-white text-xs font-semibold py-2 flex items-center justify-center gap-1.5 hover:bg-purple-700"
                       >
-                        <RefreshCw className="h-3.5 w-3.5" /> Renew License
+                        <RefreshCw className="h-3.5 w-3.5" /> {copy.myApplications.buttons.renewLicense}
                       </button>
                     )}
                   </>
@@ -111,4 +112,3 @@ const MyApplications: React.FC = () => {
 };
 
 export default MyApplications;
-

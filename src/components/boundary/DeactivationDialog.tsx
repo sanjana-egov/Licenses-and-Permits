@@ -13,13 +13,15 @@ interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onConfirm: () => void;
+  usedByServices?: string[];
 }
 
-export function DeactivationDialog({ hierarchy, open, onOpenChange, onConfirm }: Props) {
+export function DeactivationDialog({ hierarchy, open, onOpenChange, onConfirm, usedByServices }: Props) {
   const [acknowledged, setAcknowledged] = useState(false);
 
   if (!hierarchy) return null;
-  const hasServices = hierarchy.usedByServices.length > 0;
+  const serviceList = usedByServices ?? hierarchy.usedByServices;
+  const hasServices = serviceList.length > 0;
 
   return (
     <AlertDialog open={open} onOpenChange={(v) => { if (!v) setAcknowledged(false); onOpenChange(v); }}>
@@ -35,10 +37,10 @@ export function DeactivationDialog({ hierarchy, open, onOpenChange, onConfirm }:
               {hasServices && (
                 <div className="space-y-2">
                   <p className="font-medium text-foreground text-sm">
-                    The following {hierarchy.usedByServices.length === 1 ? "service is" : "services are"} currently using this hierarchy:
+                    The following {serviceList.length === 1 ? "service is" : "services are"} currently using this hierarchy:
                   </p>
                   <div className="flex flex-wrap gap-1.5">
-                    {hierarchy.usedByServices.map((s) => (
+                    {serviceList.map((s) => (
                       <Badge key={s} variant="outline" className="text-xs">{s}</Badge>
                     ))}
                   </div>

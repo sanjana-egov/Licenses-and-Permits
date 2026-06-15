@@ -1,17 +1,23 @@
 import React, { useMemo, useState } from "react";
 import { Download, FileDown, ShieldAlert, KeyRound, RotateCcw, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AuditProvider, type UnifiedEvent } from "@/components/audit/AuditContext";
+import {
+  AuditProvider,
+  type UnifiedEvent,
+  useGovernance,
+  useConfigActivity,
+  useDeployments,
+} from "@/components/audit/AuditContext";
 import { AuditFilterBar } from "@/components/audit/AuditFilterBar";
 import { UnifiedAuditTable } from "@/components/audit/UnifiedAuditTable";
 import { AuditDetailDrawer } from "@/components/audit/AuditDetailDrawer";
-import { governanceEvents, configActivityEvents, deployments, runtimeEvents } from "@/data/auditLogs";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { copy } from "@/copy";
 
 function exportCsv(filename: string, rows: Record<string, unknown>[]) {
   if (rows.length === 0) {
-    toast.error("Nothing to export");
+    toast.error(copy.auditLogs.toasts.nothingToExport);
     return;
   }
   const headers = Object.keys(rows[0]);
@@ -37,67 +43,75 @@ function exportCsv(filename: string, rows: Record<string, unknown>[]) {
   toast.success(`Exported ${rows.length} records`);
 }
 
-const HeaderActions: React.FC = () => (
-  <div className="flex items-center gap-2">
-    <Button
-      variant="outline"
-      size="sm"
-      className="gap-1.5"
-      onClick={() =>
-        exportCsv(`audit-logs-${Date.now()}.csv`, [
-          ...governanceEvents.map((g) => ({ domain: "governance", ...g })),
-          ...configActivityEvents.map((g) => ({ domain: "config", ...g })),
-          ...deployments.map((g) => ({ domain: "deployment", ...g })),
-          ...runtimeEvents.map((g) => ({ domain: "runtime", ...g })),
-        ])
-      }
-    >
-      <Download className="h-3.5 w-3.5" /> Export Logs
-    </Button>
-    <Button
-      variant="outline"
-      size="sm"
-      className="gap-1.5"
-      onClick={() => {
-        const report = `Audit Report\nGenerated: ${new Date().toLocaleString()}\nGovernance: ${governanceEvents.length}\nConfig: ${configActivityEvents.length}\nDeployments: ${deployments.length}\nRuntime: ${runtimeEvents.length}\n`;
-        const blob = new Blob([report], { type: "text/plain" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `audit-report-${Date.now()}.txt`;
-        a.click();
-        URL.revokeObjectURL(url);
-        toast.success("Audit report downloaded");
-      }}
-    >
-      <FileDown className="h-3.5 w-3.5" /> Download Audit Report
-    </Button>
-  </div>
-);
+const HeaderActions: React.FC = () => {
+  const govEvents = useGovernance();
+  const cfgEvents = useConfigActivity();
+  const depEvents = useDeployments();
+  return (
+    <div className="flex items-center gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        className="gap-1.5"
+        onClick={() =>
+          exportCsv(`audit-logs-${Date.now()}.csv`, [
+            ...govEvents.map((g) => ({ domain: "governance", ...g })),
+            ...cfgEvents.map((g) => ({ domain: "config", ...g })),
+            ...depEvents.map((g) => ({ domain: "deployment", ...g })),
+          ])
+        }
+      >
+        <Download className="h-3.5 w-3.5" /> {copy.auditLogs.buttons.exportLogs}
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        className="gap-1.5"
+        onClick={() => {
+          const report = `Audit Report\nGenerated: ${new Date().toLocaleString()}\nGovernance: ${govEvents.length}\nConfig: ${cfgEvents.length}\nDeployments: ${depEvents.length}\n`;
+          const blob = new Blob([report], { type: "text/plain" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `audit-report-${Date.now()}.txt`;
+          a.click();
+          URL.revokeObjectURL(url);
+          toast.success(copy.auditLogs.toasts.auditReportDownloaded);
+        }}
+      >
+        <FileDown className="h-3.5 w-3.5" /> {copy.auditLogs.buttons.downloadAuditReport}
+      </Button>
+    </div>
+  );
+};
 
 const InsightStrip: React.FC = () => {
+  const govEvents = useGovernance();
+  const cfgEvents = useConfigActivity();
+  const depEvents = useDeployments();
+
   const stats = useMemo(() => {
     const dayMs = 24 * 60 * 60 * 1000;
     const now = Date.now();
-    const failedSignins = governanceEvents.filter(
+    const failedSignins = govEvents.filter(
       (g) => g.action.toLowerCase().includes("sign-in") && g.result === "failed" && now - new Date(g.timestamp).getTime() < dayMs,
     ).length;
-    const permChanges = governanceEvents.filter(
+    const permChanges = govEvents.filter(
       (g) =>
         (g.action.toLowerCase().includes("permission") || g.action.toLowerCase().includes("role")) &&
         now - new Date(g.timestamp).getTime() < dayMs,
     ).length;
-    const rollbacks = deployments.filter((d) => d.status === "rolled_back" || d.status === "failed").length;
+    const rollbacks = depEvents.filter((d) => d.status === "rolled_back" || d.status === "failed").length;
     const servicesModified = new Set(
-      configActivityEvents.filter((e) => now - new Date(e.timestamp).getTime() < dayMs).map((e) => e.serviceName),
+      cfgEvents.filter((e) => now - new Date(e.timestamp).getTime() < dayMs).map((e) => e.serviceName),
     ).size;
     return [
-      { Icon: ShieldAlert, value: failedSignins || 4, label: "failed sign-ins · 24h", tone: "destructive" as const },
-      { Icon: KeyRound, value: permChanges || 2, label: "permission changes today", tone: "warning" as const },
-      { Icon: RotateCcw, value: rollbacks || 1, label: "deployment rollback", tone: "warning" as const },
-      { Icon: Settings2, value: servicesModified || 3, label: "services modified", tone: "neutral" as const },
+      { Icon: ShieldAlert, value: failedSignins, label: copy.auditLogs.insightStrip.failedSignIns, tone: "destructive" as const },
+      { Icon: KeyRound, value: permChanges, label: copy.auditLogs.insightStrip.permissionChangesToday, tone: "warning" as const },
+      { Icon: RotateCcw, value: rollbacks, label: copy.auditLogs.insightStrip.deploymentRollbacks, tone: "warning" as const },
+      { Icon: Settings2, value: servicesModified, label: copy.auditLogs.insightStrip.servicesModified, tone: "neutral" as const },
     ];
-  }, []);
+  }, [govEvents, cfgEvents, depEvents]);
 
   return (
     <div className="rounded-lg border bg-card">
@@ -134,10 +148,9 @@ const AuditLogsInner: React.FC = () => {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 pb-5 border-b">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground tracking-tight">Audit Logs</h1>
+          <h1 className="text-2xl font-semibold text-foreground tracking-tight">{copy.auditLogs.header.title}</h1>
           <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-            Investigate who did what, when and where — across governance, configuration, deployments, and runtime
-            activity in one unified, searchable timeline.
+            {copy.auditLogs.header.description}
           </p>
         </div>
         <HeaderActions />

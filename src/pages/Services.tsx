@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import TemplateDetailView from "@/components/onboarding/TemplateDetailView";
 import TemplateCard from "@/components/onboarding/TemplateCard";
 import { allTemplates, type ServiceTemplate } from "@/data/serviceTemplates";
+import { copy } from "@/copy";
 
 const Services: React.FC = () => {
   const navigate = useNavigate();
@@ -25,9 +26,9 @@ const Services: React.FC = () => {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Templates</h1>
+        <h1 className="text-3xl font-bold text-foreground">{copy.services.header.pageTitle}</h1>
         <p className="text-sm text-muted-foreground mt-1.5">
-          Choose a ready-to-use application template to get started quickly.
+          {copy.services.header.pageSubtitle}
         </p>
       </div>
 

@@ -22,12 +22,14 @@ import {
 import {
   ArrowLeft, Plus, Bell, Check, Circle, Play,
   Square, Save, ChevronRight, ChevronLeft,
-  Info, Trash2, IndianRupee, UserCog, Pencil, ClipboardCheck, CreditCard,
+  Info, Trash2, Banknote, UserCog, Pencil, ClipboardCheck, CreditCard,
   ZoomIn, ZoomOut, Maximize2, ChevronDown, FileText,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useAuditLog } from "@/hooks/useAuditLog";
 import { useServiceRoles, canonicalRoleId } from "@/lib/useServiceRoles";
 import RoleEditorDialog, { emptyRoleDraft, type RoleDraft } from "./RoleEditorDialog";
+import { copy } from "@/copy";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -279,6 +281,7 @@ interface Props {
 
 const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
   const { id: serviceId = "service" } = useParams();
+  const { logConfig } = useAuditLog();
   const storageSuffix = moduleName;
 
   /* ---- Source lists (shared with their configurator pages) ---- */
@@ -569,7 +572,7 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
   const addState = () => {
     if (!newStateName.trim()) return;
     if (newStateType === "start" && states.some(s => s.type === "start")) {
-      toast({ title: "Only one Start state allowed", variant: "destructive" });
+      toast({ title: copy.workflowDesigner.toastMessages.onlyOneStartState, variant: "destructive" });
       return;
     }
     const maxX = Math.max(...states.map(s => s.x), 0);
@@ -590,7 +593,7 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
     const target = states.find(s => s.id === id);
     if (!target) return;
     if (target.type === "start" && states.filter(s => s.type === "start").length === 1) {
-      toast({ title: "Cannot delete the only Start state", variant: "destructive" });
+      toast({ title: copy.workflowDesigner.toastMessages.cannotDeleteOnlyStart, variant: "destructive" });
       return;
     }
     const linked = transitions.filter(t => t.fromStateId === id || t.toStateId === id);
@@ -713,10 +716,10 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
             <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
               <Play className="h-8 w-8 text-accent" />
             </div>
-            <h2 className="text-xl font-semibold text-foreground mb-2">Start by adding your first state</h2>
-            <p className="text-sm text-muted-foreground mb-6">Define the steps in your process flow.</p>
+            <h2 className="text-xl font-semibold text-foreground mb-2">{copy.workflowDesigner.emptyState.heading}</h2>
+            <p className="text-sm text-muted-foreground mb-6">{copy.workflowDesigner.emptyState.description}</p>
             <Button onClick={() => setShowAddState(true)} className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
-              <Plus className="h-4 w-4" /> Add First State
+              <Plus className="h-4 w-4" /> {copy.workflowDesigner.emptyState.addFirstStateButton}
             </Button>
           </div>
         </div>
@@ -728,14 +731,17 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header moduleName={moduleName} onBack={onBack} view={view} setView={setView}
-        onSave={() => toast({ title: "Workflow saved" })}
+        onSave={() => {
+          toast({ title: copy.workflowDesigner.toastMessages.workflowSaved });
+          logConfig({ action: "Workflow saved", entity: moduleName, entityType: "Workflow", module: "Workflow", service: serviceId });
+        }}
         extra={
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={() => setShowAddState(true)} className="gap-1.5">
-              <Plus className="h-3.5 w-3.5" /> Add State
+              <Plus className="h-3.5 w-3.5" /> {copy.workflowDesigner.header.addStateButton}
             </Button>
             <Button size="sm" variant="outline" onClick={() => setShowAddTransition(true)} className="gap-1.5">
-              <Plus className="h-3.5 w-3.5" /> Add Action
+              <Plus className="h-3.5 w-3.5" /> {copy.workflowDesigner.header.addActionButton}
             </Button>
           </div>
         }
@@ -759,19 +765,19 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
             >
               {/* Zoom controls */}
               <div className="absolute top-3 right-3 z-30 flex flex-col gap-1 bg-card border rounded-md shadow-sm p-1">
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); zoomIn(); }} title="Zoom in">
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); zoomIn(); }} title={copy.workflowDesigner.canvas.zoomInTitle}>
                   <ZoomIn className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); zoomOut(); }} title="Zoom out">
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); zoomOut(); }} title={copy.workflowDesigner.canvas.zoomOutTitle}>
                   <ZoomOut className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); resetView(); }} title="Reset view">
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); resetView(); }} title={copy.workflowDesigner.canvas.resetViewTitle}>
                   <Maximize2 className="h-4 w-4" />
                 </Button>
                 <div className="text-[10px] text-center text-muted-foreground px-1">{Math.round(zoom * 100)}%</div>
               </div>
               <div className="absolute bottom-3 left-3 z-30 text-[10px] text-muted-foreground bg-card/80 border rounded px-2 py-1 pointer-events-none">
-                Drag empty area to pan • Ctrl/⌘ + scroll to zoom
+                {copy.workflowDesigner.canvas.panZoomHint}
               </div>
               <div
                 className="absolute top-0 left-0 origin-top-left"
@@ -869,7 +875,7 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                       )}
                       {stage && (
                         <div className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-700 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400 rounded px-1.5 py-0.5">
-                          <IndianRupee className="h-2.5 w-2.5" /> {stage.name}
+                          <Banknote className="h-2.5 w-2.5" /> {stage.name}
                         </div>
                       )}
                     </div>
@@ -896,10 +902,10 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Payment Stage</TableHead>
-                      <TableHead>Notifications</TableHead>
+                      <TableHead>{copy.workflowDesigner.tableView.statesColumnName}</TableHead>
+                      <TableHead>{copy.workflowDesigner.tableView.statesColumnType}</TableHead>
+                      <TableHead>{copy.workflowDesigner.tableView.statesColumnPaymentStage}</TableHead>
+                      <TableHead>{copy.workflowDesigner.tableView.statesColumnNotifications}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -917,7 +923,7 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                           <TableCell className="text-xs">
                             {stage ? (
                               <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400">
-                                <IndianRupee className="h-3 w-3" /> {stage.name}
+                                <Banknote className="h-3 w-3" /> {stage.name}
                               </span>
                             ) : <span className="text-muted-foreground">—</span>}
                           </TableCell>
@@ -931,11 +937,11 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>From</TableHead>
-                      <TableHead>To</TableHead>
-                      <TableHead>Action</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Checklists</TableHead>
+                      <TableHead>{copy.workflowDesigner.tableView.actionsColumnFrom}</TableHead>
+                      <TableHead>{copy.workflowDesigner.tableView.actionsColumnTo}</TableHead>
+                      <TableHead>{copy.workflowDesigner.tableView.actionsColumnAction}</TableHead>
+                      <TableHead>{copy.workflowDesigner.tableView.actionsColumnRole}</TableHead>
+                      <TableHead>{copy.workflowDesigner.tableView.actionsColumnChecklists}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -979,8 +985,8 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
           <button
             onClick={() => setInspectorCollapsed(v => !v)}
             className="w-10 shrink-0 border-r flex items-start justify-center pt-3 hover:bg-muted/50 transition-colors"
-            aria-label={inspectorCollapsed ? "Expand inspector" : "Collapse inspector"}
-            title={inspectorCollapsed ? "Expand inspector" : "Collapse inspector"}
+            aria-label={inspectorCollapsed ? copy.workflowDesigner.inspector.expandAriaLabel : copy.workflowDesigner.inspector.collapseAriaLabel}
+            title={inspectorCollapsed ? copy.workflowDesigner.inspector.expandAriaLabel : copy.workflowDesigner.inspector.collapseAriaLabel}
           >
             {inspectorCollapsed ? <ChevronLeft className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
           </button>
@@ -990,7 +996,7 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
               {!selection && (
                 <div className="p-6 text-center text-sm text-muted-foreground mt-20">
                   <Info className="h-8 w-8 mx-auto mb-3 text-muted-foreground/50" />
-                  <p>Select a state or action to view its properties.</p>
+                  <p>{copy.workflowDesigner.inspector.emptySelectionMessage}</p>
                 </div>
               )}
 
@@ -998,55 +1004,55 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
               {selectedState && (
                 <div className="p-4 space-y-5">
                   <div>
-                    <h3 className="font-semibold text-foreground text-sm">State Properties</h3>
-                    <p className="text-xs text-muted-foreground">Lifecycle status configuration</p>
+                    <h3 className="font-semibold text-foreground text-sm">{copy.workflowDesigner.stateInspector.heading}</h3>
+                    <p className="text-xs text-muted-foreground">{copy.workflowDesigner.stateInspector.subheading}</p>
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">State Name</Label>
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{copy.workflowDesigner.stateInspector.stateNameLabel}</Label>
                     <Input value={selectedState.name} onChange={e => updateState(selectedState.id, { name: e.target.value })} className="h-9 text-sm" />
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">State Type</Label>
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{copy.workflowDesigner.stateInspector.stateTypeLabel}</Label>
                     <Select value={selectedState.type} onValueChange={(v: StateType) => {
                       if (v === "start" && states.some(s => s.type === "start" && s.id !== selectedState.id)) {
-                        toast({ title: "Only one Start state allowed", variant: "destructive" });
+                        toast({ title: copy.workflowDesigner.toastMessages.onlyOneStartState, variant: "destructive" });
                         return;
                       }
                       updateState(selectedState.id, { type: v });
                     }}>
                       <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="start">Start</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="end">End</SelectItem>
+                        <SelectItem value="start">{copy.workflowDesigner.stateInspector.stateTypeStart}</SelectItem>
+                        <SelectItem value="in_progress">{copy.workflowDesigner.stateInspector.stateTypeInProgress}</SelectItem>
+                        <SelectItem value="end">{copy.workflowDesigner.stateInspector.stateTypeEnd}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Description</Label>
-                    <Input value={selectedState.description} onChange={e => updateState(selectedState.id, { description: e.target.value })} className="h-9 text-sm" placeholder="Short description" />
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{copy.workflowDesigner.stateInspector.descriptionLabel}</Label>
+                    <Input value={selectedState.description} onChange={e => updateState(selectedState.id, { description: e.target.value })} className="h-9 text-sm" placeholder={copy.workflowDesigner.stateInspector.descriptionPlaceholder} />
                   </div>
 
                   {/* Payment stage picker */}
                   <div className="rounded-md border p-3 space-y-2">
                     <div className="flex items-center gap-1.5">
-                      <IndianRupee className="h-3.5 w-3.5 text-amber-600" />
-                      <Label className="text-xs font-semibold text-foreground">Payment collected here</Label>
+                      <Banknote className="h-3.5 w-3.5 text-amber-600" />
+                      <Label className="text-xs font-semibold text-foreground">{copy.workflowDesigner.stateInspector.paymentSectionTitle}</Label>
                     </div>
                     <p className="text-[11px] text-muted-foreground">
-                      Pick a configured payment stage to charge the citizen when the application enters this state.
+                      {copy.workflowDesigner.stateInspector.paymentSectionDescription}
                     </p>
                     <div className="flex items-center gap-1.5">
                       <Select
                         value={selectedState.paymentStageId ?? "__none"}
                         onValueChange={(v) => updateState(selectedState.id, { paymentStageId: v === "__none" ? null : v })}
                       >
-                        <SelectTrigger className="h-9 text-sm flex-1"><SelectValue placeholder="No payment" /></SelectTrigger>
+                        <SelectTrigger className="h-9 text-sm flex-1"><SelectValue placeholder={copy.workflowDesigner.stateInspector.paymentSelectPlaceholder} /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="__none">No payment</SelectItem>
+                          <SelectItem value="__none">{copy.workflowDesigner.stateInspector.paymentNoPaymentOption}</SelectItem>
                           {paymentStages.map(p => (
                             <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                           ))}
@@ -1058,7 +1064,7 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                             const s = paymentStages.find(p => p.id === selectedState.paymentStageId);
                             if (s) setEditingStage({ ...s, methods: { ...s.methods }, fees: [...s.fees] });
                           }}
-                          title="Edit stage"
+                          title={copy.workflowDesigner.stateInspector.paymentEditTitle}
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
@@ -1066,19 +1072,19 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                     </div>
                     <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs"
                       onClick={() => createStageFor(selectedState.id)}>
-                      <Plus className="h-3 w-3" /> New payment stage
+                      <Plus className="h-3 w-3" /> {copy.workflowDesigner.stateInspector.newPaymentStageButton}
                     </Button>
                   </div>
 
                   {/* Notifications picker (dropdown) */}
                   <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Notifications on entry</Label>
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{copy.workflowDesigner.stateInspector.notificationsLabel}</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button variant="outline" size="sm" className="w-full justify-between text-xs font-normal">
                           <span className="truncate">
                             {selectedState.notificationIds.length === 0
-                              ? "None attached"
+                              ? copy.workflowDesigner.stateInspector.notificationsNoneAttached
                               : `${selectedState.notificationIds.length} attached`}
                           </span>
                           <ChevronDown className="h-3.5 w-3.5 opacity-60 shrink-0" />
@@ -1086,7 +1092,7 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                       </PopoverTrigger>
                       <PopoverContent className="w-[320px] p-0" align="start">
                         {notifications.length === 0 ? (
-                          <p className="text-xs text-muted-foreground italic p-3">No notifications configured yet.</p>
+                          <p className="text-xs text-muted-foreground italic p-3">{copy.workflowDesigner.stateInspector.notificationsNoneConfigured}</p>
                         ) : (
                           <div className="max-h-64 overflow-y-auto p-1">
                             {notifications.map(n => {
@@ -1106,7 +1112,7 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                                     <div className="flex items-center justify-between gap-2">
                                       <p className="text-xs font-medium text-foreground truncate">{n.subject || n.message?.slice(0, 40) || "(untitled)"}</p>
                                       <button onClick={() => setEditingNotif({ ...n })}
-                                        className="text-muted-foreground hover:text-foreground shrink-0" title="Edit">
+                                        className="text-muted-foreground hover:text-foreground shrink-0" title={copy.workflowDesigner.editTooltips.editNotification}>
                                         <Pencil className="h-3 w-3" />
                                       </button>
                                     </div>
@@ -1124,13 +1130,13 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                     </Popover>
                     <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs"
                       onClick={() => createNotificationFor(selectedState.id)}>
-                      <Plus className="h-3 w-3" /> New notification
+                      <Plus className="h-3 w-3" /> {copy.workflowDesigner.stateInspector.newNotificationButton}
                     </Button>
                   </div>
 
                   {/* Attached documents (dropdown) */}
                   <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Attached documents</Label>
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{copy.workflowDesigner.stateInspector.attachedDocumentsLabel}</Label>
                     {(() => {
                       const attachedIds = (selectedState.attachedDocumentIds ?? []).filter(id => configuredDocs.some(d => d.id === id));
                       const attachedNames = attachedIds.map(id => configuredDocs.find(d => d.id === id)?.name).filter(Boolean) as string[];
@@ -1139,7 +1145,7 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                           <PopoverTrigger asChild>
                             <Button variant="outline" size="sm" className="w-full justify-between text-xs font-normal">
                               <span className="truncate text-left">
-                                {attachedNames.length === 0 ? "None attached" : attachedNames.join(", ")}
+                                {attachedNames.length === 0 ? copy.workflowDesigner.stateInspector.attachedDocumentsNoneAttached : attachedNames.join(", ")}
                               </span>
                               <ChevronDown className="h-3.5 w-3.5 opacity-60 shrink-0" />
                             </Button>
@@ -1147,7 +1153,7 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                           <PopoverContent className="w-[320px] p-0" align="start">
                             {configuredDocs.length === 0 ? (
                               <p className="text-xs text-muted-foreground italic p-3">
-                                No documents configured yet — add them in Document Designer.
+                                {copy.workflowDesigner.stateInspector.attachedDocumentsNoneConfigured}
                               </p>
                             ) : (
                               <div className="max-h-64 overflow-y-auto p-1">
@@ -1181,7 +1187,7 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                   <div className="border-t pt-3">
                     <Button variant="outline" size="sm" className="w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/10"
                       onClick={() => deleteState(selectedState.id)}>
-                      <Trash2 className="h-3.5 w-3.5" /> Delete State
+                      <Trash2 className="h-3.5 w-3.5" /> {copy.workflowDesigner.stateInspector.deleteStateButton}
                     </Button>
                   </div>
                 </div>
@@ -1196,7 +1202,7 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                     <div>
                       <h3 className="font-semibold text-foreground text-sm flex items-center gap-2">
                         {selectedTransition.name}
-                        <Badge variant="secondary" className="text-[10px]">Action</Badge>
+                        <Badge variant="secondary" className="text-[10px]">{copy.workflowDesigner.transitionInspector.actionBadge}</Badge>
                       </h3>
                       <p className="text-xs text-muted-foreground mt-1">
                         From <span className="font-medium text-foreground">{from?.name ?? "—"}</span> → <span className="font-medium text-foreground">{to?.name ?? "—"}</span>
@@ -1204,13 +1210,13 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Action Name</Label>
+                      <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{copy.workflowDesigner.transitionInspector.actionNameLabel}</Label>
                       <Input value={selectedTransition.name} onChange={e => updateTransition(selectedTransition.id, { name: e.target.value })} className="h-9 text-sm" />
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">From</Label>
+                        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{copy.workflowDesigner.transitionInspector.fromLabel}</Label>
                         <Select value={selectedTransition.fromStateId} onValueChange={v => updateTransition(selectedTransition.id, { fromStateId: v })}>
                           <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                           <SelectContent>
@@ -1219,7 +1225,7 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                         </Select>
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">To</Label>
+                        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{copy.workflowDesigner.transitionInspector.toLabel}</Label>
                         <Select value={selectedTransition.toStateId} onValueChange={v => updateTransition(selectedTransition.id, { toStateId: v })}>
                           <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                           <SelectContent>
@@ -1230,7 +1236,7 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Performed by (Role)</Label>
+                      <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{copy.workflowDesigner.transitionInspector.performedByRoleLabel}</Label>
                       <Select
                         value={selectedTransition.roleId}
                         onValueChange={(v) => handleRoleSelectChange(
@@ -1243,7 +1249,7 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                         <SelectContent>
                           {ROLE_OPTIONS.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
                           <SelectItem value={CREATE_ROLE_SENTINEL} className="text-accent font-medium">
-                            + Create new role…
+                            {copy.workflowDesigner.transitionInspector.createNewRoleOption}
                           </SelectItem>
                         </SelectContent>
                       </Select>
@@ -1251,13 +1257,13 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
 
                     {/* Checklist picker (dropdown) */}
                     <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Checklists to complete</Label>
+                      <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{copy.workflowDesigner.transitionInspector.checklistsLabel}</Label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button variant="outline" size="sm" className="w-full justify-between text-xs font-normal">
                             <span className="truncate">
                               {selectedTransition.checklistIds.length === 0
-                                ? "None attached"
+                                ? copy.workflowDesigner.transitionInspector.checklistsNoneAttached
                                 : `${selectedTransition.checklistIds.length} attached`}
                             </span>
                             <ChevronDown className="h-3.5 w-3.5 opacity-60 shrink-0" />
@@ -1265,7 +1271,7 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                         </PopoverTrigger>
                         <PopoverContent className="w-[320px] p-0" align="start">
                           {checklists.length === 0 ? (
-                            <p className="text-xs text-muted-foreground italic p-3">No checklists configured yet.</p>
+                            <p className="text-xs text-muted-foreground italic p-3">{copy.workflowDesigner.transitionInspector.checklistsNoneConfigured}</p>
                           ) : (
                             <div className="max-h-64 overflow-y-auto p-1">
                               {checklists.map(c => {
@@ -1286,7 +1292,7 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                                         <p className="text-xs font-medium text-foreground truncate">{c.name || "(untitled)"}</p>
                                         <button onClick={() => setEditingChecklist({
                                           ...c, questions: c.questions.map(q => ({ ...q, options: q.options ? [...q.options] : undefined })),
-                                        })} className="text-muted-foreground hover:text-foreground shrink-0" title="Edit">
+                                        })} className="text-muted-foreground hover:text-foreground shrink-0" title={copy.workflowDesigner.editTooltips.editChecklist}>
                                           <Pencil className="h-3 w-3" />
                                         </button>
                                       </div>
@@ -1303,26 +1309,26 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                       </Popover>
                       <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs"
                         onClick={() => createChecklistFor(selectedTransition.id)}>
-                        <Plus className="h-3 w-3" /> New checklist
+                        <Plus className="h-3 w-3" /> {copy.workflowDesigner.transitionInspector.newChecklistButton}
                       </Button>
                     </div>
 
 
                     <div className="border-t pt-4 space-y-2">
                       <div className="flex items-center justify-between">
-                        <Label className="text-xs font-medium text-foreground">Add Conditions</Label>
+                        <Label className="text-xs font-medium text-foreground">{copy.workflowDesigner.transitionInspector.addConditionsLabel}</Label>
                         <Switch checked={selectedTransition.conditionsEnabled}
                           onCheckedChange={v => updateTransition(selectedTransition.id, { conditionsEnabled: v })} />
                       </div>
                       <p className="text-[11px] text-muted-foreground">
-                        When enabled, this action only appears if specific metadata criteria are met.
+                        {copy.workflowDesigner.transitionInspector.addConditionsDescription}
                       </p>
                     </div>
 
                     <div className="border-t pt-3">
                       <Button variant="outline" size="sm" className="w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/10"
                         onClick={() => deleteTransition(selectedTransition.id)}>
-                        <Trash2 className="h-3.5 w-3.5" /> Delete Action
+                        <Trash2 className="h-3.5 w-3.5" /> {copy.workflowDesigner.transitionInspector.deleteActionButton}
                       </Button>
                     </div>
                   </div>
@@ -1338,30 +1344,30 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
 
       <Dialog open={showAddTransition} onOpenChange={setShowAddTransition}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>Add Action</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{copy.workflowDesigner.addActionDialog.title}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label className="text-xs">Action Name</Label>
-              <Input value={newTransName} onChange={e => setNewTransName(e.target.value)} placeholder='e.g. "Approve"' className="h-9 text-sm" />
+              <Label className="text-xs">{copy.workflowDesigner.addActionDialog.actionNameLabel}</Label>
+              <Input value={newTransName} onChange={e => setNewTransName(e.target.value)} placeholder={copy.workflowDesigner.addActionDialog.actionNamePlaceholder} className="h-9 text-sm" />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5">
-                <Label className="text-xs">From State</Label>
+                <Label className="text-xs">{copy.workflowDesigner.addActionDialog.fromStateLabel}</Label>
                 <Select value={newTransFrom} onValueChange={setNewTransFrom}>
-                  <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Select..." /></SelectTrigger>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue placeholder={copy.workflowDesigner.addActionDialog.fromStatePlaceholder} /></SelectTrigger>
                   <SelectContent>{states.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">To State</Label>
+                <Label className="text-xs">{copy.workflowDesigner.addActionDialog.toStateLabel}</Label>
                 <Select value={newTransTo} onValueChange={setNewTransTo}>
-                  <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Select..." /></SelectTrigger>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue placeholder={copy.workflowDesigner.addActionDialog.toStatePlaceholder} /></SelectTrigger>
                   <SelectContent>{states.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Performed by (Role)</Label>
+              <Label className="text-xs">{copy.workflowDesigner.addActionDialog.performedByRoleLabel}</Label>
               <Select
                 value={newTransRole}
                 onValueChange={(v) => handleRoleSelectChange(
@@ -1374,15 +1380,15 @@ const WorkflowDesigner: React.FC<Props> = ({ moduleName, onBack }) => {
                 <SelectContent>
                   {ROLE_OPTIONS.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
                   <SelectItem value={CREATE_ROLE_SENTINEL} className="text-accent font-medium">
-                    + Create new role…
+                    {copy.workflowDesigner.addActionDialog.createNewRoleOption}
                   </SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddTransition(false)}>Cancel</Button>
-            <Button onClick={addTransition} className="bg-accent text-accent-foreground hover:bg-accent/90">Add</Button>
+            <Button variant="outline" onClick={() => setShowAddTransition(false)}>{copy.workflowDesigner.addActionDialog.cancelButton}</Button>
+            <Button onClick={addTransition} className="bg-accent text-accent-foreground hover:bg-accent/90">{copy.workflowDesigner.addActionDialog.addButton}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1489,7 +1495,7 @@ const Header: React.FC<{
         <Button variant="ghost" size="icon" onClick={onBack}><ArrowLeft className="h-4 w-4" /></Button>
         <div>
           <h1 className="font-bold text-foreground text-sm">{moduleName} — Workflow</h1>
-          <p className="text-xs text-muted-foreground">Capture every state and action in your process</p>
+          <p className="text-xs text-muted-foreground">{copy.workflowDesigner.header.subtitle}</p>
         </div>
       </div>
       <div className="flex items-center gap-3">
@@ -1497,16 +1503,16 @@ const Header: React.FC<{
         <div className="flex rounded-md border overflow-hidden">
           <button onClick={() => setView("visual")}
             className={`text-xs font-medium px-3 py-1.5 transition-colors ${view === "visual" ? "bg-accent text-accent-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}>
-            Visual
+            {copy.workflowDesigner.header.viewToggleVisual}
           </button>
           <button onClick={() => setView("table")}
             className={`text-xs font-medium px-3 py-1.5 transition-colors ${view === "table" ? "bg-accent text-accent-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}>
-            Table
+            {copy.workflowDesigner.header.viewToggleTable}
           </button>
         </div>
         {onSave && (
           <Button size="sm" variant="outline" onClick={onSave} className="gap-1.5">
-            <Save className="h-3.5 w-3.5" /> Save
+            <Save className="h-3.5 w-3.5" /> {copy.workflowDesigner.header.saveButton}
           </Button>
         )}
       </div>
@@ -1524,7 +1530,7 @@ const ScopeBar: React.FC<{
   if (!cfg || !cfg.hasCategories) return null;
   return (
     <div className="border-b bg-muted/20 px-4 py-2 flex items-center gap-3 flex-wrap">
-      <span className="text-xs font-medium text-muted-foreground">Apply to:</span>
+      <span className="text-xs font-medium text-muted-foreground">{copy.workflowDesigner.scopeBar.applyToLabel}</span>
       <ScopeSelector
         size="sm"
         value={scope}
@@ -1533,10 +1539,10 @@ const ScopeBar: React.FC<{
       />
       {scope === "by_category" && categories.length > 0 && (
         <>
-          <span className="text-xs text-muted-foreground ml-2">Editing:</span>
+          <span className="text-xs text-muted-foreground ml-2">{copy.workflowDesigner.scopeBar.editingLabel}</span>
           <CatSelect value={activeCategory} onValueChange={setActiveCategory}>
             <CatSelectTrigger className="h-8 w-48 text-xs">
-              <CatSelectValue placeholder="Pick a category" />
+              <CatSelectValue placeholder={copy.workflowDesigner.scopeBar.categoryPlaceholder} />
             </CatSelectTrigger>
             <CatSelectContent>
               {categories.map((c) => (
@@ -1545,7 +1551,7 @@ const ScopeBar: React.FC<{
             </CatSelectContent>
           </CatSelect>
           <span className="text-[11px] text-muted-foreground italic ml-1">
-            Changes apply only to this category's workflow.
+            {copy.workflowDesigner.scopeBar.categoryWorkflowNote}
           </span>
         </>
       )}
@@ -1565,27 +1571,27 @@ const AddStateDialog: React.FC<{
 }> = ({ open, onOpenChange, name, setName, type, setType, onAdd, states }) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="sm:max-w-md">
-      <DialogHeader><DialogTitle>Add State</DialogTitle></DialogHeader>
+      <DialogHeader><DialogTitle>{copy.workflowDesigner.addStateDialog.title}</DialogTitle></DialogHeader>
       <div className="space-y-3">
         <div className="space-y-1.5">
-          <Label className="text-xs">State Name</Label>
-          <Input value={name} onChange={e => setName(e.target.value)} placeholder='e.g. "Technical Review"' className="h-9 text-sm" />
+          <Label className="text-xs">{copy.workflowDesigner.addStateDialog.stateNameLabel}</Label>
+          <Input value={name} onChange={e => setName(e.target.value)} placeholder={copy.workflowDesigner.addStateDialog.stateNamePlaceholder} className="h-9 text-sm" />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs">State Type</Label>
+          <Label className="text-xs">{copy.workflowDesigner.addStateDialog.stateTypeLabel}</Label>
           <Select value={type} onValueChange={(v: StateType) => setType(v)}>
             <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="start" disabled={states.some(s => s.type === "start")}>Start</SelectItem>
-              <SelectItem value="in_progress">In Progress</SelectItem>
-              <SelectItem value="end">End</SelectItem>
+              <SelectItem value="start" disabled={states.some(s => s.type === "start")}>{copy.workflowDesigner.addStateDialog.stateTypeStart}</SelectItem>
+              <SelectItem value="in_progress">{copy.workflowDesigner.addStateDialog.stateTypeInProgress}</SelectItem>
+              <SelectItem value="end">{copy.workflowDesigner.addStateDialog.stateTypeEnd}</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
       <DialogFooter>
-        <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-        <Button onClick={onAdd} className="bg-accent text-accent-foreground hover:bg-accent/90">Add State</Button>
+        <Button variant="outline" onClick={() => onOpenChange(false)}>{copy.workflowDesigner.addStateDialog.cancelButton}</Button>
+        <Button onClick={onAdd} className="bg-accent text-accent-foreground hover:bg-accent/90">{copy.workflowDesigner.addStateDialog.addStateButton}</Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
@@ -1613,12 +1619,12 @@ const NotificationEditDialog: React.FC<{
     <Dialog open={!!value} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Notification</DialogTitle>
-          <DialogDescription>Fired when the application enters this state.</DialogDescription>
+          <DialogTitle>{copy.workflowDesigner.notificationEditDialog.title}</DialogTitle>
+          <DialogDescription>{copy.workflowDesigner.notificationEditDialog.description}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Channel</Label>
+            <Label>{copy.workflowDesigner.notificationEditDialog.channelLabel}</Label>
             <div className="flex gap-2">
               {(["email", "sms", "push"] as const).map(c => (
                 <button key={c} type="button" onClick={() => setChannel(c)}
@@ -1630,18 +1636,18 @@ const NotificationEditDialog: React.FC<{
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Workflow State *</Label>
+              <Label>{copy.workflowDesigner.notificationEditDialog.workflowStateLabel}</Label>
               <Select value={draft.workflowState} onValueChange={(v) => setDraft(d => d ? { ...d, workflowState: v, tag: v, tagColor: tagColors[v] ?? d.tagColor } : d)}>
-                <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={copy.workflowDesigner.notificationEditDialog.workflowStatePlaceholder} /></SelectTrigger>
                 <SelectContent>
                   {workflowStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Recipient Role *</Label>
+              <Label>{copy.workflowDesigner.notificationEditDialog.recipientRoleLabel}</Label>
               <Select value={draft.recipientRole} onValueChange={(v) => setDraft(d => d ? { ...d, recipientRole: v } : d)}>
-                <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={copy.workflowDesigner.notificationEditDialog.recipientRolePlaceholder} /></SelectTrigger>
                 <SelectContent>
                   {roles.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
                 </SelectContent>
@@ -1651,15 +1657,15 @@ const NotificationEditDialog: React.FC<{
 
           {draft.channel === "email" && (
             <div className="space-y-1.5">
-              <Label>Subject</Label>
+              <Label>{copy.workflowDesigner.notificationEditDialog.subjectLabel}</Label>
               <Input value={draft.subject} onChange={(e) => setDraft(d => d ? { ...d, subject: e.target.value } : d)} />
             </div>
           )}
           <div className="space-y-1.5">
-            <Label>Message</Label>
+            <Label>{copy.workflowDesigner.notificationEditDialog.messageLabel}</Label>
             <Textarea rows={4} value={draft.message} onChange={(e) => setDraft(d => d ? { ...d, message: e.target.value } : d)} />
             <div className="flex flex-wrap gap-1.5 mt-2">
-              <span className="text-xs text-muted-foreground">Variables:</span>
+              <span className="text-xs text-muted-foreground">{copy.workflowDesigner.notificationEditDialog.variablesLabel}</span>
               {VARIABLES.map(v => (
                 <button key={v} type="button" onClick={() => insertVariable(v)}
                   className="text-[10px] px-2 py-0.5 rounded-full border bg-muted hover:bg-accent/10 text-foreground transition-colors">
@@ -1672,13 +1678,13 @@ const NotificationEditDialog: React.FC<{
         <DialogFooter className="sm:justify-between">
           <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive"
             onClick={() => onDelete(draft.id)}>
-            <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
+            <Trash2 className="h-3.5 w-3.5 mr-1" /> {copy.workflowDesigner.notificationEditDialog.deleteButton}
           </Button>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button variant="outline" onClick={onClose}>{copy.workflowDesigner.notificationEditDialog.cancelButton}</Button>
             <Button className="bg-accent text-accent-foreground hover:bg-accent/90"
               disabled={!draft.workflowState || !draft.recipientRole || !draft.message.trim() || (draft.channel === "email" && !draft.subject.trim())}
-              onClick={() => onSave(draft)}>Save</Button>
+              onClick={() => onSave(draft)}>{copy.workflowDesigner.notificationEditDialog.saveButton}</Button>
           </div>
         </DialogFooter>
       </DialogContent>
@@ -1707,19 +1713,19 @@ const ChecklistEditDialog: React.FC<{
     <Dialog open={!!value} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><ClipboardCheck className="h-4 w-4 text-accent" /> Checklist</DialogTitle>
-          <DialogDescription>Items the assignee must complete before this action runs.</DialogDescription>
+          <DialogTitle className="flex items-center gap-2"><ClipboardCheck className="h-4 w-4 text-accent" /> {copy.workflowDesigner.checklistEditDialog.title}</DialogTitle>
+          <DialogDescription>{copy.workflowDesigner.checklistEditDialog.description}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Name</Label>
+              <Label>{copy.workflowDesigner.checklistEditDialog.nameLabel}</Label>
               <Input value={draft.name} onChange={(e) => setDraft(d => d ? { ...d, name: e.target.value } : d)} />
             </div>
             <div className="space-y-1.5">
-              <Label>Workflow State</Label>
+              <Label>{copy.workflowDesigner.checklistEditDialog.workflowStateLabel}</Label>
               <Select value={draft.workflowState} onValueChange={(v) => setDraft(d => d ? { ...d, workflowState: v } : d)}>
-                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={copy.workflowDesigner.checklistEditDialog.workflowStatePlaceholder} /></SelectTrigger>
                 <SelectContent>
                   {workflowStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
@@ -1733,7 +1739,7 @@ const ChecklistEditDialog: React.FC<{
                 <span className="text-xs text-muted-foreground font-medium mt-2 w-5 shrink-0">{idx + 1}.</span>
                 <div className="flex-1 space-y-2">
                   <Input value={q.text} onChange={(e) => updateQ(q.id, { text: e.target.value })}
-                    placeholder="Question text" className="text-sm" />
+                    placeholder={copy.workflowDesigner.checklistEditDialog.questionPlaceholder} className="text-sm" />
                   <div className="flex items-center gap-3 flex-wrap">
                     <Select value={q.fieldType} onValueChange={(v) => updateQ(q.id, { fieldType: v as FieldType })}>
                       <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue /></SelectTrigger>
@@ -1742,7 +1748,7 @@ const ChecklistEditDialog: React.FC<{
                       </SelectContent>
                     </Select>
                     <div className="flex items-center gap-1.5 ml-auto">
-                      <span className="text-xs text-muted-foreground">Required</span>
+                      <span className="text-xs text-muted-foreground">{copy.workflowDesigner.checklistEditDialog.requiredLabel}</span>
                       <Switch checked={q.required} onCheckedChange={(v) => updateQ(q.id, { required: v })} />
                     </div>
                     <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive shrink-0"
@@ -1754,20 +1760,20 @@ const ChecklistEditDialog: React.FC<{
               </div>
             ))}
             <Button variant="outline" size="sm" onClick={addQ} className="gap-1.5 text-xs">
-              <Plus className="h-3 w-3" /> Add Question
+              <Plus className="h-3 w-3" /> {copy.workflowDesigner.checklistEditDialog.addQuestionButton}
             </Button>
           </div>
         </div>
         <DialogFooter className="sm:justify-between">
           <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive"
             onClick={() => onDelete(draft.id)}>
-            <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
+            <Trash2 className="h-3.5 w-3.5 mr-1" /> {copy.workflowDesigner.checklistEditDialog.deleteButton}
           </Button>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button variant="outline" onClick={onClose}>{copy.workflowDesigner.checklistEditDialog.cancelButton}</Button>
             <Button className="bg-accent text-accent-foreground hover:bg-accent/90"
               disabled={!draft.name.trim() || !draft.workflowState}
-              onClick={() => onSave(draft)}>Save</Button>
+              onClick={() => onSave(draft)}>{copy.workflowDesigner.checklistEditDialog.saveButton}</Button>
           </div>
         </DialogFooter>
       </DialogContent>
@@ -1801,25 +1807,25 @@ const PaymentStageEditDialog: React.FC<{
     <Dialog open={!!value} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><CreditCard className="h-4 w-4 text-accent" /> Payment Stage</DialogTitle>
-          <DialogDescription>Configure when and how the citizen pays.</DialogDescription>
+          <DialogTitle className="flex items-center gap-2"><CreditCard className="h-4 w-4 text-accent" /> {copy.workflowDesigner.paymentStageEditDialog.title}</DialogTitle>
+          <DialogDescription>{copy.workflowDesigner.paymentStageEditDialog.description}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Stage Name</Label>
-            <Input value={draft.name} onChange={(e) => update({ name: e.target.value })} placeholder="e.g. Application Fee" />
+            <Label>{copy.workflowDesigner.paymentStageEditDialog.stageNameLabel}</Label>
+            <Input value={draft.name} onChange={(e) => update({ name: e.target.value })} placeholder={copy.workflowDesigner.paymentStageEditDialog.stageNamePlaceholder} />
           </div>
           <div className="space-y-1.5">
-            <Label>Workflow State</Label>
+            <Label>{copy.workflowDesigner.paymentStageEditDialog.workflowStateLabel}</Label>
             <Select value={draft.workflowState} onValueChange={(v) => update({ workflowState: v })}>
-              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={copy.workflowDesigner.checklistEditDialog.workflowStatePlaceholder} /></SelectTrigger>
               <SelectContent>
                 {workflowStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Fees</Label>
+            <Label>{copy.workflowDesigner.paymentStageEditDialog.feesLabel}</Label>
             <div className="rounded-md border p-2 space-y-1.5">
               {AVAILABLE_FEES.map(fee => (
                 <label key={fee} className="flex items-center gap-2 cursor-pointer text-sm">
@@ -1830,7 +1836,7 @@ const PaymentStageEditDialog: React.FC<{
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Methods</Label>
+            <Label>{copy.workflowDesigner.paymentStageEditDialog.methodsLabel}</Label>
             <div className="flex gap-3">
               {(["online", "counter"] as const).map(m => (
                 <label key={m} className="flex items-center gap-2 cursor-pointer text-sm">
@@ -1842,13 +1848,13 @@ const PaymentStageEditDialog: React.FC<{
           </div>
           {draft.methods.online && (
             <div className="space-y-1.5">
-              <Label>Gateway</Label>
+              <Label>{copy.workflowDesigner.paymentStageEditDialog.gatewayLabel}</Label>
               <Select value={draft.gateway} onValueChange={(v) => update({ gateway: v as Gateway })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="razorpay">Razorpay</SelectItem>
-                  <SelectItem value="paygov">PayGov</SelectItem>
-                  <SelectItem value="custom">Custom</SelectItem>
+                  <SelectItem value="razorpay">{copy.workflowDesigner.paymentStageEditDialog.gatewayRazorpay}</SelectItem>
+                  <SelectItem value="paygov">{copy.workflowDesigner.paymentStageEditDialog.gatewayPaygov}</SelectItem>
+                  <SelectItem value="custom">{copy.workflowDesigner.paymentStageEditDialog.gatewayCustom}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1856,19 +1862,19 @@ const PaymentStageEditDialog: React.FC<{
 
           <div className="flex items-center gap-2">
             <Switch checked={draft.generateReceipt} onCheckedChange={(v) => update({ generateReceipt: v })} />
-            <Label>Generate Receipt</Label>
+            <Label>{copy.workflowDesigner.paymentStageEditDialog.generateReceiptLabel}</Label>
           </div>
         </div>
         <DialogFooter className="sm:justify-between">
           <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive"
             onClick={() => onDelete(draft.id)}>
-            <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
+            <Trash2 className="h-3.5 w-3.5 mr-1" /> {copy.workflowDesigner.paymentStageEditDialog.deleteButton}
           </Button>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button variant="outline" onClick={onClose}>{copy.workflowDesigner.paymentStageEditDialog.cancelButton}</Button>
             <Button className="bg-accent text-accent-foreground hover:bg-accent/90"
               disabled={!draft.name.trim() || !draft.workflowState || draft.fees.length === 0}
-              onClick={() => onSave(draft)}>Save</Button>
+              onClick={() => onSave(draft)}>{copy.workflowDesigner.paymentStageEditDialog.saveButton}</Button>
           </div>
         </DialogFooter>
       </DialogContent>

@@ -17,6 +17,7 @@ import ChecklistDialog from "./ChecklistDialog";
 import DocumentPreviewSheet from "./DocumentPreviewSheet";
 import { downloadApplicationPdf } from "@/lib/applicationPdf";
 import EmployeeTopBar from "./EmployeeTopBar";
+import { copy } from "@/copy";
 
 const ApplicationReview: React.FC = () => {
   const {
@@ -88,34 +89,34 @@ const ApplicationReview: React.FC = () => {
 
       <div className="px-6 py-2 text-xs flex items-center justify-between">
         <button onClick={() => setScreen({ type: "inbox" })} className="text-accent hover:underline flex items-center gap-1">
-          <ArrowLeft className="h-3 w-3" /> Back to Inbox
+          <ArrowLeft className="h-3 w-3" /> {copy.applicationReview.navigation.backToInbox}
         </button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs">
-              <Download className="h-3.5 w-3.5" /> Download
+              <Download className="h-3.5 w-3.5" /> {copy.applicationReview.downloadMenu.buttonLabel}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel className="text-xs">Include in PDF</DropdownMenuLabel>
+            <DropdownMenuLabel className="text-xs">{copy.applicationReview.downloadMenu.menuHeading}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuCheckboxItem
               checked={includeDocs}
               onCheckedChange={(v) => setIncludeDocs(!!v)}
               onSelect={(e) => e.preventDefault()}
             >
-              Documents list
+              {copy.applicationReview.downloadMenu.optionDocuments}
             </DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem
               checked={includeChecklists}
               onCheckedChange={(v) => setIncludeChecklists(!!v)}
               onSelect={(e) => e.preventDefault()}
             >
-              Checklists
+              {copy.applicationReview.downloadMenu.optionChecklists}
             </DropdownMenuCheckboxItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleDownload} className="text-accent font-medium">
-              <Download className="h-3.5 w-3.5 mr-1" /> Download PDF
+              <Download className="h-3.5 w-3.5 mr-1" /> {copy.applicationReview.downloadMenu.downloadPdf}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -132,7 +133,7 @@ const ApplicationReview: React.FC = () => {
                   isRenewal ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"
                 }`}>
                   {isRenewal ? <RefreshCw className="h-3 w-3" /> : <FilePlus className="h-3 w-3" />}
-                  {isRenewal ? "Renewal" : "New"}
+                  {isRenewal ? copy.applicationReview.applicationHeader.badgeRenewal : copy.applicationReview.applicationHeader.badgeNew}
                 </span>
                 {isRenewal && parentLicenseApp?.license && (
                   <button
@@ -182,7 +183,7 @@ const ApplicationReview: React.FC = () => {
             <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
               app.paymentStatus === "paid" ? "bg-emerald-600 text-white" : "bg-amber-500 text-white"
             }`}>
-              {app.paymentStatus === "paid" ? <><CheckCircle2 className="h-3.5 w-3.5" /> Paid</> : "Awaiting Payment"}
+              {app.paymentStatus === "paid" ? <><CheckCircle2 className="h-3.5 w-3.5" /> {copy.applicationReview.demandBanner.statusPaid}</> : copy.applicationReview.demandBanner.statusAwaitingPayment}
             </span>
           </div>
         )}
@@ -191,15 +192,15 @@ const ApplicationReview: React.FC = () => {
         <div className="rounded-xl bg-card border border-border/50 overflow-hidden shadow-sm">
           <Tabs value={tab} onValueChange={setTab}>
             <TabsList className="w-full justify-start rounded-none border-b bg-muted/30 h-auto p-2 gap-1 flex-wrap">
-              <TabsTrigger value="applicant" className="rounded-full px-3 py-1 text-xs data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow">Applicant</TabsTrigger>
-              <TabsTrigger value="business" className="rounded-full px-3 py-1 text-xs data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow">Business</TabsTrigger>
+              <TabsTrigger value="applicant" className="rounded-full px-3 py-1 text-xs data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow">{copy.applicationReview.tabs.applicant}</TabsTrigger>
+              <TabsTrigger value="business" className="rounded-full px-3 py-1 text-xs data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow">{copy.applicationReview.tabs.business}</TabsTrigger>
               <TabsTrigger value="docs" className="rounded-full px-3 py-1 text-xs data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow">
                 Documents {app.documents.length > 0 && <span className="ml-1 opacity-80">({app.documents.length})</span>}
               </TabsTrigger>
               <TabsTrigger value="checklist" className="rounded-full px-3 py-1 text-xs data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow">
-                Checklist
+                {copy.applicationReview.tabs.checklist}
               </TabsTrigger>
-              <TabsTrigger value="timeline" className="rounded-full px-3 py-1 text-xs data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow">Timeline</TabsTrigger>
+              <TabsTrigger value="timeline" className="rounded-full px-3 py-1 text-xs data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow">{copy.applicationReview.tabs.timeline}</TabsTrigger>
             </TabsList>
 
             {[{ id: "applicant", sec: "sec-1" }, { id: "business", sec: "sec-2" }].map(({ id, sec }) => {
@@ -209,7 +210,7 @@ const ApplicationReview: React.FC = () => {
               return (
                 <TabsContent key={id} value={id} className="p-4 mt-0">
                   {fields.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No data.</p>
+                    <p className="text-sm text-muted-foreground">{copy.applicationReview.applicantAndBusinessTab.emptyState}</p>
                   ) : (
                     <dl className="grid grid-cols-2 gap-y-3 text-sm">
                       {fields.map((f) => (
@@ -226,18 +227,18 @@ const ApplicationReview: React.FC = () => {
 
             <TabsContent value="docs" className="p-4 mt-0">
               {app.documents.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No documents uploaded.</p>
+                <p className="text-sm text-muted-foreground">{copy.applicationReview.documentsTab.emptyState}</p>
               ) : (
                 <div className="space-y-3">
                   {allDocsVerified && app.documents.length > 0 && (
                     <div className="flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2">
                       <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                      <p className="text-xs font-semibold text-emerald-800">All documents verified</p>
+                      <p className="text-xs font-semibold text-emerald-800">{copy.applicationReview.documentsTab.allVerifiedBanner}</p>
                     </div>
                   )}
                   {canReviewDocs && !allDocsVerified && (
                     <p className="text-[11px] text-muted-foreground">
-                      Click any document to preview and verify.
+                      {copy.applicationReview.documentsTab.verifyInstructions}
                     </p>
                   )}
                   <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
@@ -270,7 +271,7 @@ const ApplicationReview: React.FC = () => {
                               </span>
                               {d.reused && (
                                 <span className="inline-flex items-center gap-0.5 text-[10px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full font-semibold">
-                                  <Repeat className="h-2.5 w-2.5" /> Reused
+                                  <Repeat className="h-2.5 w-2.5" /> {copy.applicationReview.documentsTab.badgeReused}
                                 </span>
                               )}
                             </div>
@@ -315,14 +316,14 @@ const ApplicationReview: React.FC = () => {
                     onClick={() => completeRenewal(app.id)}
                     className="bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700 text-white gap-1.5 shadow-lg shadow-purple-500/30"
                   >
-                    <RefreshCw className="h-4 w-4" /> Complete Renewal
+                    <RefreshCw className="h-4 w-4" /> {copy.applicationReview.actionBar.completeRenewalButton}
                   </Button>
                 ) : (
                   <Button
                     onClick={() => issueLicense(app.id)}
                     className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white gap-1.5 shadow-lg shadow-emerald-500/30"
                   >
-                    <Award className="h-4 w-4" /> Issue License
+                    <Award className="h-4 w-4" /> {copy.applicationReview.actionBar.issueLicenseButton}
                   </Button>
                 )
               ) : primaryTransition ? (
@@ -330,12 +331,12 @@ const ApplicationReview: React.FC = () => {
                   <Button
                     onClick={() => setPendingTransition(primaryTransition)}
                     disabled={isTransitionBlocked(primaryTransition)}
-                    title={isTransitionBlocked(primaryTransition) ? "Verify all documents first" : undefined}
+                    title={isTransitionBlocked(primaryTransition) ? copy.applicationReview.actionBar.verifyDocsTooltip : undefined}
                     className="bg-gradient-to-r from-accent to-teal-600 text-accent-foreground hover:from-accent/90 hover:to-teal-600/90 gap-1.5 shadow-lg shadow-accent/20"
                   >
                     {primaryTransition.name}
                     {isTransitionBlocked(primaryTransition) && (
-                      <span className="text-[10px] opacity-80">(verify docs)</span>
+                      <span className="text-[10px] opacity-80">{copy.applicationReview.actionBar.verifyDocsInlineHint}</span>
                     )}
                   </Button>
                   {secondaryTransitions.length > 0 && (
@@ -362,7 +363,7 @@ const ApplicationReview: React.FC = () => {
               ) : (
                 <p className="text-xs text-muted-foreground px-2">
                   {app.currentStateId === "s4"
-                    ? "Waiting for citizen to pay."
+                    ? copy.applicationReview.actionBar.waitingForPayment
                     : `No actions for ${role}.`}
                 </p>
               )}
@@ -421,8 +422,8 @@ const ChecklistTabContent: React.FC<{ appId: string }> = ({ appId }) => {
     return (
       <div className="text-center py-8">
         <ClipboardList className="h-10 w-10 mx-auto text-muted-foreground/40 mb-2" />
-        <p className="text-sm text-muted-foreground">No checklists yet.</p>
-        <p className="text-[11px] text-muted-foreground/70 mt-1">Items appear here as officers take actions.</p>
+        <p className="text-sm text-muted-foreground">{copy.applicationReview.checklistTab.emptyStateTitle}</p>
+        <p className="text-[11px] text-muted-foreground/70 mt-1">{copy.applicationReview.checklistTab.emptyStateSubtitle}</p>
       </div>
     );
   }
@@ -467,7 +468,7 @@ const ChecklistTabContent: React.FC<{ appId: string }> = ({ appId }) => {
             </ul>
             {!saved && (
               <p className="px-4 pb-3 text-[10px] text-muted-foreground/70 italic">
-                Items will be checked off when an officer triggers “{t.name}”.
+                Items will be checked off when an officer triggers "{t.name}".
               </p>
             )}
           </div>

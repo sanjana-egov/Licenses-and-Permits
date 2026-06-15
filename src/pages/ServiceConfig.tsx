@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, Rocket, Check, AlertCircle, Settings2 } from "lucide-react";
+import { ArrowLeft, Rocket, Check, AlertCircle, Settings2, Eye } from "lucide-react";
 import { defaultModules, configTiles } from "@/data/serviceModules";
 import RolesDesigner from "@/components/service-config/RolesDesigner";
 import NotificationsManager from "@/components/service-config/NotificationsManager";
@@ -190,14 +190,12 @@ const ServiceConfigInner: React.FC = () => {
   const workspaceTabs: { id: typeof mode; label: string; disabled?: boolean; tooltip?: string }[] = isLive
     ? [
         { id: "overview", label: "Overview" },
-        { id: "preview", label: "Preview" },
         { id: "operations", label: "Monitor" },
         { id: "deployment", label: "Manage" },
       ]
     : [
         { id: "overview", label: "Overview" },
         { id: "configure", label: "Configure" },
-        { id: "preview", label: "Preview" },
         { id: "operations", label: "Monitor" },
         {
           id: "deployment",
@@ -239,6 +237,14 @@ const ServiceConfigInner: React.FC = () => {
                   <Settings2 className="h-4 w-4" /> Template Setup
                 </Button>
               )}
+              <Button
+                variant={mode === "preview" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setMode(mode === "preview" ? "overview" : "preview")}
+                className={`gap-1.5 ${mode === "preview" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                <Eye className="h-4 w-4" /> Preview
+              </Button>
               {!isLive && (
                 <Button
                   size="sm"

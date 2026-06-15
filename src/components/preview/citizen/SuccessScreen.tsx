@@ -3,6 +3,7 @@ import { usePreview } from "../PreviewContext";
 import { Button } from "@/components/ui/button";
 import { Check, ArrowRight, Download, Copy } from "lucide-react";
 import { toast } from "sonner";
+import { copy } from "@/copy";
 
 const SuccessScreen: React.FC = () => {
   const { setScreen, screen, applications } = usePreview();
@@ -21,9 +22,9 @@ const SuccessScreen: React.FC = () => {
       </div>
 
       <div className="px-4 py-2 text-xs">
-        <button onClick={() => setScreen({ type: "home" })} className="text-accent hover:underline">Home</button>
+        <button onClick={() => setScreen({ type: "home" })} className="text-accent hover:underline">{copy.successScreen.breadcrumb.homeLink}</button>
         <span className="mx-1 text-muted-foreground">/</span>
-        <span className="text-muted-foreground">Submitted</span>
+        <span className="text-muted-foreground">{copy.successScreen.breadcrumb.currentPage}</span>
       </div>
 
       <div className="flex-1 flex flex-col items-center px-4">
@@ -31,15 +32,15 @@ const SuccessScreen: React.FC = () => {
           <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-3">
             <Check className="h-8 w-8 text-white" />
           </div>
-          <h2 className="text-lg font-bold mb-2">Your application has been submitted</h2>
-          <p className="text-xs opacity-90 mb-1">Your Application ID</p>
+          <h2 className="text-lg font-bold mb-2">{copy.successScreen.confirmationCard.heading}</h2>
+          <p className="text-xs opacity-90 mb-1">{copy.successScreen.confirmationCard.applicationIdLabel}</p>
           <div className="flex items-center justify-center gap-2">
             <p className="text-[11px] font-mono break-all opacity-95">{app?.applicationNumber || "N/A"}</p>
             {app?.applicationNumber && (
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(app.applicationNumber);
-                  toast.success("Application ID copied");
+                  toast.success(copy.successScreen.toast.applicationIdCopied);
                 }}
                 className="p-1 rounded hover:bg-white/20 transition-colors"
                 aria-label="Copy Application ID"
@@ -51,7 +52,7 @@ const SuccessScreen: React.FC = () => {
         </div>
 
         <p className="text-[11px] text-muted-foreground text-center mb-4 px-2">
-          A clerk will review your application shortly. You'll be notified about payment and license issuance.
+          {copy.successScreen.notices.reviewNotice}
         </p>
 
         <div className="w-full space-y-2">
@@ -60,7 +61,7 @@ const SuccessScreen: React.FC = () => {
               onClick={() => setScreen({ type: "invoice", applicationId: app.id })}
               className="w-full bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
             >
-              <Download className="h-3.5 w-3.5" /> Download Invoice
+              <Download className="h-3.5 w-3.5" /> {copy.successScreen.buttons.downloadInvoice}
             </Button>
           )}
           {app && (
@@ -68,11 +69,11 @@ const SuccessScreen: React.FC = () => {
               onClick={() => setScreen({ type: "application_detail", applicationId: app.id })}
               className="w-full bg-accent text-accent-foreground hover:bg-accent/90 gap-1.5"
             >
-              View Application <ArrowRight className="h-3.5 w-3.5" />
+              {copy.successScreen.buttons.viewApplication} <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           )}
           <Button onClick={() => setScreen({ type: "home" })} variant="outline" className="w-full">
-            Go To Home
+            {copy.successScreen.buttons.goToHome}
           </Button>
         </div>
       </div>

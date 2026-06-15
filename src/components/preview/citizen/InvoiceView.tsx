@@ -5,9 +5,9 @@ import { ArrowLeft, Download } from "lucide-react";
 import { downloadInvoicePdf } from "@/lib/invoicePdf";
 
 const fmt = (ts: number) =>
-  new Date(ts).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  new Date(ts).toLocaleDateString("en-ZA", { day: "2-digit", month: "short", year: "numeric" });
 const fmtTime = (ts: number) =>
-  new Date(ts).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  new Date(ts).toLocaleString("en-ZA", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
 const InvoiceView: React.FC = () => {
   const { screen, applications, setScreen, serviceName } = usePreview();
@@ -52,7 +52,7 @@ const InvoiceView: React.FC = () => {
               <span className="bg-slate-700" />
             </div>
             <p className="text-[10px] tracking-[0.2em] font-semibold text-slate-700 uppercase">
-              Government of India
+              City of Cape Town
             </p>
             <p className="text-[10px] text-slate-500 -mt-1">
               Department of Municipal Administration
@@ -121,11 +121,11 @@ const InvoiceView: React.FC = () => {
             <ul className="mt-2 text-[11.5px]">
               <li className="flex justify-between py-1">
                 <span className="text-slate-800">Total Amount</span>
-                <span className="font-semibold text-slate-900">₹{app.demand.total.toLocaleString("en-IN")}</span>
+                <span className="font-semibold text-slate-900">R{app.demand.total.toLocaleString("en-ZA")}</span>
               </li>
               <li className="flex justify-between py-1">
                 <span className="font-bold text-slate-900">Amount Paid</span>
-                <span className="font-bold text-slate-900">₹{app.paymentDetails.amount.toLocaleString("en-IN")}</span>
+                <span className="font-bold text-slate-900">R{app.paymentDetails.amount.toLocaleString("en-ZA")}</span>
               </li>
             </ul>
           </div>

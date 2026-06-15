@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { FilePlus, RefreshCw, Filter, X } from "lucide-react";
 import EmployeeTopBar from "./EmployeeTopBar";
 import { useServiceRoles } from "@/lib/useServiceRoles";
+import { copy } from "@/copy";
 
 export const getStatusStyle = (stateId: string): { bg: string; text: string; dot: string; label?: string } => {
   switch (stateId) {
@@ -67,15 +68,15 @@ const InboxView: React.FC = () => {
       <EmployeeTopBar />
 
       <div className="px-6 py-2 text-xs">
-        <button onClick={() => setScreen({ type: "employee_home" })} className="text-accent hover:underline">Home</button>
+        <button onClick={() => setScreen({ type: "employee_home" })} className="text-accent hover:underline">{copy.inboxView.breadcrumb.home}</button>
         <span className="mx-1 text-muted-foreground">/</span>
-        <span className="text-muted-foreground">Inbox</span>
+        <span className="text-muted-foreground">{copy.inboxView.breadcrumb.inbox}</span>
       </div>
 
       <div className="px-6 pb-6">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <div className="flex items-baseline gap-3">
-            <h2 className="text-2xl font-bold text-accent">Inbox</h2>
+            <h2 className="text-2xl font-bold text-accent">{copy.inboxView.header.title}</h2>
             <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[11px] font-semibold">
               {items.length} application{items.length !== 1 ? "s" : ""}
             </span>
@@ -90,7 +91,7 @@ const InboxView: React.FC = () => {
                 onClick={() => setScreen({ type: "inbox" })}
                 className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-semibold hover:bg-accent/20 transition-colors"
               >
-                <X className="h-3 w-3" /> Clear
+                <X className="h-3 w-3" /> {copy.inboxView.filter.clearButton}
               </button>
             )}
           </div>
@@ -104,11 +105,11 @@ const InboxView: React.FC = () => {
               <circle cx="75" cy="32" r="3" fill="hsl(45 90% 60%)" />
               <path d="M75 25v3M75 36v3M68 32h3M79 32h3" stroke="hsl(45 90% 60%)" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
-            <p className="text-sm font-semibold text-foreground">Inbox zero!</p>
+            <p className="text-sm font-semibold text-foreground">{copy.inboxView.emptyState.heading}</p>
             <p className="text-xs text-muted-foreground mt-1">
               {roleStateIds && roleStateIds.length === 0
                 ? `No cases assigned to ${activeRoleName} in the current workflow.`
-                : "No applications in your queue."}
+                : copy.inboxView.emptyState.noApplicationsMessage}
             </p>
           </div>
         ) : (
@@ -116,11 +117,11 @@ const InboxView: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gradient-to-r from-accent/5 to-transparent hover:bg-gradient-to-r hover:from-accent/5 hover:to-transparent">
-                  <TableHead className="text-accent font-semibold">Application Number</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Business</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Submitted</TableHead>
+                  <TableHead className="text-accent font-semibold">{copy.inboxView.table.columnApplicationNumber}</TableHead>
+                  <TableHead>{copy.inboxView.table.columnType}</TableHead>
+                  <TableHead>{copy.inboxView.table.columnBusiness}</TableHead>
+                  <TableHead>{copy.inboxView.table.columnStatus}</TableHead>
+                  <TableHead>{copy.inboxView.table.columnSubmitted}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -138,10 +139,10 @@ const InboxView: React.FC = () => {
                           : "bg-blue-100 text-blue-700"
                       }`}>
                         {app.type === "RENEWAL" ? <RefreshCw className="h-2.5 w-2.5" /> : <FilePlus className="h-2.5 w-2.5" />}
-                        {app.type === "RENEWAL" ? "Renewal" : "New"}
+                        {app.type === "RENEWAL" ? copy.inboxView.applicationTypeBadge.renewal : copy.inboxView.applicationTypeBadge.new}
                       </span>
                     </TableCell>
-                    <TableCell className="text-sm text-foreground">{app.formData.f5 || "—"}</TableCell>
+                    <TableCell className="text-sm text-foreground">{app.formData.f5 || copy.inboxView.fallback.emptyBusinessName}</TableCell>
                     <TableCell><StatusPill stateId={app.currentStateId} label={app.status} /></TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {new Date(app.createdAt).toLocaleDateString()}

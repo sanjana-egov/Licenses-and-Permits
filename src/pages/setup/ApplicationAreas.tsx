@@ -1,12 +1,18 @@
 import { useState, useEffect } from "react";
 import { Plus, MapPin, AlertTriangle, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useOnboarding, type BoundaryHierarchy } from "@/contexts/OnboardingContext";
+import { useOnboarding, type BoundaryHierarchy, type ServiceItem } from "@/contexts/OnboardingContext";
 import { HierarchyCard } from "@/components/boundary/HierarchyCard";
 import { DeactivationDialog } from "@/components/boundary/DeactivationDialog";
 import { BoundarySetupWizard } from "@/components/boundary/BoundarySetupWizard";
 import { SEED_HIERARCHY } from "@/data/boundaryData";
 import { toast } from "@/hooks/use-toast";
+
+function getServicesForHierarchy(hierarchyId: string, isDefault: boolean, services: ServiceItem[]): string[] {
+  return services
+    .filter((s) => s.boundaryHierarchyId === hierarchyId || (!s.boundaryHierarchyId && isDefault))
+    .map((s) => s.name);
+}
 
 export default function ApplicationAreas() {
   const { state, updateState, addBoundaryHierarchy, updateBoundaryHierarchy } = useOnboarding();
@@ -14,6 +20,7 @@ export default function ApplicationAreas() {
   const [deactivateTarget, setDeactivateTarget] = useState<BoundaryHierarchy | null>(null);
 
   const hierarchies = state.boundaryHierarchies || [];
+  const services = state.services || [];
 
   // Seed a demo hierarchy for Super Admin on first visit if none exist
   useEffect(() => {
@@ -136,6 +143,7 @@ export default function ApplicationAreas() {
               <HierarchyCard
                 key={h.id}
                 hierarchy={h}
+                computedUsedBy={getServicesForHierarchy(h.id, h.isDefault, services)}
                 onMakeDefault={() => handleMakeDefault(h.id)}
                 onToggleStatus={() => handleToggleStatus(h)}
               />
@@ -148,13 +156,20 @@ export default function ApplicationAreas() {
         </div>
       )}
 
-      <BoundarySetupWizard open={wizardOpen} onOpenChange={setWizardOpen} />
+      {wizardOpen && (
+        <BoundarySetupWizard
+          mode="onboarding"
+          onBack={() => setWizardOpen(false)}
+          onComplete={() => setWizardOpen(false)}
+        />
+      )}
 
       <DeactivationDialog
         hierarchy={deactivateTarget}
         open={!!deactivateTarget}
         onOpenChange={(v) => !v && setDeactivateTarget(null)}
         onConfirm={handleConfirmDeactivate}
+        usedByServices={deactivateTarget ? getServicesForHierarchy(deactivateTarget.id, deactivateTarget.isDefault, services) : []}
       />
     </div>
   );

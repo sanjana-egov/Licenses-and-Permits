@@ -5,8 +5,6 @@ import SignIn from "@/components/onboarding/SignIn";
 import ResetPassword from "@/components/onboarding/ResetPassword";
 import ConfirmOrganization from "@/components/onboarding/ConfirmOrganization";
 import AddAdmins from "@/components/onboarding/AddAdmins";
-import SelectTemplateStep from "@/components/onboarding/SelectTemplateStep";
-import AddServiceOwners from "@/components/onboarding/AddServiceOwners";
 
 const Onboarding: React.FC = () => {
   const { state, updateState } = useOnboarding();
@@ -49,35 +47,12 @@ const Onboarding: React.FC = () => {
   if (state.onboardingStep === 3) {
     return (
       <AddAdmins
-        onComplete={(admins: InvitedAdmin[]) => updateState({ onboardingStep: 4, invitedAdmins: admins })}
-        onSkip={() => updateState({ onboardingStep: 4 })}
-      />
-    );
-  }
-
-  // Step 5: Select a service template
-  if (state.onboardingStep === 4) {
-    return (
-      <SelectTemplateStep
-        onComplete={() => updateState({ onboardingStep: 5 })}
-        onSkip={() => {
-          updateState({ isOnboardingComplete: true });
-          navigate("/dashboard");
-        }}
-      />
-    );
-  }
-
-  // Step 6: Add service owners (optional)
-  if (state.onboardingStep === 5) {
-    return (
-      <AddServiceOwners
-        onComplete={() => {
-          updateState({ isOnboardingComplete: true });
+        onComplete={(admins: InvitedAdmin[]) => {
+          updateState({ onboardingStep: 5, invitedAdmins: admins, isOnboardingComplete: true });
           navigate("/dashboard");
         }}
         onSkip={() => {
-          updateState({ isOnboardingComplete: true });
+          updateState({ onboardingStep: 5, isOnboardingComplete: true });
           navigate("/dashboard");
         }}
       />

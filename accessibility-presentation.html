@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accessibility Assessment Tool — DIGIT Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --b50:#eff6ff;--b100:#dbeafe;--b200:#bfdbfe;--b500:#3b82f6;--b600:#2563eb;--b700:#1d4ed8;--b800:#1e40af;--b900:#1e3a8a;
+  --p50:#faf5ff;--p100:#f3e8ff;--p500:#a855f7;--p600:#9333ea;--p700:#7e22ce;
+  --g50:#f0fdf4;--g100:#dcfce7;--g500:#22c55e;--g600:#16a34a;--g700:#15803d;
+  --a50:#fffbeb;--a100:#fef3c7;--a500:#f59e0b;--a600:#d97706;
+  --r50:#fef2f2;--r100:#fee2e2;--r500:#ef4444;--r600:#dc2626;
+  --o100:#ffedd5;--o600:#ea580c;
+  --s50:#f8fafc;--s100:#f1f5f9;--s200:#e2e8f0;--s300:#cbd5e1;--s400:#94a3b8;
+  --s500:#64748b;--s600:#475569;--s700:#334155;--s800:#1e293b;--s900:#0f172a;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:#0d1117;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+
+/* ── PRESENTATION SHELL ── */
+.pres{position:relative;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center}
+.scaler{position:relative;width:1280px;height:720px;transform-origin:top left}
+.slide{position:absolute;inset:0;background:#fff;border-radius:0;overflow:hidden;opacity:0;transform:translateX(50px) scale(.98);transition:opacity .4s cubic-bezier(.4,0,.2,1),transform .4s cubic-bezier(.4,0,.2,1);pointer-events:none}
+.slide.active{opacity:1;transform:none;pointer-events:all}
+.slide.prev{opacity:0;transform:translateX(-50px) scale(.98)}
+
+/* ── PROGRESS ── */
+.prog{position:fixed;top:0;left:0;right:0;height:3px;background:rgba(255,255,255,.08);z-index:50}
+.prog-fill{height:100%;background:linear-gradient(90deg,#3b82f6,#8b5cf6);transition:width .4s ease}
+
+/* ── NAV ── */
+.nav{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;background:rgba(15,23,42,.85);backdrop-filter:blur(12px);padding:8px 18px;border-radius:100px;z-index:50;border:1px solid rgba(255,255,255,.1)}
+.nb{background:rgba(255,255,255,.1);border:none;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;font-size:0}
+.nb:hover{background:rgba(255,255,255,.2)}
+.nb:disabled{opacity:.3;cursor:not-allowed}
+.nb svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.5}
+.sc{color:rgba(255,255,255,.75);font-size:12px;font-weight:600;min-width:52px;text-align:center}
+.nsep{width:1px;height:20px;background:rgba(255,255,255,.15)}
+.ntoggle{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);padding:5px 14px;border-radius:100px;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s;font-family:inherit}
+.ntoggle:hover{background:rgba(255,255,255,.18);color:#fff}
+
+/* ── SPEAKER NOTES ── */
+.notes{position:fixed;bottom:0;left:0;right:0;background:#0f172a;color:#fff;padding:20px 48px 28px;transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);z-index:100;max-height:38vh;overflow-y:auto;border-top:2px solid #3b82f6}
+.notes.open{transform:none}
+.notes h4{font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#3b82f6;margin-bottom:10px}
+.notes p{font-size:13px;line-height:1.75;color:rgba(255,255,255,.75)}
+.nclose{position:absolute;top:18px;right:24px;background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:18px;font-family:inherit;transition:color .2s}
+.nclose:hover{color:#fff}
+
+/* ── SHARED SLIDE COMPONENTS ── */
+.sh{padding:36px 52px 0}
+.stag{font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--b600);margin-bottom:6px}
+.stitle{font-size:32px;font-weight:900;color:var(--s900);line-height:1.15;letter-spacing:-.5px}
+.stitle .hl{color:var(--b600)}
+.ssub{font-size:16px;color:var(--s500);margin-top:6px;font-weight:400}
+.sb{padding:20px 52px 32px;height:calc(100% - 128px);display:flex;flex-direction:column}
+
+.card{background:var(--s50);border-radius:14px;padding:20px;border:1px solid var(--s200)}
+.cw{background:#fff;border-radius:14px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);border:1px solid var(--s200)}
+
+.ibox{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ibox svg{width:20px;height:20px}
+.ibox.blue{background:var(--b100);color:var(--b700)}
+.ibox.purple{background:var(--p100);color:var(--p700)}
+.ibox.green{background:var(--g100);color:var(--g700)}
+.ibox.amber{background:var(--a100);color:var(--a600)}
+.ibox.red{background:var(--r100);color:var(--r600)}
+
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:.5px}
+.badge.crit{background:var(--r100);color:var(--r600)}
+.badge.high{background:var(--o100);color:var(--o600)}
+.badge.med{background:var(--a100);color:var(--a600)}
+.badge.low{background:var(--g100);color:var(--g700)}
+.badge.blue{background:var(--b100);color:var(--b700)}
+
+/* ── SLIDE 1: TITLE ── */
+.s1{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 45%,#312e81 75%,#0f172a 100%) !important}
+.s1-pat{position:absolute;inset:0;opacity:.05;background-image:radial-gradient(circle at 2px 2px,#fff 1px,transparent 0);background-size:28px 28px}
+.s1-orb{position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(59,130,246,.25) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%)}
+.s1-body{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px}
+.s1-chip{display:inline-flex;align-items:center;gap:8px;background:rgba(59,130,246,.18);border:1px solid rgba(59,130,246,.35);padding:6px 20px;border-radius:100px;color:#93c5fd;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:28px}
+.s1-dot{width:6px;height:6px;border-radius:50%;background:#3b82f6}
+.s1-title{font-size:50px;font-weight:900;color:#fff;line-height:1.08;letter-spacing:-1.5px;margin-bottom:16px;max-width:860px}
+.s1-title .ac{background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.s1-sub{font-size:18px;color:rgba(255,255,255,.55);margin-bottom:40px;font-weight:400}
+.s1-div{width:56px;height:3px;background:linear-gradient(90deg,#3b82f6,#8b5cf6);border-radius:2px;margin:0 auto 36px}
+.s1-meta{display:flex;align-items:center;gap:20px;color:rgba(255,255,255,.3);font-size:12px}
+.s1-sep{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.2)}
+
+/* ── SLIDE 2: PERSONAS ── */
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;flex:1;margin-top:16px}
+.pcard{background:#fff;border-radius:16px;padding:22px;border:1px solid var(--s200);display:flex;flex-direction:column;gap:10px}
+.ptop{display:flex;align-items:center;gap:12px}
+.pav{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.pname{font-size:14px;font-weight:800;color:var(--s900)}
+.plabel{font-size:11px;color:var(--s500);margin-top:1px}
+.pscen{font-size:12px;line-height:1.6;color:var(--s700);border-left:3px solid;padding-left:12px;margin:2px 0}
+.pq{font-size:12px;font-weight:700;color:var(--s800);background:var(--s50);padding:8px 12px;border-radius:8px;display:flex;align-items:center;gap:6px}
+
+/* ── SLIDE 3: WHEEL ── */
+.wlayout{display:flex;align-items:center;gap:40px;flex:1;margin-top:14px}
+.wlegend{display:grid;grid-template-columns:1fr 1fr;gap:14px;flex:1}
+.li{display:flex;align-items:flex-start;gap:11px}
+.ldot{width:12px;height:12px;border-radius:3px;margin-top:3px;flex-shrink:0}
+.llabel{font-size:14px;font-weight:700;color:var(--s900);margin-bottom:2px}
+.ldesc{font-size:12px;color:var(--s500);line-height:1.5}
+
+/* ── SLIDE 4: WHY MATTERS ── */
+.twocol{display:grid;grid-template-columns:1fr 1fr;gap:20px;flex:1;margin-top:16px}
+.ccol{border-radius:18px;padding:28px;display:flex;flex-direction:column;gap:14px}
+.ccol.bblue{background:linear-gradient(135deg,#eff6ff,#dbeafe)}
+.ccol.bpurple{background:linear-gradient(135deg,#faf5ff,#f3e8ff)}
+.chead{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.cheadicon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center}
+.cheadicon.b{background:var(--b600);color:#fff}
+.cheadicon.p{background:var(--p600);color:#fff}
+.cheadicon svg{width:20px;height:20px}
+.cheadtext{font-size:17px;font-weight:900;color:var(--s900)}
+.bitem{display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.75);border-radius:10px}
+.bico{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.btext{font-size:13px;font-weight:600;color:var(--s800)}
+
+/* ── SLIDE 5: JOURNEY ── */
+.jcon{flex:1;display:flex;flex-direction:column;gap:16px;margin-top:14px}
+.jrow{display:flex;align-items:flex-start}
+.jstep{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:0}
+.jnode{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:8px;flex-shrink:0}
+.jsname{font-size:13px;font-weight:800;color:var(--s900);margin-bottom:4px}
+.jssub{font-size:11px;color:var(--s500);line-height:1.4;max-width:120px}
+.jconn{display:flex;align-items:flex-start;padding-top:14px;flex-shrink:0;color:var(--s300)}
+.jconn svg{width:18px;height:18px}
+.jaccess{padding:14px 20px;background:linear-gradient(135deg,#eff6ff,#f0fdf4);border-radius:14px;border:1px solid var(--s200)}
+.jalab{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--b600);margin-bottom:10px}
+.japts{display:flex;gap:8px}
+.japt{flex:1;display:flex;align-items:center;gap:6px;padding:7px 11px;background:#fff;border-radius:9px;font-size:11px;font-weight:500;color:var(--s700);border:1px solid var(--s200)}
+.jadot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.jadot.g{background:var(--g500)}
+.jadot.b{background:var(--b500)}
+.jadot.p{background:var(--p500)}
+
+/* ── SLIDE 6: SCALE ── */
+.slayout{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;flex:1;margin-top:16px;align-items:center}
+.spyr{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.slayer{display:flex;align-items:center;justify-content:space-between;border-radius:12px;padding:14px 20px}
+.slayer-inner{display:flex;align-items:center;gap:12px}
+.slname{font-weight:700;color:#fff;font-size:15px}
+.slcount{font-size:12px;color:rgba(255,255,255,.65)}
+.slnum{font-size:26px;font-weight:900;color:rgba(255,255,255,.9)}
+.srisk{background:linear-gradient(135deg,#fef2f2,#fee2e2);border:2px solid var(--r500);border-radius:18px;padding:24px;text-align:center}
+.srisk-ico{font-size:44px;margin-bottom:12px}
+.srisk-title{font-size:20px;font-weight:800;color:var(--r600);margin-bottom:10px}
+.srisk-desc{font-size:13px;color:var(--s700);line-height:1.6;margin-bottom:16px}
+.sstats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sstat{background:#fff;border-radius:10px;padding:12px;text-align:center}
+.sstat-n{font-size:26px;font-weight:900;color:var(--r600)}
+.sstat-l{font-size:11px;color:var(--s500);margin-top:2px}
+
+/* ── SLIDE 7: OPTIONS ── */
+.ogrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;flex:1;margin-top:14px}
+.ocard{background:#fff;border-radius:15px;padding:20px 16px;border:2px solid var(--s200);display:flex;flex-direction:column;gap:12px}
+.ocard.win{border-color:var(--b500);background:linear-gradient(180deg,#eff6ff,#fff);box-shadow:0 6px 24px rgba(37,99,235,.14)}
+.onum{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--s400)}
+.oico{font-size:26px}
+.oname{font-size:14px;font-weight:800;color:var(--s900);line-height:1.3}
+.opros-h,.ocons-h{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.opros-h{color:var(--g600)}
+.ocons-h{color:var(--r600)}
+.opros,.ocons{display:flex;flex-direction:column;gap:4px}
+.opi,.oci{font-size:11px;color:var(--s700);display:flex;align-items:flex-start;gap:5px;line-height:1.4}
+.opi::before{content:'✓';color:var(--g600);font-weight:800;flex-shrink:0;font-size:10px;margin-top:1px}
+.oci::before{content:'✗';color:var(--r500);font-weight:800;flex-shrink:0;font-size:10px;margin-top:1px}
+.wbadge{display:inline-flex;align-items:center;gap:4px;background:var(--b600);color:#fff;font-size:10px;font-weight:700;padding:3px 9px;border-radius:100px}
+
+/* ── SLIDE 8: MATRIX ── */
+.mlayout{display:grid;grid-template-columns:1.3fr 1fr;gap:28px;flex:1;margin-top:14px;align-items:center}
+.mtable{width:100%;border-collapse:collapse;font-size:12px}
+.mtable th{background:var(--s900);color:#fff;padding:9px 12px;font-size:11px;font-weight:600;text-align:center}
+.mtable th:first-child{text-align:left;border-radius:8px 0 0 0}
+.mtable th:last-child{border-radius:0 8px 0 0;background:var(--b700)}
+.mtable td{padding:9px 12px;border-bottom:1px solid var(--s200);color:var(--s700);font-weight:500}
+.mtable td:not(:first-child){text-align:center}
+.mtable tr:last-child td{border-bottom:none}
+.mtable tr:nth-child(even) td{background:var(--s50)}
+.mtable .wc{background:var(--b50) !important;font-weight:700;color:var(--b700)}
+.mrate{display:flex;align-items:center;justify-content:center;gap:2px}
+.md{width:8px;height:8px;border-radius:50%}
+.md.f{background:var(--b600)}
+.md.fg{background:var(--g600)}
+.md.e{background:var(--s300)}
+.msum{background:linear-gradient(135deg,var(--b700),#4f46e5);border-radius:18px;padding:28px;color:#fff;display:flex;flex-direction:column;gap:16px}
+.msum-title{font-size:20px;font-weight:800;line-height:1.3}
+.msum-sub{font-size:13px;color:rgba(255,255,255,.7);line-height:1.6}
+.mpts{display:flex;flex-direction:column;gap:8px}
+.mpt{display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,.9);background:rgba(255,255,255,.1);padding:9px 13px;border-radius:9px}
+.mpt svg{width:14px;height:14px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2.5}
+
+/* ── SLIDE 9: TOOL INTRO ── */
+.thero{display:grid;grid-template-columns:1fr 1fr;gap:28px;flex:1;margin-top:16px;align-items:center}
+.tinfo{display:flex;flex-direction:column;gap:18px}
+.tlogo{display:flex;align-items:center;gap:14px}
+.tlogo-ico{width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,var(--b600),var(--p600));display:flex;align-items:center;justify-content:center;color:#fff}
+.tlogo-ico svg{width:30px;height:30px}
+.tname{font-size:20px;font-weight:900;color:var(--s900);line-height:1.2}
+.ttagline{font-size:13px;color:var(--s500)}
+.tdesc{font-size:14px;color:var(--s700);line-height:1.7}
+.tfeats{display:flex;flex-direction:column;gap:8px}
+.tfeat{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--s700);font-weight:500}
+.tfeat-d{width:7px;height:7px;border-radius:50%;background:var(--b500);flex-shrink:0}
+.tmock{background:var(--s900);border-radius:18px;overflow:hidden;display:flex;flex-direction:column}
+.tmock-bar{background:var(--s800);padding:10px 18px;display:flex;align-items:center;gap:7px}
+.mdd{width:11px;height:11px;border-radius:50%}
+.mdd.r{background:#ef4444}.mdd.a{background:#f59e0b}.mdd.g{background:#22c55e}
+.mock-ttl{margin-left:8px;font-size:11px;color:rgba(255,255,255,.4);font-family:monospace}
+.tmock-body{padding:18px;display:flex;flex-direction:column;gap:10px}
+.mock-row{display:flex;gap:8px}
+.mock-inp{flex:1;background:var(--s700);border-radius:7px;padding:9px 12px;font-size:11px;color:rgba(255,255,255,.75);font-family:monospace}
+.mock-run{background:var(--b600);color:#fff;font-size:11px;font-weight:600;padding:9px 16px;border-radius:7px;border:none;cursor:pointer;font-family:inherit;white-space:nowrap}
+.mock-res{background:var(--s800);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.mock-res-h{display:flex;justify-content:space-between;align-items:center}
+.mock-res-t{font-size:12px;font-weight:700;color:#fff}
+.mock-score{font-size:22px;font-weight:900;color:var(--a500)}
+.mock-issues{display:flex;flex-direction:column;gap:5px}
+.mock-iss{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.65);padding:5px 9px;background:var(--s700);border-radius:5px}
+.mock-sev{font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px}
+.mock-sev.c{background:var(--r500);color:#fff}
+.mock-sev.h{background:var(--o600);color:#fff}
+.mock-sev.m{background:var(--a500);color:#fff}
+
+/* ── SLIDE 10: HOW IT WORKS ── */
+.flow{flex:1;display:flex;flex-direction:column;gap:18px;margin-top:18px;justify-content:center}
+.fsteps{display:flex;align-items:flex-start;gap:0}
+.fstep{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px}
+.fnode{width:76px;height:76px;border-radius:20px;display:flex;align-items:center;justify-content:center}
+.fnode svg{width:32px;height:32px}
+.fnum{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--s400)}
+.ftitle{font-size:14px;font-weight:800;color:var(--s900)}
+.fdesc{font-size:11px;color:var(--s500);line-height:1.5;max-width:140px}
+.farr{display:flex;align-items:flex-start;padding-top:26px;flex-shrink:0;color:var(--s300)}
+.farr svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2}
+.fbar{background:linear-gradient(135deg,var(--b50),var(--p50));border-radius:14px;padding:16px 24px;border:1px solid var(--s200);display:flex;align-items:center;gap:16px}
+.fbar-ico{font-size:22px}
+.fbar-t{font-size:13px;color:var(--s700);line-height:1.5}
+.fbar-t strong{color:var(--b700)}
+
+/* ── SLIDE 11: PILLARS ── */
+.pgr{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;flex:1;margin-top:18px}
+.pc{border-radius:18px;padding:24px 20px;display:flex;flex-direction:column;gap:14px}
+.pico{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center}
+.pico svg{width:26px;height:26px}
+.pname{font-size:15px;font-weight:800;color:var(--s900);line-height:1.2}
+.pexs{display:flex;flex-direction:column;gap:5px;margin-top:2px}
+.pex{font-size:11px;color:var(--s600);display:flex;align-items:center;gap:5px;line-height:1.4}
+.pbul{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+
+/* ── SLIDE 12: FINDINGS ── */
+.fgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;flex:1;margin-top:16px}
+.fc{background:#fff;border-radius:15px;padding:22px;border:1px solid var(--s200);display:flex;flex-direction:column;gap:10px;border-left:4px solid;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.fc.crit{border-left-color:var(--r500)}
+.fc.high{border-left-color:var(--o600)}
+.fc.med{border-left-color:var(--a500)}
+.fc.low{border-left-color:var(--g500)}
+.ftop{display:flex;align-items:center;justify-content:space-between}
+.ftitle{font-size:14px;font-weight:800;color:var(--s900)}
+.fwcag{font-size:10px;color:var(--s400);margin-top:1px}
+.fdesc{font-size:12px;color:var(--s700);line-height:1.6}
+.frec{background:var(--s50);border-radius:9px;padding:10px;font-size:11px;color:var(--s700);line-height:1.5;display:flex;align-items:flex-start;gap:7px}
+.frec-l{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--b600);flex-shrink:0;margin-top:1px;white-space:nowrap}
+
+/* ── SLIDE 13: DEMO ── */
+.dlayout{display:grid;grid-template-columns:1fr 1.5fr;gap:24px;flex:1;margin-top:18px;align-items:stretch}
+.dsteps{display:flex;flex-direction:column;gap:10px}
+.dstep{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;background:var(--s50);border:1px solid var(--s200)}
+.dstep.act{background:var(--b50);border-color:#93c5fd}
+.dsnum{width:30px;height:30px;border-radius:50%;background:var(--s200);color:var(--s600);font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.dstep.act .dsnum{background:var(--b600);color:#fff}
+.dstext{font-size:13px;font-weight:600;color:var(--s800)}
+.dplaceholder{background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px}
+.dpulse{width:76px;height:76px;border-radius:50%;background:rgba(59,130,246,.2);display:flex;align-items:center;justify-content:center;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.8}}
+.dpulse-in{width:50px;height:50px;border-radius:50%;background:var(--b600);display:flex;align-items:center;justify-content:center;color:#fff}
+.dpulse-in svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2}
+.dtitle{font-size:20px;font-weight:700;color:#fff}
+.dsub{font-size:13px;color:rgba(255,255,255,.45)}
+
+/* ── SLIDE 14: VALUE ── */
+.stakeholders{display:flex;flex-direction:column;gap:12px;flex:1;margin-top:14px}
+.stop{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.sbottom{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.scard{background:#fff;border-radius:14px;padding:18px;border:1px solid var(--s200);display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+.sctop{display:flex;align-items:center;gap:9px}
+.scico{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.scname{font-size:13px;font-weight:800;color:var(--s900)}
+.scbens{display:flex;flex-direction:column;gap:4px}
+.scben{font-size:11px;color:var(--s600);display:flex;align-items:center;gap:5px}
+.scben-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+
+/* ── SLIDE 15: MATURITY ── */
+.matlayout{flex:1;margin-top:18px;display:flex;flex-direction:column;gap:18px}
+.mattrack{display:flex;align-items:flex-end;gap:10px;height:220px}
+.matlevel{flex:1;display:flex;flex-direction:column;align-items:center;gap:10px}
+.matbar{width:100%;border-radius:12px 12px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:12px;position:relative}
+.matbar.l1{height:55px;background:var(--s200)}
+.matbar.l2{height:105px;background:linear-gradient(180deg,#bfdbfe,#93c5fd)}
+.matbar.l3{height:165px;background:linear-gradient(180deg,var(--b500),var(--b700));box-shadow:0 6px 24px rgba(37,99,235,.35)}
+.matbar.l4{height:215px;background:linear-gradient(180deg,var(--p500),var(--p700));opacity:.35}
+.matn{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
+.matn.dark{color:var(--s500)}
+.matn.light{color:rgba(255,255,255,.8)}
+.mat-cur{position:absolute;top:-34px;left:50%;transform:translateX(-50%);background:var(--b600);color:#fff;font-size:10px;font-weight:700;padding:4px 12px;border-radius:100px;white-space:nowrap}
+.matlabel{font-size:13px;font-weight:700;color:var(--s900);text-align:center;line-height:1.3}
+.matdesc{font-size:11px;color:var(--s500);text-align:center}
+.matconn{flex-shrink:0;display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:46px;color:var(--s300)}
+.matconn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
+.mattimeline{background:var(--b50);border-radius:14px;padding:16px 24px;display:flex;align-items:center;gap:16px;border:1px solid var(--b200)}
+.mattimeline-t{font-size:13px;color:var(--s700);line-height:1.5}
+.mattimeline-t strong{color:var(--b700)}
+
+/* ── SLIDE 16: TAKEAWAYS ── */
+.tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;flex:1;margin-top:22px}
+.tcard{border-radius:22px;padding:32px 26px;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden}
+.tcard.c1{background:linear-gradient(135deg,#1e3a8a,#1d4ed8);color:#fff}
+.tcard.c2{background:linear-gradient(135deg,#4c1d95,#7c3aed);color:#fff}
+.tcard.c3{background:linear-gradient(135deg,#064e3b,#059669);color:#fff}
+.tnum{font-size:80px;font-weight:900;position:absolute;top:10px;right:18px;opacity:.08;line-height:1}
+.tico{font-size:34px}
+.ttitle{font-size:19px;font-weight:800;line-height:1.3;position:relative;z-index:1}
+.tdesc{font-size:13px;opacity:.82;line-height:1.65;position:relative;z-index:1}
+
+/* ── SLIDE 17: THANK YOU ── */
+.ty{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,#4c1d95 100%) !important}
+.ty-pat{position:absolute;inset:0;opacity:.04;background-image:radial-gradient(circle at 2px 2px,#fff 1px,transparent 0);background-size:28px 28px}
+.ty-body{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:22px;padding:60px}
+.ty-label{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.35)}
+.ty-title{font-size:58px;font-weight:900;color:#fff;letter-spacing:-2px;line-height:1.05}
+.ty-sub{font-size:17px;color:rgba(255,255,255,.55);max-width:580px}
+.ty-div{width:72px;height:3px;background:linear-gradient(90deg,#3b82f6,#8b5cf6);border-radius:2px}
+.ty-cards{display:flex;gap:18px;margin-top:6px}
+.ty-c{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:18px 28px;text-align:center;backdrop-filter:blur(8px)}
+.ty-cl{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px}
+.ty-cv{font-size:16px;font-weight:700;color:#fff}
+</style>
+</head>
+<body>
+<div class="pres">
+<div class="prog"><div class="prog-fill" id="pf"></div></div>
+
+<div class="scaler" id="scaler">
+
+<!-- ══ SLIDE 1: TITLE ══ -->
+<section class="slide active" data-notes="Welcome everyone. Today we're going to walk through a critical but often overlooked aspect of digital service delivery — accessibility. We'll explore what accessibility means for citizens, why it matters at scale, and introduce the Accessibility Assessment Tool we've built for DIGIT Studio. This isn't a technical deep-dive — it's a story about inclusion, scale, and smart automation.">
+  <div class="s1">
+    <div class="s1-pat"></div>
+    <div class="s1-orb"></div>
+    <div class="s1-body">
+      <div class="s1-chip"><div class="s1-dot"></div>DIGIT Studio</div>
+      <h1 class="s1-title">Building <span class="ac">Accessible</span><br>Digital Services at Scale</h1>
+      <p class="s1-sub">Accessibility Assessment Tool for DIGIT Studio</p>
+      <div class="s1-div"></div>
+      <div class="s1-meta">
+        <span>Lingatech &amp; eGov Foundation</span>
+        <div class="s1-sep"></div>
+        <span>DIGIT Studio Platform</span>
+        <div class="s1-sep"></div>
+        <span>June 2026</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SLIDE 2: CITIZEN PERSONAS ══ -->
+<section class="slide" data-notes="Before we talk about tools or standards, let's start with people. Each of these four individuals is a real citizen who might need to apply for a business license, access a welfare benefit, or register a property. The question we need to ask ourselves is: would our digital services actually work for them? This is the heart of accessibility — not compliance, but real people being able to access services they're entitled to.">
+  <div class="sh">
+    <div class="stag">Accessibility is about people</div>
+    <h2 class="stitle">Can <span class="hl">Every Citizen</span> Use Our Digital Services?</h2>
+  </div>
+  <div class="sb">
+    <div class="pgrid">
+      <div class="pcard">
+        <div class="ptop">
+          <div class="pav" style="background:#dbeafe">👁️</div>
+          <div><div class="pname">Amara, 34</div><div class="plabel">Low vision — uses a screen reader</div></div>
+        </div>
+        <p class="pscen" style="border-color:#3b82f6">"I navigate using my keyboard and screen reader. When buttons have no labels, or forms skip field descriptions, I'm completely stuck."</p>
+        <div class="pq">❓ Can she complete a business license application?</div>
+      </div>
+      <div class="pcard">
+        <div class="ptop">
+          <div class="pav" style="background:#f3e8ff">🤲</div>
+          <div><div class="pname">Sipho, 42</div><div class="plabel">Motor disability — cannot use a mouse</div></div>
+        </div>
+        <p class="pscen" style="border-color:#9333ea">"I use only my keyboard to navigate. If I can't Tab through a form or reach a Submit button, the service is inaccessible to me — no matter how good it looks."</p>
+        <div class="pq">❓ Can he submit a permit renewal using only a keyboard?</div>
+      </div>
+      <div class="pcard">
+        <div class="ptop">
+          <div class="pav" style="background:#fef3c7">👴</div>
+          <div><div class="pname">Fatima, 68</div><div class="plabel">Older citizen with reduced vision</div></div>
+        </div>
+        <p class="pscen" style="border-color:#d97706">"Light grey text on white backgrounds is impossible for me to read. Small font sizes make me give up and go to the office instead — a full day wasted."</p>
+        <div class="pq">❓ Can she read and understand the service requirements?</div>
+      </div>
+      <div class="pcard">
+        <div class="ptop">
+          <div class="pav" style="background:#dcfce7">📱</div>
+          <div><div class="pname">Kwame, 27</div><div class="plabel">Low-bandwidth mobile-only user</div></div>
+        </div>
+        <p class="pscen" style="border-color:#16a34a">"I use a basic Android phone. If images have no alt text or the layout breaks on small screens, I can't tell what I'm looking at or what I need to do next."</p>
+        <div class="pq">❓ Can he track his application status on a mobile device?</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SLIDE 3: WHAT ACCESSIBILITY MEANS ══ -->
+<section class="slide" data-notes="Accessibility is often associated only with blindness or wheelchair users. But it's much broader than that. It covers a wide spectrum of permanent, temporary, and situational needs. Temporary impairments — a broken arm, bright sunlight on a screen — affect everyone at some point. When we design accessible services, we make them better for everyone. Accessibility is not a special feature; it's fundamental quality.">
+  <div class="sh">
+    <div class="stag">Understanding the spectrum</div>
+    <h2 class="stitle">Accessibility = <span class="hl">Equal Access</span> for All</h2>
+    <p class="ssub">Accessibility serves a far wider audience than most people assume</p>
+  </div>
+  <div class="sb">
+    <div class="wlayout">
+      <svg width="300" height="300" viewBox="0 0 300 300" style="flex-shrink:0">
+        <circle cx="150" cy="150" r="130" fill="none" stroke="#e2e8f0" stroke-width="2"/>
+        <!-- Segments -->
+        <path d="M150 150 L150 20 A130 130 0 0 1 263 85 Z" fill="#dbeafe" opacity=".9"/>
+        <path d="M150 150 L263 85 A130 130 0 0 1 263 215 Z" fill="#f3e8ff" opacity=".9"/>
+        <path d="M150 150 L263 215 A130 130 0 0 1 150 280 Z" fill="#dcfce7" opacity=".9"/>
+        <path d="M150 150 L150 280 A130 130 0 0 1 37 215 Z" fill="#fef3c7" opacity=".9"/>
+        <path d="M150 150 L37 215 A130 130 0 0 1 37 85 Z" fill="#fee2e2" opacity=".9"/>
+        <path d="M150 150 L37 85 A130 130 0 0 1 150 20 Z" fill="#e0f2fe" opacity=".9"/>
+        <!-- Center -->
+        <circle cx="150" cy="150" r="52" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+        <text x="150" y="143" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" font-weight="800" fill="#1e293b">INCLUSIVE</text>
+        <text x="150" y="161" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" font-weight="800" fill="#2563eb">ACCESS</text>
+        <!-- Labels -->
+        <text x="192" y="62" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#1d4ed8">Visual</text>
+        <text x="262" y="155" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#7c3aed">Motor</text>
+        <text x="216" y="254" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#15803d">Cognitive</text>
+        <text x="86" y="254" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#d97706">Temporary</text>
+        <text x="36" y="155" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#dc2626">Elderly</text>
+        <text x="108" y="62" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#0284c7">Hearing</text>
+      </svg>
+      <div class="wlegend">
+        <div class="li"><div class="ldot" style="background:#3b82f6"></div><div><div class="llabel">Visual Disabilities</div><div class="ldesc">Blindness, low vision, colour blindness — affecting how content is perceived</div></div></div>
+        <div class="li"><div class="ldot" style="background:#9333ea"></div><div><div class="llabel">Motor Disabilities</div><div class="ldesc">Limited hand function, tremors — affecting how users interact with interfaces</div></div></div>
+        <div class="li"><div class="ldot" style="background:#16a34a"></div><div><div class="llabel">Cognitive Disabilities</div><div class="ldesc">Dyslexia, attention disorders — affecting how users process information</div></div></div>
+        <div class="li"><div class="ldot" style="background:#d97706"></div><div><div class="llabel">Temporary Impairments</div><div class="ldesc">Broken arm, bright sunlight, noisy environment — affects everyone at times</div></div></div>
+        <div class="li"><div class="ldot" style="background:#dc2626"></div><div><div class="llabel">Elderly Users</div><div class="ldesc">Reduced vision, slower motor response — a growing segment of citizens</div></div></div>
+        <div class="li"><div class="ldot" style="background:#0284c7"></div><div><div class="llabel">Hearing Disabilities</div><div class="ldesc">Deafness, hard of hearing — affecting audio-dependent content and alerts</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SLIDE 4: WHY IT MATTERS ══ -->
+<section class="slide" data-notes="Accessibility is often framed purely as compliance — something you do to avoid legal risk. But that's the wrong lens. Accessible services are simply better services. They load faster, work on more devices, are easier to use for everyone, and reduce support costs. When you build accessible digital services, you're not creating a special category of service — you're building quality in from the start.">
+  <div class="sh">
+    <div class="stag">The business case</div>
+    <h2 class="stitle">More Than <span class="hl">Compliance</span></h2>
+    <p class="ssub">Accessibility improves outcomes for citizens and organisations alike</p>
+  </div>
+  <div class="sb">
+    <div class="twocol">
+      <div class="ccol bblue">
+        <div class="chead">
+          <div class="cheadicon b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <span class="cheadtext">Citizen Benefits</span>
+        </div>
+        <div class="bitem"><div class="bico">🤝</div><span class="btext">Equal access to public services for all citizens</span></div>
+        <div class="bitem"><div class="bico">⚡</div><span class="btext">Faster, less frustrating service experiences</span></div>
+        <div class="bitem"><div class="bico">📱</div><span class="btext">Works on any device, any network condition</span></div>
+        <div class="bitem"><div class="bico">🎯</div><span class="btext">Clearer content reduces errors and resubmissions</span></div>
+      </div>
+      <div class="ccol bpurple">
+        <div class="chead">
+          <div class="cheadicon p"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <span class="cheadtext">Organisation Benefits</span>
+        </div>
+        <div class="bitem"><div class="bico">⚖️</div><span class="btext">Legal &amp; regulatory compliance met by default</span></div>
+        <div class="bitem"><div class="bico">📈</div><span class="btext">Higher adoption — more citizens complete applications</span></div>
+        <div class="bitem"><div class="bico">💰</div><span class="btext">Lower support costs — fewer assisted transactions</span></div>
+        <div class="bitem"><div class="bico">🏆</div><span class="btext">Better product quality across the entire platform</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SLIDE 5: PUBLIC SERVICE JOURNEY ══ -->
+<section class="slide" data-notes="Government digital services are not optional products — they're essential services. A citizen who can't access a welfare payment portal or a business licensing system faces real-world consequences. Unlike a commercial app where a frustrated user simply switches to a competitor, there is often no alternative. This makes accessibility a civic obligation, not a feature request. Every touchpoint in the service journey must be accessible.">
+  <div class="sh">
+    <div class="stag">Government context</div>
+    <h2 class="stitle">Why It Matters <span class="hl">Even More</span> for Government Services</h2>
+    <p class="ssub">Public services are essential — there is often no alternative for excluded citizens</p>
+  </div>
+  <div class="sb">
+    <div class="jcon">
+      <div class="jrow">
+        <div class="jstep">
+          <div class="jnode" style="background:#dbeafe">🔍</div>
+          <div class="jsname">Awareness</div>
+          <div class="jssub">Citizen discovers available service</div>
+        </div>
+        <div class="jconn"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="jstep">
+          <div class="jnode" style="background:#f3e8ff">📋</div>
+          <div class="jsname">Application</div>
+          <div class="jssub">Fills out form, attaches documents</div>
+        </div>
+        <div class="jconn"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="jstep">
+          <div class="jnode" style="background:#dcfce7">💳</div>
+          <div class="jsname">Payment</div>
+          <div class="jssub">Pays applicable fees online</div>
+        </div>
+        <div class="jconn"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="jstep">
+          <div class="jnode" style="background:#fef3c7">✅</div>
+          <div class="jsname">Approval</div>
+          <div class="jssub">Reviews status, responds to queries</div>
+        </div>
+        <div class="jconn"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="jstep">
+          <div class="jnode" style="background:#fee2e2">🏛️</div>
+          <div class="jsname">Certificate</div>
+          <div class="jssub">Downloads digital license / permit</div>
+        </div>
+      </div>
+      <div class="jaccess">
+        <div class="jalab">Accessibility must be embedded at every stage</div>
+        <div class="japts">
+          <div class="japt"><div class="jadot g"></div>Screen reader compatible content</div>
+          <div class="japt"><div class="jadot b"></div>Keyboard-navigable forms &amp; flows</div>
+          <div class="japt"><div class="jadot p"></div>Sufficient colour contrast throughout</div>
+          <div class="japt"><div class="jadot g"></div>Clear error messages &amp; instructions</div>
+          <div class="japt"><div class="jadot b"></div>Mobile-responsive at every step</div>
+        </div>
+      </div>
+      <div style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border-radius:12px;padding:14px 20px;border:1px solid #fca5a5;display:flex;align-items:center;gap:14px">
+        <span style="font-size:24px">⚠️</span>
+        <span style="font-size:13px;color:#7f1d1d;font-weight:600">An inaccessible government service doesn't just frustrate citizens — it <strong>excludes</strong> them from rights and entitlements they are legally owed.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SLIDE 6: SCALING CHALLENGE ══ -->
+<section class="slide" data-notes="DIGIT Studio is growing rapidly. We have multiple applications, hundreds of screens, thousands of UI components, and continuous releases. Manually checking accessibility at this scale is simply not feasible. Even a dedicated accessibility expert reviewing one screen per hour would take weeks to cover a single application — and by the time the review is done, the codebase has moved on. We need a different approach.">
+  <div class="sh">
+    <div class="stag">The challenge</div>
+    <h2 class="stitle">How Do We Ensure Accessibility <span class="hl">Across Every Screen?</span></h2>
+    <p class="ssub">Scale makes manual accessibility reviews unsustainable</p>
+  </div>
+  <div class="sb">
+    <div class="slayout">
+      <div class="spyr">
+        <div class="slayer" style="background:#1e40af">
+          <div class="slayer-inner">
+            <div style="width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:18px">🏗️</div>
+            <div><div class="slname">Applications</div><div class="slcount">Deployed across government agencies</div></div>
+          </div>
+          <div class="slnum">10+</div>
+        </div>
+        <div class="slayer" style="background:#1d4ed8">
+          <div class="slayer-inner">
+            <div style="width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:18px">📄</div>
+            <div><div class="slname">Screens</div><div class="slcount">Per application, across all flows</div></div>
+          </div>
+          <div class="slnum">50+</div>
+        </div>
+        <div class="slayer" style="background:#2563eb">
+          <div class="slayer-inner">
+            <div style="width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:18px">🧩</div>
+            <div><div class="slname">UI Components</div><div class="slcount">Reusable elements per screen</div></div>
+          </div>
+          <div class="slnum">200+</div>
+        </div>
+        <div class="slayer" style="background:#3b82f6">
+          <div class="slayer-inner">
+            <div style="width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:18px">🚀</div>
+            <div><div class="slname">Releases</div><div class="slcount">Continuous deployments each sprint</div></div>
+          </div>
+          <div class="slnum">∞</div>
+        </div>
+      </div>
+      <div class="srisk">
+        <div class="srisk-ico">🎯</div>
+        <div class="srisk-title">Accessibility Risk at Scale</div>
+        <div class="srisk-desc">Each new screen, component update, or content change is a potential accessibility regression. Without automation, issues accumulate silently.</div>
+        <div class="sstats">
+          <div class="sstat"><div class="sstat-n">97%</div><div class="sstat-l">of homepages have detectable WCAG failures</div></div>
+          <div class="sstat"><div class="sstat-n">3.4×</div><div class="sstat-l">more issues found when teams skip accessibility review</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SLIDE 7: OPTIONS ══ -->
+<section class="slide" data-notes="Before deciding on our approach, we evaluated four options. Manual audits are thorough but slow and expensive — they can't keep pace with continuous development. Third-party reviews provide external expertise but are periodic and costly. Training and guidelines raise awareness but rely on every developer to remember and apply them consistently — which rarely happens under delivery pressure. Automated validation is the only option that scales with the pace of development.">
+  <div class="sh">
+    <div class="stag">Evaluating the options</div>
+    <h2 class="stitle">Four <span class="hl">Possible Approaches</span></h2>
+  </div>
+  <div class="sb">
+    <div class="ogrid">
+      <div class="ocard">
+        <div class="onum">Option 01</div>
+        <div class="oico">🔍</div>
+        <div class="oname">Manual Accessibility Audits</div>
+        <div class="opros"><div class="opros-h">Strengths</div>
+          <div class="opi">Deep, nuanced findings</div>
+          <div class="opi">Catches subjective issues</div>
+        </div>
+        <div class="ocons"><div class="ocons-h">Limitations</div>
+          <div class="oci">Slow — days per application</div>
+          <div class="oci">Expensive and scarce expertise</div>
+          <div class="oci">Point-in-time, not continuous</div>
+        </div>
+      </div>
+      <div class="ocard">
+        <div class="onum">Option 02</div>
+        <div class="oico">🏢</div>
+        <div class="oname">Third-Party Accessibility Reviews</div>
+        <div class="opros"><div class="opros-h">Strengths</div>
+          <div class="opi">Independent perspective</div>
+          <div class="opi">Expert-level coverage</div>
+        </div>
+        <div class="ocons"><div class="ocons-h">Limitations</div>
+          <div class="oci">Very high cost per review</div>
+          <div class="oci">Weeks to complete and deliver</div>
+          <div class="oci">No ongoing monitoring</div>
+        </div>
+      </div>
+      <div class="ocard">
+        <div class="onum">Option 03</div>
+        <div class="oico">📚</div>
+        <div class="oname">Training &amp; Guidelines</div>
+        <div class="opros"><div class="opros-h">Strengths</div>
+          <div class="opi">Builds team capability</div>
+          <div class="opi">Low direct cost</div>
+        </div>
+        <div class="ocons"><div class="ocons-h">Limitations</div>
+          <div class="oci">Inconsistently applied</div>
+          <div class="oci">No verification mechanism</div>
+          <div class="oci">Relies on individual discipline</div>
+        </div>
+      </div>
+      <div class="ocard win">
+        <div class="onum">Option 04</div>
+        <div class="oico">⚡</div>
+        <div class="oname">Automated Accessibility Validation</div>
+        <div class="opros"><div class="opros-h">Strengths</div>
+          <div class="opi">Scales with development pace</div>
+          <div class="opi">Fast — seconds per screen</div>
+          <div class="opi">Consistent, repeatable results</div>
+          <div class="opi">Built into the workflow</div>
+        </div>
+        <div class="ocons"><div class="ocons-h">Limitations</div>
+          <div class="oci">Cannot replace 100% of manual testing</div>
+        </div>
+        <div class="wbadge">✓ Recommended Approach</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SLIDE 8: WHY AUTOMATION ══ -->
+<section class="slide" data-notes="When we score each option against the criteria that matter most for Studio's context — scalability, speed, cost-efficiency, repeatability, and coverage — automated validation wins decisively. It's the only approach that can keep pace with continuous development, provide consistent feedback across teams, and embed accessibility directly into the build process rather than treating it as an afterthought. This is the right solution for where Studio is today and where it's heading.">
+  <div class="sh">
+    <div class="stag">The decision</div>
+    <h2 class="stitle">The Need for a <span class="hl">Scalable Solution</span></h2>
+  </div>
+  <div class="sb">
+    <div class="mlayout">
+      <div>
+        <table class="mtable">
+          <thead>
+            <tr>
+              <th>Criteria</th>
+              <th>Manual Audit</th>
+              <th>3rd Party</th>
+              <th>Guidelines</th>
+              <th>Automation ✓</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Scalability</td>
+              <td><div class="mrate"><div class="md f"></div><div class="md e"></div><div class="md e"></div><div class="md e"></div><div class="md e"></div></div></td>
+              <td><div class="mrate"><div class="md f"></div><div class="md e"></div><div class="md e"></div><div class="md e"></div><div class="md e"></div></div></td>
+              <td><div class="mrate"><div class="md f"></div><div class="md f"></div><div class="md f"></div><div class="md e"></div><div class="md e"></div></div></td>
+              <td class="wc"><div class="mrate"><div class="md fg"></div><div class="md fg"></div><div class="md fg"></div><div class="md fg"></div><div class="md fg"></div></div></td>
+            </tr>
+            <tr>
+              <td>Speed</td>
+              <td><div class="mrate"><div class="md f"></div><div class="md e"></div><div class="md e"></div><div class="md e"></div><div class="md e"></div></div></td>
+              <td><div class="mrate"><div class="md f"></div><div class="md e"></div><div class="md e"></div><div class="md e"></div><div class="md e"></div></div></td>
+              <td><div class="mrate"><div class="md f"></div><div class="md f"></div><div class="md e"></div><div class="md e"></div><div class="md e"></div></div></td>
+              <td class="wc"><div class="mrate"><div class="md fg"></div><div class="md fg"></div><div class="md fg"></div><div class="md fg"></div><div class="md fg"></div></div></td>
+            </tr>
+            <tr>
+              <td>Cost Efficiency</td>
+              <td><div class="mrate"><div class="md f"></div><div class="md f"></div><div class="md e"></div><div class="md e"></div><div class="md e"></div></div></td>
+              <td><div class="mrate"><div class="md f"></div><div class="md e"></div><div class="md e"></div><div class="md e"></div><div class="md e"></div></div></td>
+              <td><div class="mrate"><div class="md f"></div><div class="md f"></div><div class="md f"></div><div class="md f"></div><div class="md e"></div></div></td>
+              <td class="wc"><div class="mrate"><div class="md fg"></div><div class="md fg"></div><div class="md fg"></div><div class="md fg"></div><div class="md e"></div></div></td>
+            </tr>
+            <tr>
+              <td>Repeatability</td>
+              <td><div class="mrate"><div class="md f"></div><div class="md f"></div><div class="md e"></div><div class="md e"></div><div class="md e"></div></div></td>
+              <td><div class="mrate"><div class="md f"></div><div class="md f"></div><div class="md e"></div><div class="md e"></div><div class="md e"></div></div></td>
+              <td><div class="mrate"><div class="md f"></div><div class="md f"></div><div class="md e"></div><div class="md e"></div><div class="md e"></div></div></td>
+              <td class="wc"><div class="mrate"><div class="md fg"></div><div class="md fg"></div><div class="md fg"></div><div class="md fg"></div><div class="md fg"></div></div></td>
+            </tr>
+            <tr>
+              <td>Coverage</td>
+              <td><div class="mrate"><div class="md f"></div><div class="md f"></div><div class="md f"></div><div class="md f"></div><div class="md f"></div></div></td>
+              <td><div class="mrate"><div class="md f"></div><div class="md f"></div><div class="md f"></div><div class="md f"></div><div class="md e"></div></div></td>
+              <td><div class="mrate"><div class="md f"></div><div class="md f"></div><div class="md e"></div><div class="md e"></div><div class="md e"></div></div></td>
+              <td class="wc"><div class="mrate"><div class="md fg"></div><div class="md fg"></div><div class="md fg"></div><div class="md e"></div><div class="md e"></div></div></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="display:flex;gap:16px;margin-top:14px;font-size:11px;color:var(--s500)">
+          <div style="display:flex;align-items:center;gap:5px"><div class="md fg"></div> Automated</div>
+          <div style="display:flex;align-items:center;gap:5px"><div class="md f"></div> Other options</div>
+          <div style="display:flex;align-items:center;gap:5px"><div class="md e"></div> Weak/absent</div>
+        </div>
+      </div>
+      <div class="msum">
+        <div class="msum-title">Automation is the clear choice for Studio</div>
+        <div class="msum-sub">It's the only approach that keeps pace with continuous development without adding friction or cost.</div>
+        <div class="mpts">
+          <div class="mpt"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Runs in seconds, not days</div>
+          <div class="mpt"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Consistent results across all teams</div>
+          <div class="mpt"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Catches regressions early</div>
+          <div class="mpt"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Actionable, not just a report</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SLIDE 9: INTRODUCING THE TOOL ══ -->
+<section class="slide" data-notes="The Accessibility Assessment Tool is a purpose-built solution for DIGIT Studio. It takes any application screen as input and produces a structured accessibility findings report — highlighting issues by severity, mapping them to standards, and providing actionable recommendations. It's designed to be used by designers, developers, and QA teams throughout the development lifecycle, not just at the end.">
+  <div class="sh">
+    <div class="stag">The solution</div>
+    <h2 class="stitle">Introducing the <span class="hl">Accessibility Assessment Tool</span></h2>
+    <p class="ssub">Helping teams identify and resolve accessibility issues early in the development lifecycle</p>
+  </div>
+  <div class="sb">
+    <div class="thero">
+      <div class="tinfo">
+        <div class="tlogo">
+          <div class="tlogo-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+          <div><div class="tname">Accessibility Assessment Tool</div><div class="ttagline">Part of the DIGIT Studio Quality Suite</div></div>
+        </div>
+        <p class="tdesc">A purpose-built tool that automatically evaluates DIGIT Studio application screens for accessibility compliance — producing prioritised findings with clear, actionable guidance for teams to act on immediately.</p>
+        <div class="tfeats">
+          <div class="tfeat"><div class="tfeat-d"></div>Automated scan of any Studio screen or component</div>
+          <div class="tfeat"><div class="tfeat-d"></div>Issues categorised by type, severity, and WCAG criterion</div>
+          <div class="tfeat"><div class="tfeat-d"></div>Specific, actionable recommendations per finding</div>
+          <div class="tfeat"><div class="tfeat-d"></div>Exportable accessibility assessment report</div>
+          <div class="tfeat"><div class="tfeat-d"></div>Designed for non-specialist teams to understand and act on</div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <span class="badge blue">WCAG 2.1 Aligned</span>
+          <span class="badge" style="background:var(--p100);color:var(--p700)">AI-Powered Analysis</span>
+          <span class="badge" style="background:var(--g100);color:var(--g700)">Report Export</span>
+        </div>
+      </div>
+      <div class="tmock">
+        <div class="tmock-bar">
+          <div class="mdd r"></div><div class="mdd a"></div><div class="mdd g"></div>
+          <span class="mock-ttl">Accessibility Assessment Tool</span>
+        </div>
+        <div class="tmock-body">
+          <div class="mock-row">
+            <div class="mock-inp">Business License Application — Form Screen</div>
+            <button class="mock-run">▶ Run Scan</button>
+          </div>
+          <div class="mock-res">
+            <div class="mock-res-h">
+              <span class="mock-res-t">Assessment Complete — 12 issues found</span>
+              <span class="mock-score">C+</span>
+            </div>
+            <div class="mock-issues">
+              <div class="mock-iss"><span>Low colour contrast on form labels</span><span class="mock-sev c">Critical</span></div>
+              <div class="mock-iss"><span>Missing alt text on document upload icon</span><span class="mock-sev h">High</span></div>
+              <div class="mock-iss"><span>Submit button not keyboard-focusable</span><span class="mock-sev c">Critical</span></div>
+              <div class="mock-iss"><span>Error messages lack descriptive context</span><span class="mock-sev m">Medium</span></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <div style="flex:1;background:var(--s700);border-radius:7px;padding:10px;text-align:center">
+              <div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">CRITICAL</div>
+              <div style="font-size:18px;font-weight:900;color:#ef4444">4</div>
+            </div>
+            <div style="flex:1;background:var(--s700);border-radius:7px;padding:10px;text-align:center">
+              <div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">HIGH</div>
+              <div style="font-size:18px;font-weight:900;color:#ea580c">5</div>
+            </div>
+            <div style="flex:1;background:var(--s700);border-radius:7px;padding:10px;text-align:center">
+              <div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">MEDIUM</div>
+              <div style="font-size:18px;font-weight:900;color:#f59e0b">3</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SLIDE 10: HOW IT WORKS ══ -->
+<section class="slide" data-notes="The tool follows a simple five-step workflow that any team member can execute. It doesn't require specialist accessibility knowledge. You select the screen you want to evaluate, run the assessment, review the categorised findings, understand the severity and impact of each issue, and generate a shareable report. The entire process takes minutes, not days.">
+  <div class="sh">
+    <div class="stag">Simple workflow</div>
+    <h2 class="stitle">From Screen to <span class="hl">Actionable Findings</span> in Minutes</h2>
+  </div>
+  <div class="sb">
+    <div class="flow">
+      <div class="fsteps">
+        <div class="fstep">
+          <div class="fnode" style="background:#dbeafe;color:#1d4ed8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+          <div class="fnum">Step 01</div>
+          <div class="ftitle">Select Screen</div>
+          <div class="fdesc">Choose the application screen or flow to evaluate</div>
+        </div>
+        <div class="farr"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="fstep">
+          <div class="fnode" style="background:#f3e8ff;color:#7c3aed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+          <div class="fnum">Step 02</div>
+          <div class="ftitle">Run Assessment</div>
+          <div class="fdesc">Automated engine scans the screen for accessibility issues</div>
+        </div>
+        <div class="farr"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="fstep">
+          <div class="fnode" style="background:#dcfce7;color:#16a34a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+          <div class="fnum">Step 03</div>
+          <div class="ftitle">Analyse Findings</div>
+          <div class="fdesc">Review issues organised by category and accessibility dimension</div>
+        </div>
+        <div class="farr"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="fstep">
+          <div class="fnode" style="background:#fef3c7;color:#d97706"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div class="fnum">Step 04</div>
+          <div class="ftitle">Review Severity</div>
+          <div class="fdesc">Understand which issues are critical vs informational</div>
+        </div>
+        <div class="farr"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="fstep">
+          <div class="fnode" style="background:#fee2e2;color:#dc2626"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
+          <div class="fnum">Step 05</div>
+          <div class="ftitle">Generate Report</div>
+          <div class="fdesc">Export a structured accessibility report for the team</div>
+        </div>
+      </div>
+      <div class="fbar">
+        <div class="fbar-ico">⚡</div>
+        <div class="fbar-t">The entire process takes <strong>minutes, not days.</strong> Any team member can run an assessment — no accessibility specialist required. Issues are explained in plain language with specific, actionable fixes.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SLIDE 11: WHAT IT CHECKS ══ -->
+<section class="slide" data-notes="The tool evaluates accessibility across four key dimensions. Visual accessibility covers colour contrast, font sizes, and layout clarity. Navigation accessibility ensures keyboard-only users and assistive technology users can move through the interface. Screen reader accessibility checks that content is properly labelled and structured for assistive technology. Content accessibility evaluates the clarity, language, and structure of the content itself. Together, these four pillars cover the vast majority of real-world accessibility barriers.">
+  <div class="sh">
+    <div class="stag">Comprehensive coverage</div>
+    <h2 class="stitle">Four Pillars of <span class="hl">Accessibility Coverage</span></h2>
+    <p class="ssub">The tool evaluates every screen across four critical accessibility dimensions</p>
+  </div>
+  <div class="sb">
+    <div class="pgr">
+      <div class="pc" style="background:linear-gradient(135deg,#eff6ff,#dbeafe)">
+        <div class="pico" style="background:#1d4ed8;color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <div class="pname">Visual Accessibility</div>
+        <div class="pexs">
+          <div class="pex"><div class="pbul" style="background:#3b82f6"></div>Colour contrast ratios</div>
+          <div class="pex"><div class="pbul" style="background:#3b82f6"></div>Font size &amp; readability</div>
+          <div class="pex"><div class="pbul" style="background:#3b82f6"></div>Focus indicators visibility</div>
+          <div class="pex"><div class="pbul" style="background:#3b82f6"></div>Information not conveyed by colour alone</div>
+        </div>
+      </div>
+      <div class="pc" style="background:linear-gradient(135deg,#faf5ff,#f3e8ff)">
+        <div class="pico" style="background:#7c3aed;color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg></div>
+        <div class="pname">Navigation Accessibility</div>
+        <div class="pexs">
+          <div class="pex"><div class="pbul" style="background:#9333ea"></div>Full keyboard navigation support</div>
+          <div class="pex"><div class="pbul" style="background:#9333ea"></div>Logical focus order &amp; flow</div>
+          <div class="pex"><div class="pbul" style="background:#9333ea"></div>Skip navigation links</div>
+          <div class="pex"><div class="pbul" style="background:#9333ea"></div>No keyboard traps</div>
+        </div>
+      </div>
+      <div class="pc" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7)">
+        <div class="pico" style="background:#16a34a;color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></div>
+        <div class="pname">Screen Reader Accessibility</div>
+        <div class="pexs">
+          <div class="pex"><div class="pbul" style="background:#16a34a"></div>Semantic HTML &amp; ARIA labels</div>
+          <div class="pex"><div class="pbul" style="background:#16a34a"></div>Image alt text quality</div>
+          <div class="pex"><div class="pbul" style="background:#16a34a"></div>Form field labels &amp; associations</div>
+          <div class="pex"><div class="pbul" style="background:#16a34a"></div>Error message announcements</div>
+        </div>
+      </div>
+      <div class="pc" style="background:linear-gradient(135deg,#fffbeb,#fef3c7)">
+        <div class="pico" style="background:#d97706;color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+        <div class="pname">Content Accessibility</div>
+        <div class="pexs">
+          <div class="pex"><div class="pbul" style="background:#d97706"></div>Plain language &amp; reading level</div>
+          <div class="pex"><div class="pbul" style="background:#d97706"></div>Clear headings &amp; page structure</div>
+          <div class="pex"><div class="pbul" style="background:#d97706"></div>Descriptive link text</div>
+          <div class="pex"><div class="pbul" style="background:#d97706"></div>Instructions don't rely on sensory cues</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SLIDE 12: EXAMPLE FINDINGS ══ -->
+<section class="slide" data-notes="Here are four representative findings the tool produces. Each finding includes the issue name, its WCAG criterion, a clear description of the problem and its impact on users, the severity level, and a specific recommendation for how to fix it. The tool doesn't just tell you what's wrong — it tells you what to do about it. This is what makes it valuable for teams without deep accessibility expertise.">
+  <div class="sh">
+    <div class="stag">From detection to resolution</div>
+    <h2 class="stitle">The Tool Doesn't Just Identify Problems — <span class="hl">It Helps Resolve Them</span></h2>
+  </div>
+  <div class="sb">
+    <div class="fgrid">
+      <div class="fc crit">
+        <div class="ftop">
+          <div><div class="ftitle">Low Colour Contrast</div><div class="fwcag">WCAG 1.4.3 — Contrast (Minimum)</div></div>
+          <span class="badge crit">Critical</span>
+        </div>
+        <div class="fdesc">Form label text uses #9CA3AF on a white background, achieving a contrast ratio of 2.8:1. The minimum required ratio is 4.5:1. Users with low vision or in bright sunlight cannot read these labels.</div>
+        <div class="frec"><span class="frec-l">Fix →</span>Change label colour to #6B7280 or darker to achieve at least 4.5:1 contrast ratio. Test with a contrast checker before deploying.</div>
+      </div>
+      <div class="fc high">
+        <div class="ftop">
+          <div><div class="ftitle">Missing Alt Text on Images</div><div class="fwcag">WCAG 1.1.1 — Non-text Content</div></div>
+          <span class="badge high">High</span>
+        </div>
+        <div class="fdesc">The document upload icon and the service status illustration have no alt text attribute. Screen reader users will hear "image" with no context, making it impossible to understand the interface element's purpose.</div>
+        <div class="frec"><span class="frec-l">Fix →</span>Add descriptive alt text: alt="Upload document" for the icon. For decorative images, use alt="" to instruct screen readers to skip them.</div>
+      </div>
+      <div class="fc high">
+        <div class="ftop">
+          <div><div class="ftitle">Keyboard Navigation Blocked</div><div class="fwcag">WCAG 2.1.1 — Keyboard</div></div>
+          <span class="badge high">High</span>
+        </div>
+        <div class="fdesc">The "Submit Application" button and custom dropdown menus are not reachable using the Tab key. Users who cannot use a mouse — including many users with motor disabilities — cannot complete the application.</div>
+        <div class="frec"><span class="frec-l">Fix →</span>Ensure all interactive elements are focusable with tabIndex="0". Replace custom dropdowns with accessible &lt;select&gt; elements or add ARIA role="listbox" with keyboard event handlers.</div>
+      </div>
+      <div class="fc med">
+        <div class="ftop">
+          <div><div class="ftitle">Unlabelled Form Fields</div><div class="fwcag">WCAG 1.3.1 — Info and Relationships</div></div>
+          <span class="badge med">Medium</span>
+        </div>
+        <div class="fdesc">Three input fields use placeholder text only, with no associated &lt;label&gt; element. When a user starts typing, the placeholder disappears and the field has no programmatic label — screen readers cannot identify it.</div>
+        <div class="frec"><span class="frec-l">Fix →</span>Add a visible &lt;label for="fieldId"&gt; element above each input. Never rely solely on placeholder text as a label — it disappears on focus and has poor screen reader support.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SLIDE 13: LIVE DEMO ══ -->
+<section class="slide" data-notes="Pause here for the live product demonstration. Walk through the tool in a real browser session. Suggested demo flow: (1) Open the Accessibility Assessment Tool and show the main interface. (2) Select a Business License application screen from Studio. (3) Trigger the assessment and show it running. (4) Walk through the findings list — point out severity groupings and categories. (5) Open an individual finding to show the detailed description, WCAG mapping, and recommendation. (6) Show how the tool generates a downloadable report. Keep the demo focused on the user experience and outcomes — avoid explaining technical implementation details.">
+  <div class="sh">
+    <div class="stag">Live product demonstration</div>
+    <h2 class="stitle">Accessibility Assessment <span class="hl">in Action</span></h2>
+  </div>
+  <div class="sb">
+    <div class="dlayout">
+      <div class="dsteps">
+        <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--s400);margin-bottom:6px">Demo Flow</div>
+        <div class="dstep act"><div class="dsnum">1</div><div class="dstext">Open the Assessment Tool interface</div></div>
+        <div class="dstep"><div class="dsnum">2</div><div class="dstext">Select a Studio application screen</div></div>
+        <div class="dstep"><div class="dsnum">3</div><div class="dstext">Run the accessibility scan</div></div>
+        <div class="dstep"><div class="dsnum">4</div><div class="dstext">Explore findings by severity &amp; category</div></div>
+        <div class="dstep"><div class="dsnum">5</div><div class="dstext">Open an issue — view recommendation</div></div>
+        <div class="dstep"><div class="dsnum">6</div><div class="dstext">Generate &amp; download the report</div></div>
+        <div style="margin-top:auto;background:var(--b50);border-radius:10px;padding:12px 14px;border:1px solid var(--b200)">
+          <div style="font-size:11px;color:var(--b700);font-weight:600;margin-bottom:4px">⏱ Estimated demo time</div>
+          <div style="font-size:13px;color:var(--s700)">5–8 minutes</div>
+        </div>
+      </div>
+      <div class="dplaceholder">
+        <div class="dpulse"><div class="dpulse-in"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>
+        <div class="dtitle">Live Demo</div>
+        <div class="dsub">Switch to the Assessment Tool now</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SLIDE 14: VALUE DELIVERED ══ -->
+<section class="slide" data-notes="The tool creates value across every stakeholder group involved in building and deploying Studio applications. For Studio admins and product owners, it provides visibility into the accessibility health of their applications. Designers can validate their choices before handoff. Developers get specific, fix-ready guidance. QA teams can systematically verify accessibility as part of their test process. And government agencies get an auditable record of accessibility compliance for every service they deploy.">
+  <div class="sh">
+    <div class="stag">Value created</div>
+    <h2 class="stitle">Benefits Across <span class="hl">Every Team</span></h2>
+    <p class="ssub">The tool creates value for every stakeholder in the service delivery chain</p>
+  </div>
+  <div class="sb">
+    <div class="stakeholders">
+      <div class="stop">
+        <div class="scard">
+          <div class="sctop"><div class="scico" style="background:#dbeafe">🏛️</div><div class="scname">Studio Admins</div></div>
+          <div class="scbens">
+            <div class="scben"><div class="scben-dot" style="background:#3b82f6"></div>Platform-wide accessibility visibility</div>
+            <div class="scben"><div class="scben-dot" style="background:#3b82f6"></div>Quality gate before service go-live</div>
+            <div class="scben"><div class="scben-dot" style="background:#3b82f6"></div>Compliance evidence for stakeholders</div>
+          </div>
+        </div>
+        <div class="scard">
+          <div class="sctop"><div class="scico" style="background:#f3e8ff">🎨</div><div class="scname">Designers</div></div>
+          <div class="scbens">
+            <div class="scben"><div class="scben-dot" style="background:#9333ea"></div>Validate colour and layout choices early</div>
+            <div class="scben"><div class="scben-dot" style="background:#9333ea"></div>Reduce costly late-stage redesigns</div>
+            <div class="scben"><div class="scben-dot" style="background:#9333ea"></div>Build accessibility into design intent</div>
+          </div>
+        </div>
+        <div class="scard">
+          <div class="sctop"><div class="scico" style="background:#dcfce7">💻</div><div class="scname">Developers</div></div>
+          <div class="scbens">
+            <div class="scben"><div class="scben-dot" style="background:#16a34a"></div>Specific, code-ready fix recommendations</div>
+            <div class="scben"><div class="scben-dot" style="background:#16a34a"></div>Catch issues before code review</div>
+            <div class="scben"><div class="scben-dot" style="background:#16a34a"></div>No need for specialist expertise</div>
+          </div>
+        </div>
+      </div>
+      <div class="sbottom">
+        <div class="scard">
+          <div class="sctop"><div class="scico" style="background:#fef3c7">🔬</div><div class="scname">QA Teams</div></div>
+          <div class="scbens">
+            <div class="scben"><div class="scben-dot" style="background:#d97706"></div>Systematic, repeatable accessibility test coverage</div>
+            <div class="scben"><div class="scben-dot" style="background:#d97706"></div>Structured findings for regression tracking</div>
+            <div class="scben"><div class="scben-dot" style="background:#d97706"></div>Automated where manual testing is impractical</div>
+          </div>
+        </div>
+        <div class="scard">
+          <div class="sctop"><div class="scico" style="background:#fee2e2">🏢</div><div class="scname">Government Agencies</div></div>
+          <div class="scbens">
+            <div class="scben"><div class="scben-dot" style="background:#dc2626"></div>Accessible services for all citizens by default</div>
+            <div class="scben"><div class="scben-dot" style="background:#dc2626"></div>Auditable compliance trail for all deployments</div>
+            <div class="scben"><div class="scben-dot" style="background:#dc2626"></div>Reduced legal and reputational risk</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SLIDE 15: VISION / MATURITY ══ -->
+<section class="slide" data-notes="The Accessibility Assessment Tool is an important step forward, but it's part of a larger vision. We're moving from reactive, manual accessibility reviews toward a state where accessibility is continuously monitored and ultimately designed in from the start. Today we're at Level 2 — automated assessment. Our roadmap takes us to Level 3 — continuous monitoring as part of CI/CD pipelines — and eventually to Level 4 — where accessibility principles are embedded in Studio's design system, templates, and component library so that teams build accessibly by default.">
+  <div class="sh">
+    <div class="stag">Strategic vision</div>
+    <h2 class="stitle">The Vision: <span class="hl">Accessibility by Design</span></h2>
+    <p class="ssub">Moving from reactive testing toward proactive, continuous accessibility</p>
+  </div>
+  <div class="sb">
+    <div class="matlayout">
+      <div class="mattrack">
+        <div class="matlevel">
+          <div class="matbar l1"><span class="matn dark">L1</span></div>
+          <div class="matlabel">Manual<br>Reviews</div>
+          <div class="matdesc">Ad hoc, slow,<br>inconsistent</div>
+        </div>
+        <div class="matconn"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="matlevel">
+          <div class="matbar l2"><span class="matn dark">L2</span></div>
+          <div class="matlabel">Automated<br>Assessment</div>
+          <div class="matdesc">Fast, repeatable,<br>on-demand</div>
+        </div>
+        <div class="matconn"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="matlevel">
+          <div class="matbar l3" style="position:relative">
+            <div class="mat-cur">📍 Current Phase</div>
+            <span class="matn light">L3</span>
+          </div>
+          <div class="matlabel">Continuous<br>Monitoring</div>
+          <div class="matdesc">Integrated into CI/CD,<br>alerts on regression</div>
+        </div>
+        <div class="matconn"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="matlevel">
+          <div class="matbar l4"><span class="matn light">L4</span></div>
+          <div class="matlabel">Accessibility<br>by Design</div>
+          <div class="matdesc">Built into templates,<br>components &amp; system</div>
+        </div>
+      </div>
+      <div class="mattimeline">
+        <span style="font-size:24px">🗺️</span>
+        <div class="mattimeline-t">
+          <strong>Where we are:</strong> Automated Assessment is live — teams can run on-demand scans with immediate results.<br>
+          <strong>Next milestone:</strong> Integrate into Studio's build pipeline for automatic regression detection on every deployment.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SLIDE 16: TAKEAWAYS ══ -->
+<section class="slide" data-notes="To close, three things to take away from this session. First — accessibility is about real people, not compliance checkboxes. The citizens we serve depend on accessible digital services for outcomes that matter to their lives. Second — as Studio scales, manual approaches simply cannot keep up. We need systematic, automated coverage embedded in how we build. Third — the Accessibility Assessment Tool gives every team, regardless of accessibility expertise, the ability to identify and fix issues early. It's a step toward a future where accessibility is designed in, not bolted on.">
+  <div class="sh">
+    <div class="stag">Summary</div>
+    <h2 class="stitle">Building <span class="hl">Inclusive Digital Services</span> at Scale</h2>
+  </div>
+  <div class="sb">
+    <div class="tgrid">
+      <div class="tcard c1">
+        <div class="tnum">01</div>
+        <div class="tico">🤝</div>
+        <div class="ttitle">Accessibility is About Citizens</div>
+        <div class="tdesc">Every inaccessible screen is a real person unable to access a service they're entitled to. Accessibility isn't a compliance exercise — it's a commitment to every citizen we serve.</div>
+      </div>
+      <div class="tcard c2">
+        <div class="tnum">02</div>
+        <div class="tico">⚡</div>
+        <div class="ttitle">Accessibility Must Scale with Services</div>
+        <div class="tdesc">As DIGIT Studio grows — more applications, more screens, more releases — manual review cannot keep pace. Systematic, automated coverage is the only path to consistent quality.</div>
+      </div>
+      <div class="tcard c3">
+        <div class="tnum">03</div>
+        <div class="tico">🎯</div>
+        <div class="ttitle">Automation Enables Every Team</div>
+        <div class="tdesc">The Accessibility Assessment Tool puts the power to find and fix accessibility issues in the hands of every designer, developer, and QA engineer — no specialist required.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SLIDE 17: THANK YOU ══ -->
+<section class="slide" data-notes="Thank you. Open the floor for questions and discussion. Areas that often prompt good conversation: how does this integrate with existing workflows, what happens after issues are identified (who owns fixes), how does this relate to WCAG certification or legal requirements, and what does the roadmap to continuous monitoring look like? Be ready to show specific findings from a real Studio screen if asked for more detail.">
+  <div class="ty">
+    <div class="ty-pat"></div>
+    <div class="ty-body">
+      <div class="ty-label">DIGIT Studio · Lingatech &amp; eGov Foundation</div>
+      <div class="ty-title">Thank You</div>
+      <div class="ty-sub">Questions and discussion welcome — accessibility is a journey, and we're building it together.</div>
+      <div class="ty-div"></div>
+      <div class="ty-cards">
+        <div class="ty-c"><div class="ty-cl">Tool</div><div class="ty-cv">Accessibility Assessment Tool</div></div>
+        <div class="ty-c"><div class="ty-cl">Platform</div><div class="ty-cv">DIGIT Studio</div></div>
+        <div class="ty-c"><div class="ty-cl">Standard</div><div class="ty-cv">WCAG 2.1 AA</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /scaler -->
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nb" id="prevBtn" onclick="go(-1)" disabled>
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+  <span class="sc" id="sc">1 / 17</span>
+  <button class="nb" id="nextBtn" onclick="go(1)">
+    <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+  <div class="nsep"></div>
+  <button class="ntoggle" onclick="toggleNotes()">Notes</button>
+</nav>
+
+<!-- SPEAKER NOTES -->
+<div class="notes" id="notes">
+  <h4>Speaker Notes</h4>
+  <button class="nclose" onclick="toggleNotes()">✕</button>
+  <p id="notesText"></p>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+let cur = 0;
+let notesOpen = false;
+
+function scale() {
+  const sc = document.getElementById('scaler');
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const s = Math.min(vw / 1280, vh / 720) * 0.96;
+  sc.style.transform = `scale(${s})`;
+  sc.style.marginLeft = `${(vw - 1280 * s) / 2}px`;
+  sc.style.marginTop = `${(vh - 720 * s) / 2}px`;
+}
+
+function render() {
+  slides.forEach((s, i) => {
+    s.classList.remove('active', 'prev');
+    if (i === cur) s.classList.add('active');
+    else if (i < cur) s.classList.add('prev');
+  });
+  document.getElementById('sc').textContent = `${cur + 1} / ${total}`;
+  document.getElementById('prevBtn').disabled = cur === 0;
+  document.getElementById('nextBtn').disabled = cur === total - 1;
+  document.getElementById('pf').style.width = `${((cur + 1) / total) * 100}%`;
+  document.getElementById('notesText').textContent = slides[cur].dataset.notes || '';
+}
+
+function go(d) {
+  const n = cur + d;
+  if (n >= 0 && n < total) { cur = n; render(); }
+}
+
+function toggleNotes() {
+  notesOpen = !notesOpen;
+  document.getElementById('notes').classList.toggle('open', notesOpen);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); go(1); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); go(-1); }
+  if (e.key === 'Escape') { if (notesOpen) toggleNotes(); }
+  if (e.key === 'n' || e.key === 'N') toggleNotes();
+});
+
+// Click left/right halves to navigate
+document.getElementById('scaler').addEventListener('click', e => {
+  const x = e.clientX / window.innerWidth;
+  if (x > 0.55) go(1); else if (x < 0.45) go(-1);
+});
+
+window.addEventListener('resize', scale);
+scale();
+render();
+</script>
+</body>
+</html>

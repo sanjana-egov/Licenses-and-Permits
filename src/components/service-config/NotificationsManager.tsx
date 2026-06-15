@@ -13,7 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  ArrowLeft, Plus, Mail, MessageSquare, BellRing, Pencil, Trash2, Copy, Info, Search,
+  ArrowLeft, Plus, Mail, MessageSquare, BellRing, Pencil, Trash2, Copy, Info, Search, CheckCircle2, WifiOff,
 } from "lucide-react";
 import {
   TRADE_NOTIFICATIONS, TRADE_STATE_NAMES, TRADE_STATE_TAG_COLORS,
@@ -24,8 +24,10 @@ import {
 import { useModuleState } from "@/lib/moduleStorage";
 import { useServiceRoles, isCitizenRole } from "@/lib/useServiceRoles";
 import { emitNotificationsUpdated } from "@/lib/useServiceNotifications";
+import { useOnboarding } from "@/contexts/OnboardingContext";
 import NotificationPreview from "./preview/NotificationPreview";
 import { toast } from "@/hooks/use-toast";
+import { copy } from "@/copy";
 
 type Channel = "email" | "sms" | "push";
 
@@ -45,9 +47,9 @@ const VARIABLES = [
 ];
 
 const CHANNEL_META: Record<Channel, { label: string; icon: React.ElementType; subtitle: string }> = {
-  email: { label: "Email", icon: Mail, subtitle: "Configure email notifications for applicants" },
-  sms:   { label: "SMS",   icon: MessageSquare, subtitle: "Configure SMS notifications for applicants" },
-  push:  { label: "Push",  icon: BellRing, subtitle: "In-app push to officers and applicants" },
+  email: { label: copy.notificationsManager.channelCards.emailLabel, icon: Mail, subtitle: copy.notificationsManager.channelCards.emailSubtitle },
+  sms:   { label: copy.notificationsManager.channelCards.smsLabel,   icon: MessageSquare, subtitle: copy.notificationsManager.channelCards.smsSubtitle },
+  push:  { label: copy.notificationsManager.channelCards.pushLabel,  icon: BellRing, subtitle: copy.notificationsManager.channelCards.pushSubtitle },
 };
 
 const buildDefaultNotifications = (moduleName: string): Notification[] => {
@@ -70,6 +72,8 @@ interface Props { moduleName: string; onBack: () => void; }
 
 const NotificationsManager: React.FC<Props> = ({ moduleName, onBack }) => {
   const { id: serviceId = "service" } = useParams();
+  const { state: onboardingState } = useOnboarding();
+  const activeChannels = onboardingState.activeNotificationChannels ?? ["email"];
   const renewal = isRenewalModule(moduleName);
   const WORKFLOW_STATES = renewal ? RENEWAL_STATE_NAMES : TRADE_STATE_NAMES;
   const tagColors: Record<string, string> = renewal ? RENEWAL_STATE_TAG_COLORS : TRADE_STATE_TAG_COLORS;
@@ -127,7 +131,7 @@ const NotificationsManager: React.FC<Props> = ({ moduleName, onBack }) => {
     setSearch("");
     setEditing(null);
     emitNotificationsUpdated(serviceId);
-    toast({ title: "Notification saved", description: `${CHANNEL_META[n.channel].label} · ${n.workflowState}` });
+    toast({ title: copy.notificationsManager.toast.savedTitle, description: `${CHANNEL_META[n.channel].label} · ${n.workflowState}` });
   };
 
 
@@ -140,10 +144,10 @@ const NotificationsManager: React.FC<Props> = ({ moduleName, onBack }) => {
           </Button>
           <div className="flex-1">
             <h1 className="font-bold text-foreground">{moduleName} — Notifications</h1>
-            <p className="text-xs text-muted-foreground">Each notification targets one channel and one role</p>
+            <p className="text-xs text-muted-foreground">{copy.notificationsManager.header.pageSubtitle}</p>
           </div>
-          <Button onClick={() => startCreate(activeChannel)} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 gap-1.5">
-            <Plus className="h-4 w-4" /> Create New Notification
+          <Button onClick={() => startCreate(activeChannel)} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 gap-1.5" disabled={!activeChannels.includes(activeChannel)} title={!activeChannels.includes(activeChannel) ? copy.notificationsManager.header.createButtonDisabledTitle : undefined}>
+            <Plus className="h-4 w-4" /> {copy.notificationsManager.header.createButton}
           </Button>
         </div>
       </header>
@@ -154,7 +158,7 @@ const NotificationsManager: React.FC<Props> = ({ moduleName, onBack }) => {
         <div className="rounded-lg border border-accent/20 bg-accent/5 px-4 py-3 flex items-start gap-3">
           <Info className="h-4 w-4 text-accent mt-0.5 shrink-0" />
           <p className="text-sm text-foreground">
-            One notification = one channel + one recipient role. Changes here flow into the Workflow and the Service Preview.
+            {copy.notificationsManager.infoBanner.description}
           </p>
         </div>
 
@@ -163,20 +167,30 @@ const NotificationsManager: React.FC<Props> = ({ moduleName, onBack }) => {
           {(Object.keys(CHANNEL_META) as Channel[]).map((c) => {
             const meta = CHANNEL_META[c];
             const Icon = meta.icon;
+            const isActive = activeChannels.includes(c);
             return (
-              <Card key={c} className="hover:border-accent/40 transition-colors">
+              <Card key={c} className={`transition-colors ${isActive ? "hover:border-accent/40" : "opacity-70"}`}>
                 <CardContent className="p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-                    <Icon className="h-5 w-5 text-accent" />
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${isActive ? "bg-accent/10" : "bg-muted"}`}>
+                    <Icon className={`h-5 w-5 ${isActive ? "text-accent" : "text-muted-foreground"}`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-semibold text-foreground text-sm">{meta.label}</h3>
                       <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{counts[c]}</Badge>
+                      {isActive ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-green-700 dark:text-green-400">
+                          <CheckCircle2 className="h-3 w-3" /> {copy.notificationsManager.channelCards.activeStatus}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                          <WifiOff className="h-3 w-3" /> {copy.notificationsManager.channelCards.notConfiguredStatus}
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground truncate">{meta.subtitle}</p>
                   </div>
-                  <Button variant="ghost" size="icon" className="text-accent hover:text-accent" onClick={() => startCreate(c)}>
+                  <Button variant="ghost" size="icon" className="text-accent hover:text-accent" onClick={() => startCreate(c)} disabled={!isActive} title={isActive ? undefined : copy.notificationsManager.channelCards.addChannelButtonDisabledTitle}>
                     <Plus className="h-4 w-4" />
                   </Button>
                 </CardContent>
@@ -205,11 +219,18 @@ const NotificationsManager: React.FC<Props> = ({ moduleName, onBack }) => {
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search Notifications"
+                  placeholder={copy.notificationsManager.notificationList.searchPlaceholder}
                   className="pl-9 h-9 w-72"
                 />
               </div>
             </div>
+
+            {!activeChannels.includes(activeChannel) && (
+              <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 flex items-start gap-2.5 text-sm text-muted-foreground">
+                <WifiOff className="h-4 w-4 shrink-0 mt-0.5" />
+                <p>Enable this integration in <span className="font-medium text-foreground">{copy.notificationsManager.notificationList.channelNotEnabledSettings}</span> to configure notifications for this channel.</p>
+              </div>
+            )}
 
             <div className="space-y-2">
               {visible.length === 0 ? (
@@ -221,7 +242,7 @@ const NotificationsManager: React.FC<Props> = ({ moduleName, onBack }) => {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-foreground text-sm mb-1">
-                        {n.channel === "email" ? n.subject || "(no subject)" : n.message.slice(0, 60) + (n.message.length > 60 ? "…" : "")}
+                        {n.channel === "email" ? n.subject || copy.notificationsManager.notificationList.noSubjectFallback : n.message.slice(0, 60) + (n.message.length > 60 ? "…" : "")}
                       </h3>
                       {n.channel === "email" && (
                         <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{n.message}</p>
@@ -237,13 +258,13 @@ const NotificationsManager: React.FC<Props> = ({ moduleName, onBack }) => {
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       <Button variant="outline" size="sm" className="h-8 gap-1 text-accent border-accent/40 hover:bg-accent/10 hover:text-accent" onClick={() => setEditing(n)}>
-                        <Pencil className="h-3 w-3" /> Edit
+                        <Pencil className="h-3 w-3" /> {copy.notificationsManager.notificationList.editButton}
                       </Button>
                       <Button variant="outline" size="sm" className="h-8 gap-1 text-accent border-accent/40 hover:bg-accent/10 hover:text-accent" onClick={() => duplicate(n)}>
-                        <Copy className="h-3 w-3" /> Duplicate
+                        <Copy className="h-3 w-3" /> {copy.notificationsManager.notificationList.duplicateButton}
                       </Button>
                       <Button variant="outline" size="sm" className="h-8 gap-1 text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive" onClick={() => remove(n.id)}>
-                        <Trash2 className="h-3 w-3" /> Delete
+                        <Trash2 className="h-3 w-3" /> {copy.notificationsManager.notificationList.deleteButton}
                       </Button>
                     </div>
                   </div>
@@ -298,7 +319,7 @@ const NotificationDialog: React.FC<{
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Icon className="h-4 w-4 text-accent" />
-            {value.subject || draft.message ? "Edit Notification" : "New Notification"}
+            {value.subject || draft.message ? copy.notificationsManager.dialog.titleEdit : copy.notificationsManager.dialog.titleNew}
           </DialogTitle>
         </DialogHeader>
 
@@ -306,7 +327,7 @@ const NotificationDialog: React.FC<{
           <div className="space-y-5">
           {/* Channel segmented */}
           <div className="space-y-1.5">
-            <Label>Channel</Label>
+            <Label>{copy.notificationsManager.dialog.channelLabel}</Label>
             <div className="flex gap-2">
               {(Object.keys(CHANNEL_META) as Channel[]).map((c) => {
                 const M = CHANNEL_META[c];
@@ -327,28 +348,28 @@ const NotificationDialog: React.FC<{
             <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 flex items-start gap-2">
               <Info className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
               <p className="text-xs text-blue-900">
-                Some countries require SMS templates to be approved by telecom providers before sending. Verify requirements for your country and register the template with your SMS provider if needed.
+                {copy.notificationsManager.dialog.smsApprovalNotice}
               </p>
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label>Workflow State *</Label>
+              <Label>{copy.notificationsManager.dialog.workflowStateLabel}</Label>
               <Select
                 value={draft.workflowState}
                 onValueChange={(v) => setDraft(d => ({ ...d, workflowState: v, tag: v, tagColor: tagColors[v] ?? d.tagColor }))}
               >
-                <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={copy.notificationsManager.dialog.workflowStatePlaceholder} /></SelectTrigger>
                 <SelectContent>
                   {workflowStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Recipient Role *</Label>
+              <Label>{copy.notificationsManager.dialog.recipientRoleLabel}</Label>
               <Select value={draft.recipientRole} onValueChange={(v) => setDraft(d => ({ ...d, recipientRole: v }))}>
-                <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={copy.notificationsManager.dialog.recipientRolePlaceholder} /></SelectTrigger>
                 <SelectContent>
                   {roles.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
                 </SelectContent>
@@ -358,13 +379,13 @@ const NotificationDialog: React.FC<{
 
           {draft.channel === "email" && (
             <div className="space-y-1.5">
-              <Label>Subject *</Label>
+              <Label>{copy.notificationsManager.dialog.subjectLabel}</Label>
               <Input value={draft.subject} onChange={(e) => setDraft(d => ({ ...d, subject: e.target.value }))} />
             </div>
           )}
 
           <div className="space-y-1.5">
-            <Label>Message Body *</Label>
+            <Label>{copy.notificationsManager.dialog.messageBodyLabel}</Label>
             <Textarea
               rows={4}
               value={draft.message}
@@ -375,10 +396,10 @@ const NotificationDialog: React.FC<{
               <p className="text-[11px] text-muted-foreground text-right">{charCount}/160</p>
             )}
             {draft.channel === "push" && (
-              <p className="text-[11px] text-muted-foreground">Delivered to the recipient's in-app inbox.</p>
+              <p className="text-[11px] text-muted-foreground">{copy.notificationsManager.dialog.pushMessageHint}</p>
             )}
             <div className="flex flex-wrap items-center gap-1.5 mt-2">
-              <span className="text-xs text-muted-foreground">Personalization:</span>
+              <span className="text-xs text-muted-foreground">{copy.notificationsManager.dialog.personalizationLabel}</span>
               {VARIABLES.map(v => (
                 <button key={v} type="button" onClick={() => insertVar(v)}
                   className="text-[10px] px-2 py-0.5 rounded-full border bg-muted hover:bg-accent/10 text-foreground transition-colors">
@@ -403,9 +424,9 @@ const NotificationDialog: React.FC<{
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="outline" onClick={onClose}>{copy.notificationsManager.dialog.cancelButton}</Button>
           <Button onClick={() => onSave(draft)} disabled={!valid} className="bg-accent text-accent-foreground hover:bg-accent/90">
-            Save
+            {copy.notificationsManager.dialog.saveButton}
           </Button>
         </DialogFooter>
       </DialogContent>

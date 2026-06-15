@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { MOCK_CREDENTIALS } from "@/data/mockCredentials";
 import AuthShell from "./AuthShell";
+import { copy } from "@/copy";
 
 const ROLE_BADGE: Record<string, string> = {
   super_admin: "bg-primary/10 text-primary border-primary/20",
@@ -16,9 +17,9 @@ const ROLE_BADGE: Record<string, string> = {
 };
 
 const ROLE_LABEL: Record<string, string> = {
-  super_admin: "Super Admin",
-  admin: "Admin",
-  service_owner: "Service Owner",
+  super_admin: copy.signIn.demoCredentials.roleLabelSuperAdmin,
+  admin: copy.signIn.demoCredentials.roleLabelAdmin,
+  service_owner: copy.signIn.demoCredentials.roleLabelServiceOwner,
 };
 
 const SignIn: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
@@ -40,7 +41,7 @@ const SignIn: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
     );
 
     if (!match) {
-      setError("Invalid email or password. Use the credentials listed below.");
+      setError(copy.signIn.errors.invalidCredentials);
       return;
     }
 
@@ -63,46 +64,47 @@ const SignIn: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
   }
 
   return (
-    <AuthShell step="Step 1 of 3 · Sign in" showSidePanel sidePanelPosition="left">
-      <Card className="border-border shadow-sm">
+    <AuthShell step={copy.signIn.stepIndicator.stepLabel} showSidePanel sidePanelPosition="left">
+      <Card className="border-border shadow-md overflow-hidden">
+        <div className="h-1 bg-gradient-to-r from-primary via-primary/80 to-primary/40" />
         <form onSubmit={handleSubmit} className="px-7 py-8 space-y-6">
           <div className="space-y-2">
             <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-              Workspace Access
+              {copy.signIn.header.eyebrow}
             </p>
             <h1 className="text-[22px] font-semibold text-foreground tracking-tight leading-tight">
-              Sign in to your workspace
+              {copy.signIn.header.heading}
             </h1>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Enter your work email and the temporary password shared by your platform team.
+              {copy.signIn.header.description}
             </p>
           </div>
 
           <div className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="email" className="text-xs font-medium text-foreground">
-                Email address
+                {copy.signIn.form.emailLabel}
               </Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setError(""); }}
-                placeholder="you@organization.gov"
+                placeholder={copy.signIn.form.emailPlaceholder}
                 className="h-10"
                 autoFocus
               />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="password" className="text-xs font-medium text-foreground">
-                Temporary password
+                {copy.signIn.form.passwordLabel}
               </Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); setError(""); }}
-                placeholder="Enter temporary password"
+                placeholder={copy.signIn.form.passwordPlaceholder}
                 className="h-10"
               />
             </div>
@@ -118,7 +120,7 @@ const SignIn: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
               disabled={!canSubmit}
               className="w-full h-10 bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
             >
-              Sign in <ArrowRight className="h-4 w-4" />
+              {copy.signIn.buttons.signIn} <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
 
@@ -129,7 +131,7 @@ const SignIn: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
               onClick={() => setShowHints((v) => !v)}
               className="w-full flex items-center justify-between text-[11px] text-muted-foreground hover:text-foreground transition-colors"
             >
-              <span className="font-medium">Demo credentials</span>
+              <span className="font-medium">{copy.signIn.demoCredentials.sectionToggleLabel}</span>
               {showHints ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
             </button>
 

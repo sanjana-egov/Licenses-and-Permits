@@ -1,9 +1,5 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from "react";
 import {
-  governanceEvents,
-  configActivityEvents,
-  deployments,
-  runtimeEvents,
   SERVICES,
   USERS,
   type Environment,
@@ -13,6 +9,8 @@ import {
   type Deployment,
   type RuntimeEvent,
 } from "@/data/auditLogs";
+import { useOnboarding } from "@/contexts/OnboardingContext";
+import { toGovernanceEvent, toConfigEvent, toDeployment } from "@/lib/auditHelpers";
 
 export type DateRange = { from?: Date; to?: Date };
 export type AuditCategory = "governance" | "config" | "deployment" | "runtime";
@@ -50,12 +48,19 @@ type Ctx = {
   debouncedSearch: string;
 };
 
-const AuditCtx = createContext<Ctx | null>(null);
+type CtxWithData = Ctx & {
+  governanceEvents: GovernanceEvent[];
+  configEvents: ConfigActivityEvent[];
+  deploymentEvents: Deployment[];
+};
+
+const AuditCtx = createContext<CtxWithData | null>(null);
 
 export const AuditProvider: React.FC<{ children: React.ReactNode; serviceScopeId?: string }> = ({
   children,
   serviceScopeId,
 }) => {
+  const { state } = useOnboarding();
   const [filters, setFilters] = useState<AuditFilters>({ ...defaultFilters, serviceScopeId });
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
@@ -64,8 +69,27 @@ export const AuditProvider: React.FC<{ children: React.ReactNode; serviceScopeId
     return () => clearTimeout(t);
   }, [filters.search]);
 
+  const realEvents = state.auditEvents ?? [];
+  const governanceEvents = useMemo(
+    () => realEvents.filter((e) => e.category === "governance").map(toGovernanceEvent),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [realEvents.length],
+  );
+  const configEvents = useMemo(
+    () => realEvents.filter((e) => e.category === "config").map(toConfigEvent),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [realEvents.length],
+  );
+  const deploymentEvents = useMemo(
+    () => realEvents.filter((e) => e.category === "deployment").map(toDeployment),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [realEvents.length],
+  );
+
   return (
-    <AuditCtx.Provider value={{ filters, setFilters, debouncedSearch }}>{children}</AuditCtx.Provider>
+    <AuditCtx.Provider value={{ filters, setFilters, debouncedSearch, governanceEvents, configEvents, deploymentEvents }}>
+      {children}
+    </AuditCtx.Provider>
   );
 };
 
@@ -73,6 +97,17 @@ export function useAudit() {
   const ctx = useContext(AuditCtx);
   if (!ctx) throw new Error("useAudit must be used within AuditProvider");
   return ctx;
+}
+
+// Convenience accessors for the live event arrays
+function useEventData() {
+  const ctx = useContext(AuditCtx);
+  if (!ctx) throw new Error("useAudit must be used within AuditProvider");
+  return {
+    governanceEvents: ctx.governanceEvents,
+    configEvents: ctx.configEvents,
+    deploymentEvents: ctx.deploymentEvents,
+  };
 }
 
 export const SERVICE_OPTIONS = ["all", ...SERVICES] as const;
@@ -93,6 +128,7 @@ function inRange(ts: string, range: DateRange) {
 
 export function useGovernance() {
   const { filters, debouncedSearch } = useAudit();
+  const { governanceEvents } = useEventData();
   return useMemo(() => {
     return governanceEvents.filter((e) => {
       if (filters.serviceScopeId) return false;
@@ -103,13 +139,14 @@ export function useGovernance() {
       if (!inRange(e.timestamp, filters.dateRange)) return false;
       return matchSearch([e.id, e.user, e.action, e.entity, e.scope, ...e.affectedServices], debouncedSearch);
     });
-  }, [filters, debouncedSearch]);
+  }, [filters, debouncedSearch, governanceEvents]);
 }
 
 export function useConfigActivity() {
   const { filters, debouncedSearch } = useAudit();
+  const { configEvents } = useEventData();
   return useMemo(() => {
-    return configActivityEvents.filter((e) => {
+    return configEvents.filter((e) => {
       if (filters.serviceScopeId && e.serviceId !== filters.serviceScopeId) return false;
       if (filters.service !== "all" && e.serviceName !== filters.service) return false;
       if (filters.user !== "all" && e.actor !== filters.user) return false;
@@ -120,13 +157,14 @@ export function useConfigActivity() {
         debouncedSearch,
       );
     });
-  }, [filters, debouncedSearch]);
+  }, [filters, debouncedSearch, configEvents]);
 }
 
 export function useDeployments() {
   const { filters, debouncedSearch } = useAudit();
+  const { deploymentEvents } = useEventData();
   return useMemo(() => {
-    return deployments.filter((d) => {
+    return deploymentEvents.filter((d) => {
       if (filters.serviceScopeId && d.serviceId !== filters.serviceScopeId) return false;
       if (filters.service !== "all" && d.serviceName !== filters.service) return false;
       if (filters.user !== "all" && d.publishedBy !== filters.user) return false;
@@ -138,24 +176,11 @@ export function useDeployments() {
         debouncedSearch,
       );
     });
-  }, [filters, debouncedSearch]);
+  }, [filters, debouncedSearch, deploymentEvents]);
 }
 
 export function useRuntime() {
-  const { filters, debouncedSearch } = useAudit();
-  return useMemo(() => {
-    return runtimeEvents.filter((e) => {
-      if (filters.serviceScopeId && e.serviceId !== filters.serviceScopeId) return false;
-      if (filters.service !== "all" && e.serviceName !== filters.service) return false;
-      if (filters.user !== "all" && e.actor !== filters.user) return false;
-      if (filters.status !== "all" && e.status !== filters.status) return false;
-      if (!inRange(e.timestamp, filters.dateRange)) return false;
-      return matchSearch(
-        [e.id, e.applicationId, e.applicant, e.serviceName, e.stage, e.actor, e.eventType],
-        debouncedSearch,
-      );
-    });
-  }, [filters, debouncedSearch]);
+  return [] as RuntimeEvent[];
 }
 
 // ---------- Unified events ----------
@@ -188,8 +213,12 @@ const resultToTone: Record<Result, StatusTone> = {
   failed: "failed",
 };
 
-function normalize(): UnifiedEvent[] {
-  const g: UnifiedEvent[] = governanceEvents.map((e) => ({
+function normalizeAll(
+  govEvents: GovernanceEvent[],
+  cfgEvents: ConfigActivityEvent[],
+  depEvents: Deployment[],
+): UnifiedEvent[] {
+  const g: UnifiedEvent[] = govEvents.map((e) => ({
     id: e.id,
     timestamp: e.timestamp,
     actor: e.user,
@@ -204,7 +233,7 @@ function normalize(): UnifiedEvent[] {
     severity: e.result,
     raw: { kind: "governance", data: e },
   }));
-  const c: UnifiedEvent[] = configActivityEvents.map((e) => ({
+  const c: UnifiedEvent[] = cfgEvents.map((e) => ({
     id: e.id,
     timestamp: e.timestamp,
     actor: e.actor,
@@ -219,7 +248,7 @@ function normalize(): UnifiedEvent[] {
     severity: "neutral",
     raw: { kind: "config", data: e },
   }));
-  const d: UnifiedEvent[] = deployments.map((e) => {
+  const d: UnifiedEvent[] = depEvents.map((e) => {
     const tone: StatusTone =
       e.status === "published"
         ? "success"
@@ -246,45 +275,18 @@ function normalize(): UnifiedEvent[] {
       raw: { kind: "deployment", data: e },
     };
   });
-  const r: UnifiedEvent[] = runtimeEvents.map((e) => {
-    const tone: StatusTone =
-      e.status === "approved"
-        ? "success"
-        : e.status === "rejected"
-        ? "failed"
-        : e.status === "sent_back"
-        ? "warning"
-        : e.status === "in_progress"
-        ? "info"
-        : "neutral";
-    const sev: Result | "neutral" =
-      e.status === "rejected" ? "failed" : e.status === "sent_back" ? "warning" : "neutral";
-    const label = e.status.replace(/_/g, " ").replace(/\b\w/g, (x) => x.toUpperCase());
-    const actionLabel = e.eventType.replace(/_/g, " ").replace(/\b\w/g, (x) => x.toUpperCase());
-    return {
-      id: e.id,
-      timestamp: e.timestamp,
-      actor: e.actor,
-      category: "runtime",
-      action: `${actionLabel} · ${e.applicationId}`,
-      entity: `${e.applicant} · ${e.stage}`,
-      service: e.serviceName,
-      services: [e.serviceName],
-      statusLabel: label,
-      statusTone: tone,
-      severity: sev,
-      raw: { kind: "runtime", data: e },
-    };
-  });
-  return [...g, ...c, ...d, ...r].sort(
+  return [...g, ...c, ...d].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
   );
 }
 
-const ALL_UNIFIED = normalize();
-
 export function useUnifiedEvents(): UnifiedEvent[] {
   const { filters, debouncedSearch } = useAudit();
+  const { governanceEvents, configEvents, deploymentEvents } = useEventData();
+  const ALL_UNIFIED = useMemo(
+    () => normalizeAll(governanceEvents, configEvents, deploymentEvents),
+    [governanceEvents, configEvents, deploymentEvents],
+  );
   return useMemo(() => {
     return ALL_UNIFIED.filter((e) => {
       if (filters.serviceScopeId) return false;
@@ -347,5 +349,5 @@ export function useUnifiedEvents(): UnifiedEvent[] {
         debouncedSearch,
       );
     });
-  }, [filters, debouncedSearch]);
+  }, [filters, debouncedSearch, ALL_UNIFIED]);
 }

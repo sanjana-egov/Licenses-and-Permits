@@ -6,7 +6,7 @@ import type { OperationsData } from "../mockData";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
-const fmtMoney = (v: number) => `₹${(v / 1000).toFixed(v >= 100000 ? 0 : 1)}k`;
+const fmtMoney = (v: number) => `R${(v / 1000).toFixed(v >= 100000 ? 0 : 1)}k`;
 const fmtNum = (v: number) => v.toLocaleString();
 
 interface Props {

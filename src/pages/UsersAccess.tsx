@@ -27,6 +27,8 @@ import type {
 import { InviteUserSheet } from "@/components/users-access/InviteUserSheet";
 import { RoleDetailSheet } from "@/components/users-access/RoleDetailSheet";
 import { toast } from "@/hooks/use-toast";
+import { useAuditLog } from "@/hooks/useAuditLog";
+import { copy } from "@/copy";
 
 type UserFilter = "all" | "system" | "service" | "invited";
 
@@ -87,9 +89,9 @@ function Avatar({ name, tone }: { name: string; tone: string }) {
 
 function StatusBadge({ status }: { status: UserStatus }) {
   const map: Record<UserStatus, { dot: string; label: string; cls: string }> = {
-    active: { dot: "bg-success", label: "Active", cls: "text-foreground" },
-    invited: { dot: "bg-warning", label: "Invited", cls: "text-foreground" },
-    disabled: { dot: "bg-muted-foreground", label: "Disabled", cls: "text-muted-foreground" },
+    active: { dot: "bg-success", label: copy.usersAccess.statusBadges.active, cls: "text-foreground" },
+    invited: { dot: "bg-warning", label: copy.usersAccess.statusBadges.invited, cls: "text-foreground" },
+    disabled: { dot: "bg-muted-foreground", label: copy.usersAccess.statusBadges.disabled, cls: "text-muted-foreground" },
   };
   const s = map[status];
   return (
@@ -152,6 +154,7 @@ export default function UsersAccess() {
   const setTab = (v: string) => setSearchParams({ tab: v }, { replace: true });
 
   const { state: onboarding } = useOnboarding();
+  const { logGovernance } = useAuditLog();
   const isSuperAdmin = onboarding.currentUserRole === "super_admin";
 
   const servicesFromCtx = useMemo(() => {
@@ -208,10 +211,10 @@ export default function UsersAccess() {
   }, [state.users, filter, query, rolesById]);
 
   const filterPills: { id: UserFilter; label: string; count: number }[] = [
-    { id: "all", label: "All Users", count: total },
-    { id: "system", label: "System", count: systemCount },
-    { id: "service", label: "Service", count: serviceCount },
-    { id: "invited", label: "Invited", count: invitedCount },
+    { id: "all", label: copy.usersAccess.userFilters.allUsers, count: total },
+    { id: "system", label: copy.usersAccess.userFilters.system, count: systemCount },
+    { id: "service", label: copy.usersAccess.userFilters.service, count: serviceCount },
+    { id: "invited", label: copy.usersAccess.userFilters.invited, count: invitedCount },
   ];
 
   function addUsers(rows: UserRow[]) {
@@ -249,7 +252,7 @@ export default function UsersAccess() {
     const user = state.users.find((u) => u.id === id);
     // Super Admin check: cannot remove another super_admin
     if (user?.roleId === "super_admin") {
-      toast({ title: "Cannot remove Super Admin", description: "The Super Admin account cannot be removed.", variant: "destructive" });
+      toast({ title: copy.usersAccess.toasts.cannotRemoveSuperAdminTitle, description: copy.usersAccess.toasts.cannotRemoveSuperAdminDescription, variant: "destructive" });
       return;
     }
     setState((s) => ({ ...s, users: s.users.filter((u) => u.id !== id) }));
@@ -264,7 +267,10 @@ export default function UsersAccess() {
         service: null,
       });
     }
-    toast({ title: "User removed" });
+    if (user) {
+      logGovernance({ action: "User removed", entity: user.name, entityType: "User" });
+    }
+    toast({ title: copy.usersAccess.toasts.userRemovedTitle });
   }
 
   function resendInvite(u: UserRow) {
@@ -277,7 +283,8 @@ export default function UsersAccess() {
       role: rolesById[u.roleId]?.name || u.roleId,
       service: null,
     });
-    toast({ title: "Invite resent", description: u.email });
+    logGovernance({ action: "Invite resent", entity: u.email, entityType: "User" });
+    toast({ title: copy.usersAccess.toasts.inviteResentTitle, description: u.email });
   }
 
   const [activeRole, setActiveRole] = useState<RoleDef | null>(null);
@@ -321,37 +328,37 @@ export default function UsersAccess() {
     <div className="p-6 max-w-[1400px] mx-auto space-y-6">
       <header className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Users & Access</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{copy.usersAccess.header.pageTitle}</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Manage people, roles, and service permissions across your platform.
+            {copy.usersAccess.header.pageDescription}
           </p>
         </div>
         <div className="flex items-center gap-2">
           {!isSuperAdmin && (
             <Badge variant="outline" className="text-[11px] font-normal text-muted-foreground">
-              Limited access — Admin invite only
+              {copy.usersAccess.header.limitedAccessBadge}
             </Badge>
           )}
           <Button onClick={() => setInviteOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" /> Invite User
+            <Plus className="h-4 w-4" /> {copy.usersAccess.header.inviteUserButton}
           </Button>
         </div>
       </header>
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
-          <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="roles">Roles & Permissions</TabsTrigger>
-          <TabsTrigger value="activity">Activity Log</TabsTrigger>
+          <TabsTrigger value="users">{copy.usersAccess.tabs.usersTab}</TabsTrigger>
+          <TabsTrigger value="roles">{copy.usersAccess.tabs.rolesTab}</TabsTrigger>
+          <TabsTrigger value="activity">{copy.usersAccess.tabs.activityTab}</TabsTrigger>
         </TabsList>
 
         {/* USERS */}
         <TabsContent value="users" className="space-y-5 mt-5">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <MetricCard icon={Users} label="Total Users" value={total} hint="Across all services" />
-            <MetricCard icon={ShieldCheck} label="System Users" value={systemCount} hint="Platform-level access" />
-            <MetricCard icon={Briefcase} label="Service Users" value={serviceCount} hint="Scoped to services" />
-            <MetricCard icon={MailPlus} label="Pending Invites" value={invitedCount} hint="Awaiting acceptance" />
+            <MetricCard icon={Users} label={copy.usersAccess.metricsCards.totalUsersLabel} value={total} hint={copy.usersAccess.metricsCards.totalUsersHint} />
+            <MetricCard icon={ShieldCheck} label={copy.usersAccess.metricsCards.systemUsersLabel} value={systemCount} hint={copy.usersAccess.metricsCards.systemUsersHint} />
+            <MetricCard icon={Briefcase} label={copy.usersAccess.metricsCards.serviceUsersLabel} value={serviceCount} hint={copy.usersAccess.metricsCards.serviceUsersHint} />
+            <MetricCard icon={MailPlus} label={copy.usersAccess.metricsCards.pendingInvitesLabel} value={invitedCount} hint={copy.usersAccess.metricsCards.pendingInvitesHint} />
           </div>
 
           <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -375,7 +382,7 @@ export default function UsersAccess() {
               <Input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by name, email, or role"
+                placeholder={copy.usersAccess.usersSearchPlaceholder}
                 className="pl-8 w-[280px] h-9"
               />
             </div>
@@ -385,11 +392,11 @@ export default function UsersAccess() {
             <Table>
               <TableHeader className="bg-muted/40 sticky top-0">
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="text-[11px] uppercase tracking-wide font-medium">User</TableHead>
-                  <TableHead className="text-[11px] uppercase tracking-wide font-medium">Role</TableHead>
-                  <TableHead className="text-[11px] uppercase tracking-wide font-medium">Service Scope</TableHead>
-                  <TableHead className="text-[11px] uppercase tracking-wide font-medium">Status</TableHead>
-                  <TableHead className="text-[11px] uppercase tracking-wide font-medium">Last Active</TableHead>
+                  <TableHead className="text-[11px] uppercase tracking-wide font-medium">{copy.usersAccess.usersTable.columnUser}</TableHead>
+                  <TableHead className="text-[11px] uppercase tracking-wide font-medium">{copy.usersAccess.usersTable.columnRole}</TableHead>
+                  <TableHead className="text-[11px] uppercase tracking-wide font-medium">{copy.usersAccess.usersTable.columnServiceScope}</TableHead>
+                  <TableHead className="text-[11px] uppercase tracking-wide font-medium">{copy.usersAccess.usersTable.columnStatus}</TableHead>
+                  <TableHead className="text-[11px] uppercase tracking-wide font-medium">{copy.usersAccess.usersTable.columnLastActive}</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
@@ -397,7 +404,7 @@ export default function UsersAccess() {
                 {filteredUsers.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-12 text-sm text-muted-foreground">
-                      No users match your filters.
+                      {copy.usersAccess.usersTable.emptyState}
                     </TableCell>
                   </TableRow>
                 )}
@@ -414,7 +421,7 @@ export default function UsersAccess() {
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
                               <span className="text-sm font-medium truncate">{u.name}</span>
-                              {isProtected && <Badge variant="outline" className="text-[9px] font-normal shrink-0">Super Admin</Badge>}
+                              {isProtected && <Badge variant="outline" className="text-[9px] font-normal shrink-0">{copy.usersAccess.usersTable.superAdminBadge}</Badge>}
                             </div>
                             <div className="text-xs text-muted-foreground truncate">{u.email}</div>
                           </div>
@@ -444,21 +451,21 @@ export default function UsersAccess() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => openRole(role!)} disabled={!role}>
-                              <Settings2 className="h-4 w-4 mr-2" /> Edit role
+                              <Settings2 className="h-4 w-4 mr-2" /> {copy.usersAccess.userRowActions.editRole}
                             </DropdownMenuItem>
                             {u.status === "invited" && (
                               <DropdownMenuItem onClick={() => resendInvite(u)}>
-                                <MailPlus className="h-4 w-4 mr-2" /> Resend invite
+                                <MailPlus className="h-4 w-4 mr-2" /> {copy.usersAccess.userRowActions.resendInvite}
                               </DropdownMenuItem>
                             )}
                             {u.status === "active" && !isProtected && (
                               <DropdownMenuItem onClick={() => setUserStatus(u.id, "disabled")}>
-                                Disable user
+                                {copy.usersAccess.userRowActions.disableUser}
                               </DropdownMenuItem>
                             )}
                             {u.status === "disabled" && (
                               <DropdownMenuItem onClick={() => setUserStatus(u.id, "active")}>
-                                Re-enable user
+                                {copy.usersAccess.userRowActions.reEnableUser}
                               </DropdownMenuItem>
                             )}
                             {!isProtected && (
@@ -469,7 +476,7 @@ export default function UsersAccess() {
                                   onClick={() => removeUser(u.id)}
                                   disabled={u.roleId === "system_admin" && !isSuperAdmin}
                                 >
-                                  Remove
+                                  {copy.usersAccess.userRowActions.remove}
                                 </DropdownMenuItem>
                               </>
                             )}
@@ -483,7 +490,7 @@ export default function UsersAccess() {
             </Table>
             <div className="flex items-center justify-between px-4 py-2.5 border-t border-border text-xs text-muted-foreground">
               <span>{filteredUsers.length} of {total}</span>
-              <span>Page 1 of 1</span>
+              <span>{copy.usersAccess.usersTable.paginationPageCount}</span>
             </div>
           </div>
         </TabsContent>
@@ -491,8 +498,8 @@ export default function UsersAccess() {
         {/* ROLES */}
         <TabsContent value="roles" className="space-y-7 mt-5">
           {[
-            { label: "System Roles", helper: "Platform-level roles that span the whole organization.", items: systemRoles },
-            { label: "Service Roles", helper: "Operational roles scoped to one or more services.", items: serviceRoles },
+            { label: copy.usersAccess.rolesTab.systemRolesSectionLabel, helper: copy.usersAccess.rolesTab.systemRolesSectionHelper, items: systemRoles },
+            { label: copy.usersAccess.rolesTab.serviceRolesSectionLabel, helper: copy.usersAccess.rolesTab.serviceRolesSectionHelper, items: serviceRoles },
           ].map((section) => (
             <section key={section.label} className="space-y-3">
               <div className="flex items-baseline justify-between">
@@ -516,7 +523,7 @@ export default function UsersAccess() {
                           <div className="flex items-center gap-1.5">
                             <div className="text-sm font-semibold">{r.name}</div>
                             {isSuperAdminRole && (
-                              <Badge variant="outline" className="text-[9px] font-normal shrink-0">1 per org</Badge>
+                              <Badge variant="outline" className="text-[9px] font-normal shrink-0">{copy.usersAccess.rolesTab.onePerOrgBadge}</Badge>
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{r.description}</p>
@@ -526,21 +533,21 @@ export default function UsersAccess() {
                         </Badge>
                       </div>
                       <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap min-h-[20px]">
-                        <span className="font-medium text-foreground">{count}</span> {count === 1 ? "user" : "users"}
+                        <span className="font-medium text-foreground">{count}</span> {count === 1 ? copy.usersAccess.rolesTab.userSingular : copy.usersAccess.rolesTab.userPlural}
                         {r.type === "service" && scope.length > 0 && (
                           <>
                             <span className="text-border">·</span>
                             <span className="truncate">{scope.slice(0, 2).join(", ")}{scope.length > 2 ? ` +${scope.length - 2}` : ""}</span>
                           </>
                         )}
-                        {r.type === "system" && <><span className="text-border">·</span><span>Platform-wide</span></>}
+                        {r.type === "system" && <><span className="text-border">·</span><span>{copy.usersAccess.rolesTab.platformWide}</span></>}
                       </div>
                       <div className="flex items-center gap-1 pt-1 border-t border-border -mx-4 px-4 -mb-1">
                         <Button variant="ghost" size="sm" className="text-xs h-8" onClick={() => openRole(r)}>
-                          Manage permissions
+                          {copy.usersAccess.rolesTab.managePermissionsButton}
                         </Button>
                         <Button variant="ghost" size="sm" className="text-xs h-8 ml-auto" onClick={() => { setFilter("all"); setQuery(r.name); setTab("users"); }}>
-                          View users
+                          {copy.usersAccess.rolesTab.viewUsersButton}
                         </Button>
                       </div>
                     </div>
@@ -555,7 +562,7 @@ export default function UsersAccess() {
         <TabsContent value="activity" className="space-y-5 mt-5">
           <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 rounded-lg px-4 py-2.5 border border-border">
             <Clock className="h-3.5 w-3.5 shrink-0" />
-            This log is immutable and read-only. All user and role actions are recorded here and cannot be deleted.
+            {copy.usersAccess.activityLog.immutableNotice}
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
@@ -564,7 +571,7 @@ export default function UsersAccess() {
               <Input
                 value={activityQuery}
                 onChange={(e) => setActivityQuery(e.target.value)}
-                placeholder="Search by actor, user, or role"
+                placeholder={copy.usersAccess.activityLog.searchPlaceholder}
                 className="pl-8 h-9"
               />
             </div>
@@ -572,10 +579,10 @@ export default function UsersAccess() {
               <Filter className="h-4 w-4 text-muted-foreground" />
               <Select value={actionFilter} onValueChange={setActionFilter}>
                 <SelectTrigger className="h-9 w-[180px] text-xs">
-                  <SelectValue placeholder="All actions" />
+                  <SelectValue placeholder={copy.usersAccess.activityLog.allActionsOption} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All actions</SelectItem>
+                  <SelectItem value="all">{copy.usersAccess.activityLog.allActionsOption}</SelectItem>
                   {ALL_ACTIONS.map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -586,19 +593,19 @@ export default function UsersAccess() {
             <Table>
               <TableHeader className="bg-muted/40">
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="text-[11px] uppercase tracking-wide font-medium">Timestamp</TableHead>
-                  <TableHead className="text-[11px] uppercase tracking-wide font-medium">Actor</TableHead>
-                  <TableHead className="text-[11px] uppercase tracking-wide font-medium">Action</TableHead>
-                  <TableHead className="text-[11px] uppercase tracking-wide font-medium">Affected User</TableHead>
-                  <TableHead className="text-[11px] uppercase tracking-wide font-medium">Role</TableHead>
-                  <TableHead className="text-[11px] uppercase tracking-wide font-medium">Service</TableHead>
+                  <TableHead className="text-[11px] uppercase tracking-wide font-medium">{copy.usersAccess.activityLog.columnTimestamp}</TableHead>
+                  <TableHead className="text-[11px] uppercase tracking-wide font-medium">{copy.usersAccess.activityLog.columnActor}</TableHead>
+                  <TableHead className="text-[11px] uppercase tracking-wide font-medium">{copy.usersAccess.activityLog.columnAction}</TableHead>
+                  <TableHead className="text-[11px] uppercase tracking-wide font-medium">{copy.usersAccess.activityLog.columnAffectedUser}</TableHead>
+                  <TableHead className="text-[11px] uppercase tracking-wide font-medium">{copy.usersAccess.activityLog.columnRole}</TableHead>
+                  <TableHead className="text-[11px] uppercase tracking-wide font-medium">{copy.usersAccess.activityLog.columnService}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredActivity.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-12 text-sm text-muted-foreground">
-                      No activity log entries match your filters.
+                      {copy.usersAccess.activityLog.emptyState}
                     </TableCell>
                   </TableRow>
                 )}
@@ -628,7 +635,7 @@ export default function UsersAccess() {
             </Table>
             <div className="flex items-center justify-between px-4 py-2.5 border-t border-border text-xs text-muted-foreground">
               <span>{filteredActivity.length} of {activityLog.length} entries</span>
-              <span>Read-only</span>
+              <span>{copy.usersAccess.activityLog.readOnlyLabel}</span>
             </div>
           </div>
         </TabsContent>

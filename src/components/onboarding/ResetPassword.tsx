@@ -8,6 +8,7 @@ import { useOnboarding } from "@/contexts/OnboardingContext";
 import AuthShell from "./AuthShell";
 
 import { MOCK_CREDENTIALS } from "@/data/mockCredentials";
+import { copy } from "@/copy";
 
 const ResetPassword: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
   const { state, updateState } = useOnboarding();
@@ -24,10 +25,10 @@ const ResetPassword: React.FC<{ onComplete: () => void }> = ({ onComplete }) => 
 
   let error = "";
   if (submitted || current) {
-    if (current && !currentValid) error = "Current password is incorrect.";
-    else if (next && next.length < 8) error = "New password must be at least 8 characters.";
-    else if (next && next === current) error = "New password must be different from your current password.";
-    else if (confirm && !matches) error = "Passwords do not match.";
+    if (current && !currentValid) error = copy.resetPassword.errors.incorrectCurrentPassword;
+    else if (next && next.length < 8) error = copy.resetPassword.errors.newPasswordTooShort;
+    else if (next && next === current) error = copy.resetPassword.errors.newPasswordSameAsCurrent;
+    else if (confirm && !matches) error = copy.resetPassword.errors.passwordsDoNotMatch;
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -44,13 +45,13 @@ const ResetPassword: React.FC<{ onComplete: () => void }> = ({ onComplete }) => 
   const handleBack = () => updateState({ isLoggedIn: false });
 
   return (
-    <AuthShell step="Step 2 of 3 · Reset password" showSidePanel sidePanelPosition="left">
+    <AuthShell step={copy.resetPassword.header.stepLabel} showSidePanel sidePanelPosition="left">
       <Card className="border-border shadow-sm">
         <form onSubmit={handleSubmit} className="px-7 py-8 space-y-6">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                Secure Password Reset
+                {copy.resetPassword.header.sectionEyebrow}
               </p>
               <Button
                 type="button"
@@ -59,58 +60,58 @@ const ResetPassword: React.FC<{ onComplete: () => void }> = ({ onComplete }) => 
                 onClick={handleBack}
                 className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
               >
-                <ArrowLeft className="h-3.5 w-3.5" /> Back
+                <ArrowLeft className="h-3.5 w-3.5" /> {copy.resetPassword.buttons.back}
               </Button>
             </div>
             <h1 className="text-[22px] font-semibold text-foreground tracking-tight leading-tight">
-              Set a new password
+              {copy.resetPassword.header.heading}
             </h1>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              For security, replace your temporary password before accessing your workspace.
+              {copy.resetPassword.header.description}
             </p>
           </div>
 
           <div className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="current" className="text-xs font-medium text-foreground">
-                Current password
+                {copy.resetPassword.form.currentPasswordLabel}
               </Label>
               <Input
                 id="current"
                 type="password"
                 value={current}
                 onChange={(e) => setCurrent(e.target.value)}
-                placeholder="Enter temporary password"
+                placeholder={copy.resetPassword.form.currentPasswordPlaceholder}
                 className="h-10"
                 autoFocus
               />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="new" className="text-xs font-medium text-foreground">
-                New password
+                {copy.resetPassword.form.newPasswordLabel}
               </Label>
               <Input
                 id="new"
                 type="password"
                 value={next}
                 onChange={(e) => setNext(e.target.value)}
-                placeholder="At least 8 characters"
+                placeholder={copy.resetPassword.form.newPasswordPlaceholder}
                 className="h-10"
               />
               <p className="text-[11px] text-muted-foreground">
-                At least 8 characters. Use a mix of letters and numbers.
+                {copy.resetPassword.form.newPasswordHint}
               </p>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="confirm" className="text-xs font-medium text-foreground">
-                Confirm new password
+                {copy.resetPassword.form.confirmPasswordLabel}
               </Label>
               <Input
                 id="confirm"
                 type="password"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
-                placeholder="Re-enter new password"
+                placeholder={copy.resetPassword.form.confirmPasswordPlaceholder}
                 className="h-10"
               />
             </div>
@@ -126,7 +127,7 @@ const ResetPassword: React.FC<{ onComplete: () => void }> = ({ onComplete }) => 
               disabled={!canContinue}
               className="w-full h-10 bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
             >
-              Continue <ArrowRight className="h-4 w-4" />
+              {copy.resetPassword.buttons.continue} <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
         </form>

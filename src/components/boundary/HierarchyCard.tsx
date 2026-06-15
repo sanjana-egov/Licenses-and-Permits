@@ -18,15 +18,17 @@ const SOURCE_ICONS: Record<BoundaryHierarchy["source"], typeof Map> = {
 
 interface Props {
   hierarchy: BoundaryHierarchy;
+  computedUsedBy?: string[];
   onMakeDefault: () => void;
   onToggleStatus: () => void;
 }
 
-export function HierarchyCard({ hierarchy, onMakeDefault, onToggleStatus }: Props) {
+export function HierarchyCard({ hierarchy, computedUsedBy, onMakeDefault, onToggleStatus }: Props) {
   const SourceIcon = SOURCE_ICONS[hierarchy.source];
   const isActive = hierarchy.status === "active";
-  const visibleServices = hierarchy.usedByServices.slice(0, 2);
-  const extraServices = hierarchy.usedByServices.length - visibleServices.length;
+  const usedByList = computedUsedBy ?? hierarchy.usedByServices;
+  const visibleServices = usedByList.slice(0, 2);
+  const extraServices = usedByList.length - visibleServices.length;
 
   return (
     <div
@@ -94,7 +96,7 @@ export function HierarchyCard({ hierarchy, onMakeDefault, onToggleStatus }: Prop
 
         {/* Used by services */}
         <div className="flex items-center gap-1.5 flex-wrap min-h-[22px]">
-          {hierarchy.usedByServices.length === 0 ? (
+          {usedByList.length === 0 ? (
             <span className="text-[11px] text-muted-foreground/60">Not yet used by any service</span>
           ) : (
             <>

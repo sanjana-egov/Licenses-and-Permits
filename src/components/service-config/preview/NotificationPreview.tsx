@@ -79,7 +79,7 @@ const NotificationPreview: React.FC<Props> = ({
             <div className="border rounded-md overflow-hidden bg-white shadow-sm">
               <div className="border-b px-2.5 py-1.5 bg-slate-50 space-y-0.5">
                 <div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
-                  <span className="truncate">From: noreply@gov.in</span>
+                  <span className="truncate">From: noreply@capetown.gov.za</span>
                   <span className="shrink-0">9:41 AM</span>
                 </div>
                 {recipientLabel && (

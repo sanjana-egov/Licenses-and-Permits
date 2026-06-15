@@ -4,6 +4,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { OnboardingProvider } from "@/contexts/OnboardingContext";
+import { HelpProvider } from "@/contexts/HelpContext";
+import HelpPanel from "@/components/help/HelpPanel";
+import CoachmarkTour from "@/components/help/CoachmarkTour";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
 import ServiceConfig from "./pages/ServiceConfig";
@@ -31,42 +34,44 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Navigate to="/onboarding" replace />} />
-            <Route path="/onboarding" element={<Onboarding />} />
+          <HelpProvider>
+            <Routes>
+              <Route path="/" element={<Navigate to="/onboarding" replace />} />
+              <Route path="/onboarding" element={<Onboarding />} />
 
-            {/* App shell with sidebar */}
-            <Route element={<AppLayout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/services" element={<Services />} />
-              <Route path="/templates/:templateId/setup" element={<TemplateSetup />} />
-              <Route path="/service/:id/configure" element={<ServiceConfig />} />
-              <Route path="/service/:id/preview" element={<ServicePreview />} />
-              <Route path="/service/:id/manage" element={<ServiceManage />} />
-              <Route path="/go-live" element={<GoLive />} />
+              {/* App shell with sidebar */}
+              <Route element={<AppLayout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/services" element={<Services />} />
+                <Route path="/templates/:templateId/setup" element={<TemplateSetup />} />
+                <Route path="/service/:id/configure" element={<ServiceConfig />} />
+                <Route path="/service/:id/preview" element={<ServicePreview />} />
+                <Route path="/service/:id/manage" element={<ServiceManage />} />
+                <Route path="/go-live" element={<GoLive />} />
 
-              {/* Setup */}
-              <Route path="/setup/organization" element={<OrganizationProfile />} />
-              <Route path="/setup/users" element={<UsersAccess />} />
-              <Route path="/setup/deployment" element={<ApplicationAreas />} />
-              <Route path="/setup/auth" element={<PlaceholderPage title="Authentication" description="Set up how your team signs in — Email, Single Sign-On, or One-Time Password." />} />
-              <Route path="/setup/license" element={<PlaceholderPage title="License & Billing" description="Manage your license key, subscription plan, and usage." />} />
+                {/* Setup */}
+                <Route path="/setup/organization" element={<OrganizationProfile />} />
+                <Route path="/setup/users" element={<UsersAccess />} />
+                <Route path="/setup/deployment" element={<ApplicationAreas />} />
+                <Route path="/setup/auth" element={<PlaceholderPage title="Authentication" description="Set up how your team signs in — Email, Single Sign-On, or One-Time Password." />} />
+                <Route path="/setup/license" element={<PlaceholderPage title="License & Billing" description="Manage your license key, subscription plan, and usage." />} />
 
-              {/* Configuration */}
-              <Route path="/config/branding" element={<BrandingTheme />} />
-              <Route path="/config/languages" element={<PlaceholderPage title="Languages" description="Add language support and manage translations for your applications." />} />
-              
-              <Route path="/config/integrations" element={<PlaceholderPage title="Integrations" description="Connect payment gateways, document verification, and external APIs." />} />
+                {/* Configuration */}
+                <Route path="/config/branding" element={<BrandingTheme />} />
+                <Route path="/config/languages" element={<PlaceholderPage title="Languages" description="Add language support and manage translations for your applications." />} />
 
-              {/* Utilities */}
-              <Route path="/audit-log" element={<AuditLogs />} />
-              <Route path="/responsive-qa" element={<ResponsiveQA />} />
-              <Route path="/help" element={<PlaceholderPage title="Help & Support" description="Access documentation, FAQs, and contact support." />} />
-              <Route path="/settings" element={<PlaceholderPage title="Settings" description="General platform settings, data export, and account management." />} />
-            </Route>
+                <Route path="/config/integrations" element={<PlaceholderPage title="Integrations" description="Connect payment gateways, document verification, and external APIs." />} />
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+                {/* Utilities */}
+                <Route path="/audit-log" element={<AuditLogs />} />
+                <Route path="/responsive-qa" element={<ResponsiveQA />} />
+              </Route>
+
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <HelpPanel />
+            <CoachmarkTour />
+          </HelpProvider>
         </BrowserRouter>
       </OnboardingProvider>
     </TooltipProvider>

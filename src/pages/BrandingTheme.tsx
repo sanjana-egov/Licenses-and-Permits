@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { DEFAULT_BRANDING } from "@/hooks/useBranding";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { copy } from "@/copy";
 
 interface ThemePreset {
   id: string;
@@ -173,10 +174,10 @@ const BrandingTheme: React.FC = () => {
     };
     if (scope === "service" && activeService) {
       updateActiveServiceBranding(payload);
-      toast.success("Theme applied to this service");
+      toast.success(copy.brandingTheme.toastMessages.themeAppliedToService);
     } else {
       updatePlatformBranding(payload);
-      toast.success("Platform-wide theme applied");
+      toast.success(copy.brandingTheme.toastMessages.themeAppliedToPlatform);
     }
   };
 
@@ -189,9 +190,9 @@ const BrandingTheme: React.FC = () => {
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Branding & Theme</h1>
+            <h1 className="text-2xl font-bold text-foreground">{copy.brandingTheme.header.pageTitle}</h1>
             <p className="text-sm text-muted-foreground">
-              Customize the look and feel of your citizen-facing portal
+              {copy.brandingTheme.header.pageSubtitle}
             </p>
           </div>
         </div>
@@ -199,8 +200,8 @@ const BrandingTheme: React.FC = () => {
           {activeService && (
             <Tabs value={scope} onValueChange={(v) => setScope(v as "service" | "platform")}>
               <TabsList>
-                <TabsTrigger value="service">This service</TabsTrigger>
-                <TabsTrigger value="platform">Platform default</TabsTrigger>
+                <TabsTrigger value="service">{copy.brandingTheme.header.scopeTabService}</TabsTrigger>
+                <TabsTrigger value="platform">{copy.brandingTheme.header.scopeTabPlatform}</TabsTrigger>
               </TabsList>
             </Tabs>
           )}
@@ -208,7 +209,7 @@ const BrandingTheme: React.FC = () => {
           onClick={applyTheme}
           style={{ backgroundColor: primaryColor, color: contrastText, borderRadius: buttonRadius }}
         >
-          Apply Theme
+          {copy.brandingTheme.header.applyThemeButton}
           </Button>
         </div>
       </div>
@@ -217,13 +218,13 @@ const BrandingTheme: React.FC = () => {
       <div className="flex gap-6" style={{ height: "calc(100vh - 180px)" }}>
         {/* Left Panel — Theme Config */}
         <div className="w-[380px] shrink-0 overflow-y-auto border-r pr-6 space-y-6">
-          <h2 className="text-lg font-bold text-foreground">Theme Properties</h2>
+          <h2 className="text-lg font-bold text-foreground">{copy.brandingTheme.leftPanel.sectionTitle}</h2>
 
           {/* Theme Presets */}
           <div>
             <div className="flex items-center gap-2 mb-3">
               <Palette className="h-4 w-4 text-muted-foreground" />
-              <Label className="text-sm font-semibold">Theme Presets</Label>
+              <Label className="text-sm font-semibold">{copy.brandingTheme.themePresets.sectionLabel}</Label>
             </div>
             <div className="grid grid-cols-2 gap-2.5">
               {themePresets.map((preset) => (
@@ -263,7 +264,7 @@ const BrandingTheme: React.FC = () => {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <Type className="h-4 w-4 text-muted-foreground" />
-              <Label className="text-sm font-semibold">Font Family</Label>
+              <Label className="text-sm font-semibold">{copy.brandingTheme.fontFamily.sectionLabel}</Label>
             </div>
             <Select value={selectedFont} onValueChange={setSelectedFont}>
               <SelectTrigger>
@@ -283,9 +284,9 @@ const BrandingTheme: React.FC = () => {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Palette className="h-4 w-4 text-muted-foreground" />
-              <Label className="text-sm font-semibold">Primary Colour</Label>
+              <Label className="text-sm font-semibold">{copy.brandingTheme.primaryColour.sectionLabel}</Label>
             </div>
-            <p className="text-xs text-muted-foreground mb-3">10 curated government-friendly colours</p>
+            <p className="text-xs text-muted-foreground mb-3">{copy.brandingTheme.primaryColour.helpText}</p>
             <div className="grid grid-cols-5 gap-2.5">
               {colorSwatches.map((c) => (
                 <button
@@ -312,7 +313,7 @@ const BrandingTheme: React.FC = () => {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <Shield className="h-4 w-4 text-muted-foreground" />
-              <Label className="text-sm font-semibold">Logo</Label>
+              <Label className="text-sm font-semibold">{copy.brandingTheme.logo.sectionLabel}</Label>
             </div>
             {logoFile ? (
               <div className="border rounded-lg p-4 space-y-3">
@@ -332,8 +333,8 @@ const BrandingTheme: React.FC = () => {
               <label className="border-2 border-dashed rounded-lg p-6 text-center text-muted-foreground hover:border-muted-foreground/40 transition-colors cursor-pointer block">
                 <input type="file" accept="image/png,image/svg+xml,image/jpeg" className="hidden" onChange={handleLogoUpload} />
                 <Upload className="h-5 w-5 mx-auto mb-2" />
-                <p className="text-xs font-medium">Click to upload logo</p>
-                <p className="text-xs text-muted-foreground/60 mt-0.5">PNG, SVG, JPG up to 5 MB</p>
+                <p className="text-xs font-medium">{copy.brandingTheme.logo.uploadCta}</p>
+                <p className="text-xs text-muted-foreground/60 mt-0.5">{copy.brandingTheme.logo.uploadHint}</p>
               </label>
             )}
           </div>
@@ -344,7 +345,7 @@ const BrandingTheme: React.FC = () => {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <FileText className="h-4 w-4 text-muted-foreground" />
-              <Label className="text-sm font-semibold">Brand Guidelines</Label>
+              <Label className="text-sm font-semibold">{copy.brandingTheme.brandGuidelines.sectionLabel}</Label>
             </div>
             {guidelinesFile ? (
               <div className="border rounded-lg p-4">
@@ -362,8 +363,8 @@ const BrandingTheme: React.FC = () => {
               <label className="border-2 border-dashed rounded-lg p-6 text-center text-muted-foreground hover:border-muted-foreground/40 transition-colors cursor-pointer block">
                 <input type="file" accept=".pdf,.png,.svg" className="hidden" onChange={handleGuidelinesUpload} />
                 <Upload className="h-5 w-5 mx-auto mb-2" />
-                <p className="text-xs font-medium">Click to upload guidelines</p>
-                <p className="text-xs text-muted-foreground/60 mt-0.5">PDF, PNG, SVG up to 10 MB</p>
+                <p className="text-xs font-medium">{copy.brandingTheme.brandGuidelines.uploadCta}</p>
+                <p className="text-xs text-muted-foreground/60 mt-0.5">{copy.brandingTheme.brandGuidelines.uploadHint}</p>
               </label>
             )}
           </div>
@@ -372,15 +373,15 @@ const BrandingTheme: React.FC = () => {
 
           {/* Name on the Header */}
           <div>
-            <Label className="text-sm font-semibold">Name on the Header</Label>
-            <Input className="mt-2" value={portalName} onChange={(e) => setPortalName(e.target.value)} placeholder="e.g. City A Corporation" />
+            <Label className="text-sm font-semibold">{copy.brandingTheme.portalName.sectionLabel}</Label>
+            <Input className="mt-2" value={portalName} onChange={(e) => setPortalName(e.target.value)} placeholder={copy.brandingTheme.portalName.placeholder} />
           </div>
 
           <Separator />
 
           {/* Footer Copyright */}
           <div>
-            <Label className="text-sm font-semibold">Footer Copyright</Label>
+            <Label className="text-sm font-semibold">{copy.brandingTheme.footerCopyright.sectionLabel}</Label>
             <Input className="mt-2" value={copyright} onChange={(e) => setCopyright(e.target.value)} />
           </div>
 
@@ -390,7 +391,7 @@ const BrandingTheme: React.FC = () => {
             onClick={applyTheme}
             style={{ backgroundColor: primaryColor, color: contrastText, borderRadius: buttonRadius }}
           >
-            Apply Theme
+            {copy.brandingTheme.applyButton.label}
           </Button>
         </div>
 
@@ -398,8 +399,8 @@ const BrandingTheme: React.FC = () => {
         <div className="flex-1 min-w-0 overflow-y-auto">
           <Card className="overflow-hidden h-full">
             <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/50 border-b text-xs text-muted-foreground">
-              <span className="font-medium">Preview</span>
-              <span className="ml-auto">Citizen Portal</span>
+              <span className="font-medium">{copy.brandingTheme.preview.previewLabel}</span>
+              <span className="ml-auto">{copy.brandingTheme.preview.citizenPortalLabel}</span>
             </div>
             <CardContent className="p-4">
               <div
@@ -426,17 +427,17 @@ const BrandingTheme: React.FC = () => {
                     {portalName}
                   </span>
                   <div className="ml-auto flex gap-5 text-xs" style={{ color: contrastText + "CC" }}>
-                    <span>Home</span>
-                    <span>Applications</span>
-                    <span>Help</span>
+                    <span>{copy.brandingTheme.preview.navHome}</span>
+                    <span>{copy.brandingTheme.preview.navApplications}</span>
+                    <span>{copy.brandingTheme.preview.navHelp}</span>
                   </div>
                 </div>
 
                 {/* Welcome */}
                 <div className="px-6 pt-6 pb-4">
-                  <h2 className="text-lg font-bold">Welcome back, Alexander</h2>
+                  <h2 className="text-lg font-bold">{copy.brandingTheme.preview.welcomeHeading}</h2>
                   <p className="text-sm mt-1" style={{ color: activePreset?.mutedColor || "#6B7280" }}>
-                    Your governance dashboard — manage applications and services.
+                    {copy.brandingTheme.preview.welcomeSubtext}
                   </p>
                 </div>
 
@@ -444,29 +445,29 @@ const BrandingTheme: React.FC = () => {
                 <div className="px-6 grid grid-cols-3 gap-4">
                   <div className="p-4 bg-white shadow-sm" style={{ borderRadius: cardRadius }}>
                     <p className="text-xs" style={{ color: activePreset?.mutedColor || "#6B7280" }}>
-                      Active Applications
+                      {copy.brandingTheme.preview.statCardActiveApplicationsLabel}
                     </p>
-                    <p className="text-2xl font-bold mt-1" style={{ color: primaryColor }}>12</p>
+                    <p className="text-2xl font-bold mt-1" style={{ color: primaryColor }}>{copy.brandingTheme.preview.statCardActiveApplicationsValue}</p>
                     <p className="text-xs mt-1" style={{ color: activePreset?.mutedColor || "#6B7280" }}>
-                      3 pending review
+                      {copy.brandingTheme.preview.statCardActiveApplicationsSubtext}
                     </p>
                   </div>
                   <div className="p-4 bg-white shadow-sm" style={{ borderRadius: cardRadius }}>
                     <p className="text-xs" style={{ color: activePreset?.mutedColor || "#6B7280" }}>
-                      Property Tax
+                      {copy.brandingTheme.preview.statCardPropertyTaxLabel}
                     </p>
-                    <p className="text-2xl font-bold mt-1" style={{ color: primaryColor }}>$1,240</p>
+                    <p className="text-2xl font-bold mt-1" style={{ color: primaryColor }}>{copy.brandingTheme.preview.statCardPropertyTaxValue}</p>
                     <p className="text-xs mt-1" style={{ color: activePreset?.mutedColor || "#6B7280" }}>
-                      Due by Jan 31
+                      {copy.brandingTheme.preview.statCardPropertyTaxSubtext}
                     </p>
                   </div>
                   <div className="p-4 bg-white shadow-sm" style={{ borderRadius: cardRadius }}>
                     <p className="text-xs" style={{ color: activePreset?.mutedColor || "#6B7280" }}>
-                      Complaints
+                      {copy.brandingTheme.preview.statCardComplaintsLabel}
                     </p>
-                    <p className="text-2xl font-bold mt-1" style={{ color: primaryColor }}>5</p>
+                    <p className="text-2xl font-bold mt-1" style={{ color: primaryColor }}>{copy.brandingTheme.preview.statCardComplaintsValue}</p>
                     <p className="text-xs mt-1" style={{ color: activePreset?.mutedColor || "#6B7280" }}>
-                      2 resolved this week
+                      {copy.brandingTheme.preview.statCardComplaintsSubtext}
                     </p>
                   </div>
                 </div>
@@ -482,7 +483,7 @@ const BrandingTheme: React.FC = () => {
                         borderRadius: buttonRadius,
                       }}
                     >
-                      New Application
+                      {copy.brandingTheme.preview.actionButtonNewApplication}
                     </button>
                     <button
                       className="text-xs px-5 py-2.5 font-medium border"
@@ -493,14 +494,14 @@ const BrandingTheme: React.FC = () => {
                         backgroundColor: "transparent",
                       }}
                     >
-                      Pay Dues
+                      {copy.brandingTheme.preview.actionButtonPayDues}
                     </button>
                   </div>
                 </div>
 
                 {/* Recent Documents */}
                 <div className="px-6 mt-5 pb-5">
-                  <h3 className="text-sm font-semibold mb-2">Recent Documents</h3>
+                  <h3 className="text-sm font-semibold mb-2">{copy.brandingTheme.preview.recentDocumentsHeading}</h3>
                   <div className="space-y-2">
                     {["Building_Permit_2025.pdf", "Trade_License_Renewal.pdf"].map((doc) => (
                       <div
@@ -511,7 +512,7 @@ const BrandingTheme: React.FC = () => {
                         <FileText className="h-4 w-4" style={{ color: primaryColor }} />
                         <span className="text-xs font-medium">{doc}</span>
                         <span className="ml-auto text-xs" style={{ color: activePreset?.mutedColor || "#9CA3AF" }}>
-                          2 days ago
+                          {copy.brandingTheme.preview.documentTimestamp}
                         </span>
                       </div>
                     ))}

@@ -3,6 +3,7 @@ import { usePreview } from "../PreviewContext";
 import CitizenScreenShell from "./_shell/CitizenScreenShell";
 import NotificationsPanel from "../NotificationsPanel";
 import { FileText, ListChecks, FolderOpen, Plus, ChevronRight, Search, RotateCcw } from "lucide-react";
+import { copy } from "@/copy";
 
 const STEP_NAMES = ["Applicant Details", "Business Details", "Business Location", "Operational Details", "Documents"];
 
@@ -29,15 +30,15 @@ const CitizenHome: React.FC = () => {
   const issued = applications.filter((a) => a.license).length;
 
   const stats = [
-    { label: "Total Applications", value: total, target: () => setScreen({ type: "my_applications" }) },
-    { label: "Payments Due", value: pendingPayment, accent: pendingPayment > 0, target: () => setScreen({ type: "my_applications" }) },
-    { label: "Active Licenses", value: issued, target: () => setScreen({ type: "my_applications" }) },
+    { label: copy.citizenHome.metrics.totalApplications, value: total, target: () => setScreen({ type: "my_applications" }) },
+    { label: copy.citizenHome.metrics.paymentsDue, value: pendingPayment, accent: pendingPayment > 0, target: () => setScreen({ type: "my_applications" }) },
+    { label: copy.citizenHome.metrics.activeLicenses, value: issued, target: () => setScreen({ type: "my_applications" }) },
   ];
 
   const tiles = [
-    { id: "apply", label: "Apply", desc: "Start a new application", icon: Plus, action: () => setScreen({ type: "apply_intro" }), primary: true },
-    { id: "my", label: "My Applications", desc: `${total} ${total === 1 ? "application" : "applications"}`, icon: ListChecks, action: () => setScreen({ type: "my_applications" }) },
-    { id: "docs", label: "My Documents", desc: `${userDocuments.length} documents — Saved documents you can reuse`, icon: FolderOpen, action: () => setScreen({ type: "my_documents" }) },
+    { id: "apply", label: copy.citizenHome.actionTiles.applyLabel, desc: copy.citizenHome.actionTiles.applyDescription, icon: Plus, action: () => setScreen({ type: "apply_intro" }), primary: true },
+    { id: "my", label: copy.citizenHome.actionTiles.myApplicationsLabel, desc: `${total} ${total === 1 ? "application" : "applications"}`, icon: ListChecks, action: () => setScreen({ type: "my_applications" }) },
+    { id: "docs", label: copy.citizenHome.actionTiles.myDocumentsLabel, desc: `${userDocuments.length} documents — Saved documents you can reuse`, icon: FolderOpen, action: () => setScreen({ type: "my_documents" }) },
   ];
 
   const draftStepIdx = draft ? Math.min(draft.step, 4) : 0;
@@ -48,7 +49,7 @@ const CitizenHome: React.FC = () => {
       <CitizenScreenShell
         showHeaderActions
         onBack={() => setScreen({ type: "catalogue" })}
-        backLabel="All Applications"
+        backLabel={copy.citizenHome.navigation.backLabel}
       >
         {/* Welcome card */}
         <div className="bg-white rounded-xl shadow-sm p-4 mb-3" style={{ border: "1px solid #E0E0E0" }}>
@@ -59,10 +60,10 @@ const CitizenHome: React.FC = () => {
             {serviceName}
           </span>
           <h1 className="text-lg font-bold leading-tight" style={{ color: "#1D3557" }}>
-            Apply, Track &amp; Manage
+            {copy.citizenHome.welcomeCard.heading}
           </h1>
           <p className="text-[12px] mt-1 leading-snug" style={{ color: "#363636" }}>
-            Apply for a new license or manage existing ones.
+            {copy.citizenHome.welcomeCard.description}
           </p>
         </div>
 
@@ -72,7 +73,7 @@ const CitizenHome: React.FC = () => {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search applications or licenses"
+            placeholder={copy.citizenHome.search.placeholder}
             className="w-full bg-white rounded-lg pl-9 pr-3 py-2.5 text-[12px] outline-none"
             style={{ border: "1px solid #E0E0E0", color: "#363636" }}
           />
@@ -107,7 +108,7 @@ const CitizenHome: React.FC = () => {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[10px] uppercase tracking-wider font-bold" style={{ color: "#6B7280" }}>
-                Continue where you left off
+                {copy.citizenHome.draftResume.eyebrow}
               </p>
               <p className="text-[12px] font-semibold mt-0.5" style={{ color: "#1D3557" }}>
                 {serviceName} Application
@@ -122,7 +123,7 @@ const CitizenHome: React.FC = () => {
 
         {/* What would you like to do */}
         <p className="text-[10px] uppercase tracking-wider font-bold mb-2 px-1" style={{ color: "#6B7280" }}>
-          What would you like to do?
+          {copy.citizenHome.actionTiles.sectionLabel}
         </p>
 
         <div className="space-y-2">

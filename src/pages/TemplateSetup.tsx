@@ -1,16 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useOnboarding, type ServiceItem } from "@/contexts/OnboardingContext";
 import SetupShell, { type SetupStepKey } from "@/components/template-setup/SetupShell";
 import Step1Identity from "@/components/template-setup/Step1Identity";
 import Step2Modules from "@/components/template-setup/Step2Modules";
 import Step3Structure from "@/components/template-setup/Step3Structure";
-import Step4RenewalPolicy, {
-  type RenewalPolicyState,
-} from "@/components/template-setup/Step4RenewalPolicy";
-import Step5WorkflowScope from "@/components/template-setup/Step5WorkflowScope";
 import Step4Initializing from "@/components/template-setup/Step4Initializing";
+import type { RenewalPolicyState } from "@/components/template-setup/Step4RenewalPolicy";
 import { allTemplates } from "@/data/serviceTemplates";
-import { useOnboarding, type ServiceItem, type WorkflowScope } from "@/contexts/OnboardingContext";
+
+const VISIBLE_STEPS: SetupStepKey[] = ["identity", "structure", "modules", "initialize"];
 
 const TemplateSetup: React.FC = () => {
   const { templateId } = useParams<{ templateId: string }>();
@@ -32,20 +31,17 @@ const TemplateSetup: React.FC = () => {
   const [name, setName] = useState(template?.name ?? "");
   const [renewalEnabled, setRenewalEnabled] = useState(true);
   const [hasCategories, setHasCategories] = useState<boolean | null>(null);
-  const [categoriesFile, setCategoriesFile] = useState<File | null>(null);
   const [hasSubcategories, setHasSubcategories] = useState<boolean | null>(null);
-  const [subcategoriesFile, setSubcategoriesFile] = useState<File | null>(null);
   const [categoriesList, setCategoriesList] = useState<string[]>([]);
-  const [subcategoriesList, setSubcategoriesList] = useState<
-    { name: string; parent: string }[]
-  >([]);
+  const [subcategoriesList, setSubcategoriesList] = useState<{ name: string; parent: string }[]>(
+    [],
+  );
   const [renewalPolicy, setRenewalPolicy] = useState<RenewalPolicyState>({
     mode: "global",
     globalMonths: 12,
     perCategory: {},
     perSubcategory: {},
   });
-  const [workflowScope, setWorkflowScope] = useState<WorkflowScope>("shared");
 
   if (!template) return null;
 
@@ -54,32 +50,11 @@ const TemplateSetup: React.FC = () => {
     (s) => s.name.trim().toLowerCase() === trimmed.toLowerCase(),
   );
 
-  const visibleSteps: SetupStepKey[] = useMemo(() => {
-    const base: SetupStepKey[] = ["identity", "structure", "modules"];
-    if (renewalEnabled) base.push("renewal");
-    if (hasCategories === true) base.push("workflow_scope");
-    base.push("initialize");
-    return base;
-  }, [renewalEnabled, hasCategories]);
-
   const handleBack = () => {
     if (step === "identity") navigate("/services");
     else if (step === "structure") setStep("identity");
     else if (step === "modules") setStep("structure");
-    else if (step === "renewal") setStep("modules");
-    else if (step === "workflow_scope") setStep(renewalEnabled ? "renewal" : "modules");
-    // initializing has no back
-  };
-
-  const goAfterModules = () => {
-    if (renewalEnabled) setStep("renewal");
-    else if (hasCategories === true) setStep("workflow_scope");
-    else setStep("initialize");
-  };
-
-  const goAfterRenewal = () => {
-    if (hasCategories === true) setStep("workflow_scope");
-    else setStep("initialize");
+    // initialize has no back
   };
 
   const finalize = () => {
@@ -98,13 +73,11 @@ const TemplateSetup: React.FC = () => {
       templateSetup: {
         hasCategories: hasCategories === true,
         hasSubcategories: hasSubcategories === true,
-        categoriesFileName: categoriesFile?.name,
-        subcategoriesFileName: subcategoriesFile?.name,
         categoriesList,
         subcategoriesList,
       },
       renewalPolicy: renewalEnabled ? renewalPolicy : undefined,
-      workflowScope: hasCategories === true ? workflowScope : "shared",
+      workflowScope: "shared",
     };
     addService(newService);
     navigate(`/service/${newService.id}/configure`, { state: { mode: "overview" } });
@@ -115,7 +88,7 @@ const TemplateSetup: React.FC = () => {
       current={step}
       onBack={step === "initialize" ? undefined : handleBack}
       backLabel={step === "identity" ? "Back to templates" : "Back"}
-      visibleSteps={visibleSteps}
+      visibleSteps={VISIBLE_STEPS}
     >
       {step === "identity" && (
         <Step1Identity
@@ -130,13 +103,11 @@ const TemplateSetup: React.FC = () => {
         <Step3Structure
           hasCategories={hasCategories}
           setHasCategories={setHasCategories}
-          categoriesFile={categoriesFile}
-          setCategoriesFile={setCategoriesFile}
           hasSubcategories={hasSubcategories}
           setHasSubcategories={setHasSubcategories}
-          subcategoriesFile={subcategoriesFile}
-          setSubcategoriesFile={setSubcategoriesFile}
+          categoriesList={categoriesList}
           setCategoriesList={setCategoriesList}
+          subcategoriesList={subcategoriesList}
           setSubcategoriesList={setSubcategoriesList}
           onContinue={() => setStep("modules")}
         />
@@ -145,23 +116,10 @@ const TemplateSetup: React.FC = () => {
         <Step2Modules
           renewalEnabled={renewalEnabled}
           onRenewalChange={setRenewalEnabled}
-          onContinue={goAfterModules}
-        />
-      )}
-      {step === "renewal" && (
-        <Step4RenewalPolicy
+          renewalPolicy={renewalPolicy}
+          setRenewalPolicy={setRenewalPolicy}
           categories={categoriesList}
           subcategories={subcategoriesList}
-          policy={renewalPolicy}
-          setPolicy={setRenewalPolicy}
-          onContinue={goAfterRenewal}
-        />
-      )}
-      {step === "workflow_scope" && (
-        <Step5WorkflowScope
-          value={workflowScope}
-          onChange={setWorkflowScope}
-          categoryCount={categoriesList.length}
           onContinue={() => setStep("initialize")}
         />
       )}

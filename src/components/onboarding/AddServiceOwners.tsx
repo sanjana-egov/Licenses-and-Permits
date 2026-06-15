@@ -45,7 +45,7 @@ export default function AddServiceOwners({ onComplete, onSkip }: Props) {
 
   if (services.length === 0) {
     return (
-      <AuthShell step="Step 6 of 6 · Service owners">
+      <AuthShell step="Step 5 of 5 · Service owners">
         <div className="mb-6">
           <h1 className="text-xl font-semibold tracking-tight">Assign service owners</h1>
           <p className="text-sm text-muted-foreground mt-1">No services were selected. You can assign service owners later from the dashboard.</p>
@@ -60,7 +60,7 @@ export default function AddServiceOwners({ onComplete, onSkip }: Props) {
   }
 
   return (
-    <AuthShell step="Step 6 of 6 · Service owners" contentMaxWidth="max-w-[620px]">
+    <AuthShell step="Step 5 of 5 · Service owners" contentMaxWidth="max-w-[620px]">
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">

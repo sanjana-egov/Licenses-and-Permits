@@ -10,21 +10,21 @@ export interface MockCredential {
 
 export const MOCK_CREDENTIALS: MockCredential[] = [
   {
-    email: "tahera@gov.in",
+    email: "tahera@capetown.gov.za",
     tempPassword: "Temp@1234",
     role: "super_admin",
     name: "Tahera Ahmed",
     hint: "Full platform access. Runs the onboarding flow.",
   },
   {
-    email: "joanna@gov.in",
+    email: "joanna@capetown.gov.za",
     tempPassword: "Temp@1234",
     role: "admin",
     name: "Joanna Lee",
     hint: "Platform-wide access. Cannot manage Admin accounts.",
   },
   {
-    email: "meera@gov.in",
+    email: "meera@capetown.gov.za",
     tempPassword: "Temp@1234",
     role: "service_owner",
     name: "Meera Iyer",
