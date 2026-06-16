@@ -38,6 +38,31 @@
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
+    --danger: 0 84% 60%;
+    --danger-foreground: 210 40% 98%;
+    --info: 210 89% 52%;
+    --info-foreground: 0 0% 100%;
+
+    /* Full CSS color values — safe to use in SVG fill, Recharts props, color-mix() */
+    --chart-1: hsl(174, 72%, 34%);
+    --chart-2: hsl(210, 89%, 52%);
+    --chart-3: hsl(38, 92%, 50%);
+    --chart-4: hsl(0, 84%, 60%);
+    --chart-5: hsl(142, 71%, 45%);
+    --chart-6: hsl(270, 72%, 60%);
+    --chart-7: hsl(330, 84%, 60%);
+    --chart-8: hsl(25, 95%, 53%);
+    --chart-9: hsl(186, 100%, 38%);
+    /* Resolved color aliases for chart components (SVG fill / Recharts / color-mix) */
+    --color-primary: hsl(174, 72%, 34%);
+    --color-success: hsl(142, 71%, 45%);
+    --color-warning: hsl(38, 92%, 50%);
+    --color-danger:  hsl(0, 84%, 60%);
+    --color-info:    hsl(210, 89%, 52%);
+    --color-foreground: hsl(213, 50%, 15%);
+    --color-muted: hsl(210, 20%, 96%);
+    --color-muted-foreground: hsl(215, 16%, 47%);
+    --color-border: hsl(214, 32%, 91%);
 
     --sidebar-background: 180 55% 18%;
     --sidebar-foreground: 210 40% 98%;
@@ -136,4 +161,11 @@
     from { opacity: 0; transform: translateX(100%); }
     to { opacity: 1; transform: translateX(0); }
   }
+
+  .bg-success-soft { background-color: hsl(142 71% 45% / 0.12); }
+  .bg-warning-soft { background-color: hsl(38 92% 50% / 0.12); }
+  .bg-info-soft    { background-color: hsl(210 89% 52% / 0.12); }
+  .bg-danger-soft  { background-color: hsl(0 84% 60% / 0.12); }
+  .text-info   { color: hsl(var(--info)); }
+  .text-danger { color: hsl(var(--danger)); }
 }

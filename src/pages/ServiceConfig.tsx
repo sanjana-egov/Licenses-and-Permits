@@ -20,7 +20,7 @@ import MasterTemplateConfigurator from "@/components/service-config/MasterTempla
 import ModuleTabs from "@/components/service-config/ModuleTabs";
 import OverviewWorkspace from "@/components/service-config/OverviewWorkspace";
 import { ServiceConfigProvider } from "@/contexts/ServiceConfigContext";
-import { OperationsWorkspace } from "@/components/operations/OperationsWorkspace";
+import { ServiceMonitorDashboard } from "@/components/operations/monitor/ServiceMonitorDashboard";
 
 const deploymentSections: { title: string; description: string }[] = [
   { title: "Production Status", description: "Real-time health, uptime, and recent incidents." },
@@ -359,8 +359,10 @@ const ServiceConfigInner: React.FC = () => {
           <ServicePreviewWorkspace />
         </main>
       ) : mode === "operations" ? (
-        <main className="flex-1 min-h-0">
-          <OperationsWorkspace serviceId={id ?? ""} />
+        <main className="flex-1 overflow-auto">
+          <div className="max-w-6xl mx-auto px-6 py-8">
+            <ServiceMonitorDashboard serviceName={serviceName} />
+          </div>
         </main>
       ) : mode === "deployment" ? (
         <main className="max-w-4xl w-full mx-auto px-6 py-10 flex-1 min-h-0 overflow-auto">
