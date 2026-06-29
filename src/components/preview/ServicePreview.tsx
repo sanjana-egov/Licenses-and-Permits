@@ -21,10 +21,15 @@ import LicenseView from "./citizen/LicenseView";
 import DemandNoticeView from "./citizen/DemandNoticeView";
 import InvoiceView from "./citizen/InvoiceView";
 import ServiceCatalogue from "./citizen/ServiceCatalogue";
+import ServiceDetailView from "./citizen/ServiceDetailView";
+import NotificationsScreen from "./citizen/NotificationsScreen";
+import ProfileScreen from "./citizen/ProfileScreen";
 import EmployeeHome from "./employee/EmployeeHome";
 import InboxView from "./employee/InboxView";
 import SearchApplications from "./employee/SearchApplications";
 import ApplicationReview from "./employee/ApplicationReview";
+import EmployeeDesktopShell from "./employee/EmployeeDesktopShell";
+import EmployeeReports from "./employee/EmployeeReports";
 import { ServiceConfigProvider } from "@/contexts/ServiceConfigContext";
 
 const embeddedDevices: { mode: DeviceMode; icon: React.ElementType }[] = [
@@ -61,38 +66,77 @@ const EmbeddedDeviceToggle: React.FC = () => {
   );
 };
 
+const EMPLOYEE_SCREENS = new Set([
+  "employee_home", "inbox", "search", "application_review", "reports",
+]);
+
 export const PreviewContent: React.FC = () => {
   const { screen, deviceMode, role } = usePreview();
 
-  const renderScreen = () => {
+  const isEmployee = role !== "citizen" || EMPLOYEE_SCREENS.has(screen.type);
+
+  const renderCitizenScreen = () => {
     switch (screen.type) {
-      case "catalogue": return <ServiceCatalogue />;
-      case "home": return role === "citizen" ? <CitizenHome /> : <EmployeeHome />;
-      case "apply_intro": return <ApplicationIntro />;
-      case "apply": return <ApplicationForm />;
-      case "renew": return <ApplicationForm />;
-      case "success": return <SuccessScreen />;
-      case "my_applications": return <MyApplications />;
-      case "my_documents": return <MyDocuments />;
-      case "application_detail": return <ApplicationDetail />;
-      case "payment": return <PaymentScreen />;
-      case "license": return <LicenseView />;
-      case "demand_notice": return <DemandNoticeView />;
-      case "invoice": return <InvoiceView />;
-      case "employee_home": return <EmployeeHome />;
-      case "inbox": return <InboxView />;
-      case "search": return <SearchApplications />;
-      case "application_review": return <ApplicationReview />;
-      default: return role === "citizen" ? <ServiceCatalogue /> : <EmployeeHome />;
+      case "catalogue":           return <ServiceCatalogue />;
+      case "home":                return <CitizenHome />;
+      case "apply_intro":         return <ApplicationIntro />;
+      case "apply":
+      case "renew":               return <ApplicationForm />;
+      case "success":             return <SuccessScreen />;
+      case "my_applications":     return <MyApplications />;
+      case "my_documents":        return <MyDocuments />;
+      case "application_detail":  return <ApplicationDetail />;
+      case "payment":             return <PaymentScreen />;
+      case "license":             return <LicenseView />;
+      case "demand_notice":       return <DemandNoticeView />;
+      case "invoice":             return <InvoiceView />;
+      case "service_detail":      return <ServiceDetailView />;
+      case "notifications":       return <NotificationsScreen />;
+      case "profile":             return <ProfileScreen />;
+      default:                    return <ServiceCatalogue />;
+    }
+  };
+
+  const renderEmployeeScreen = () => {
+    switch (screen.type) {
+      case "employee_home":       return <EmployeeHome />;
+      case "inbox":               return <InboxView />;
+      case "search":              return <SearchApplications />;
+      case "application_review":  return <ApplicationReview />;
+      case "reports":             return <EmployeeReports />;
+      default:                    return <EmployeeHome />;
     }
   };
 
   const isMobile = deviceMode === "mobile";
 
+  // Employee preview always renders as desktop shell (no mobile emulator frame)
+  if (isEmployee) {
+    return (
+      <div className="flex-1 bg-[#444] overflow-hidden p-6">
+        <div className="bg-card rounded-xl shadow-lg overflow-hidden h-full flex flex-col">
+          <div className="flex items-center gap-2 px-4 py-2 bg-muted/50 border-b">
+            <div className="flex gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-red-400" />
+              <span className="w-3 h-3 rounded-full bg-yellow-400" />
+              <span className="w-3 h-3 rounded-full bg-green-400" />
+            </div>
+            <div className="flex-1 bg-background rounded px-3 py-1 text-xs text-muted-foreground">
+              digit-studio/employee-preview
+            </div>
+          </div>
+          <EmployeeDesktopShell>
+            {renderEmployeeScreen()}
+          </EmployeeDesktopShell>
+        </div>
+      </div>
+    );
+  }
+
   if (isMobile) {
     return (
       <div className="flex-1 bg-[#444] overflow-hidden">
-        <MobileFrame>{renderScreen()}</MobileFrame>
+        <MobileFrame>{renderCitizenScreen()}</MobileFrame>
       </div>
     );
   }
@@ -110,7 +154,7 @@ export const PreviewContent: React.FC = () => {
             digit-studio/preview
           </div>
         </div>
-        <div className="flex-1 overflow-auto">{renderScreen()}</div>
+        <div className="flex-1 overflow-auto">{renderCitizenScreen()}</div>
       </div>
     </div>
   );

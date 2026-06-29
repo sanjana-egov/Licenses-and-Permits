@@ -4,30 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Check, ArrowRight, Download, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { copy } from "@/copy";
+import CitizenScreenShell from "./_shell/CitizenScreenShell";
 
 const SuccessScreen: React.FC = () => {
   const { setScreen, screen, applications } = usePreview();
   const app = applications.find((a) => a.id === screen.applicationId);
 
   return (
-    <div className="flex-1 overflow-y-auto flex flex-col bg-background">
-      <div className="bg-[#0b4f6c] text-white px-4 py-3 flex items-center gap-2 text-sm font-medium">
-        <span className="grid grid-cols-2 gap-0.5">
-          <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-          <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-          <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-          <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-        </span>
-        DIGIT <span className="text-white/60 ml-1">| dev</span>
-      </div>
-
-      <div className="px-4 py-2 text-xs">
-        <button onClick={() => setScreen({ type: "home" })} className="text-accent hover:underline">{copy.successScreen.breadcrumb.homeLink}</button>
-        <span className="mx-1 text-muted-foreground">/</span>
-        <span className="text-muted-foreground">{copy.successScreen.breadcrumb.currentPage}</span>
-      </div>
-
-      <div className="flex-1 flex flex-col items-center px-4">
+    <CitizenScreenShell>
+      <div className="flex flex-col items-center">
         <div className="w-full bg-gradient-to-br from-green-600 to-green-700 rounded-xl p-6 text-center text-white mb-4">
           <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-3">
             <Check className="h-8 w-8 text-white" />
@@ -77,7 +62,7 @@ const SuccessScreen: React.FC = () => {
           </Button>
         </div>
       </div>
-    </div>
+    </CitizenScreenShell>
   );
 };
 

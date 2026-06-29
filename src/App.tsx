@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import { HelpProvider } from "@/contexts/HelpContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import HelpPanel from "@/components/help/HelpPanel";
 import CoachmarkTour from "@/components/help/CoachmarkTour";
 import Onboarding from "./pages/Onboarding";
@@ -29,6 +30,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <LanguageProvider>
     <TooltipProvider>
       <OnboardingProvider>
         <Toaster />
@@ -75,6 +77,7 @@ const App = () => (
         </BrowserRouter>
       </OnboardingProvider>
     </TooltipProvider>
+    </LanguageProvider>
   </QueryClientProvider>
 );
 

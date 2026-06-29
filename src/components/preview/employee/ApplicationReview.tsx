@@ -13,10 +13,10 @@ import {
 } from "lucide-react";
 import TimelineList from "../TimelineList";
 import { getStatusStyle } from "./InboxView";
+import WorkflowProgressStrip from "./WorkflowProgressStrip";
 import ChecklistDialog from "./ChecklistDialog";
 import DocumentPreviewSheet from "./DocumentPreviewSheet";
 import { downloadApplicationPdf } from "@/lib/applicationPdf";
-import EmployeeTopBar from "./EmployeeTopBar";
 import { copy } from "@/copy";
 
 const ApplicationReview: React.FC = () => {
@@ -85,8 +85,6 @@ const ApplicationReview: React.FC = () => {
 
   return (
     <div className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50 via-background to-sky-50/40">
-      <EmployeeTopBar />
-
       <div className="px-6 py-2 text-xs flex items-center justify-between">
         <button onClick={() => setScreen({ type: "inbox" })} className="text-accent hover:underline flex items-center gap-1">
           <ArrowLeft className="h-3 w-3" /> {copy.applicationReview.navigation.backToInbox}
@@ -155,6 +153,13 @@ const ApplicationReview: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Workflow progress strip */}
+        <WorkflowProgressStrip
+          states={workflowStates}
+          transitions={workflowTransitions}
+          currentStateId={app.currentStateId}
+        />
 
         {/* Demand banner */}
         {app.demand && (

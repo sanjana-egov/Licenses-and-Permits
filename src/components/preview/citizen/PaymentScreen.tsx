@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { usePreview } from "../PreviewContext";
 import { Button } from "@/components/ui/button";
-import { CreditCard, ShieldCheck, ArrowLeft, FileText } from "lucide-react";
+import { CreditCard, ShieldCheck, FileText } from "lucide-react";
+import CitizenScreenShell from "./_shell/CitizenScreenShell";
 
 const PaymentScreen: React.FC = () => {
   const { screen, applications, setScreen, payApplication } = usePreview();
@@ -21,27 +22,11 @@ const PaymentScreen: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto flex flex-col bg-background">
-      <div className="bg-[#0b4f6c] text-white px-4 py-3 flex items-center gap-2 text-sm font-medium">
-        <span className="grid grid-cols-2 gap-0.5">
-          <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-          <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-          <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-          <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-        </span>
-        DIGIT <span className="text-white/60 ml-1">| dev</span>
-      </div>
-
-      <div className="px-4 py-2 text-xs flex items-center gap-1">
-        <button
-          onClick={() => setScreen({ type: "application_detail", applicationId: app.id })}
-          className="text-accent hover:underline flex items-center gap-1"
-        >
-          <ArrowLeft className="h-3 w-3" /> Back
-        </button>
-      </div>
-
-      <div className="px-4 pb-4 space-y-4">
+    <CitizenScreenShell
+      onBack={() => setScreen({ type: "application_detail", applicationId: app.id })}
+      backLabel="Application"
+    >
+      <div className="space-y-4">
         <div>
           <h2 className="font-bold text-foreground">Pay License Fee</h2>
           <p className="text-[11px] text-muted-foreground break-all">{app.applicationNumber}</p>
@@ -97,7 +82,7 @@ const PaymentScreen: React.FC = () => {
           {processing ? "Processing..." : `Pay R${app.demand.total.toLocaleString()}`}
         </Button>
       </div>
-    </div>
+    </CitizenScreenShell>
   );
 };
 

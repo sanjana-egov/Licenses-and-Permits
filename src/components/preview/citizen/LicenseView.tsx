@@ -1,8 +1,9 @@
 import React from "react";
 import { usePreview } from "../PreviewContext";
 import { Button } from "@/components/ui/button";
-import { Download, ArrowLeft, QrCode, RefreshCw } from "lucide-react";
+import { Download, QrCode, RefreshCw } from "lucide-react";
 import { downloadLicensePdf } from "@/lib/licensePdf";
+import CitizenScreenShell from "./_shell/CitizenScreenShell";
 
 const fmt = (ts: number) =>
   new Date(ts).toLocaleDateString("en-ZA", { day: "2-digit", month: "short", year: "numeric" });
@@ -16,28 +17,11 @@ const LicenseView: React.FC = () => {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto flex flex-col bg-muted/30">
-      {/* App chrome top bar (kept for consistency) */}
-      <div className="bg-[#0b4f6c] text-white px-4 py-3 flex items-center gap-2 text-sm font-medium">
-        <span className="grid grid-cols-2 gap-0.5">
-          <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-          <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-          <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-          <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-        </span>
-        DIGIT <span className="text-white/60 ml-1">| dev</span>
-      </div>
-
-      <div className="px-4 py-2 text-xs">
-        <button
-          onClick={() => setScreen({ type: "application_detail", applicationId: app.id })}
-          className="text-accent hover:underline flex items-center gap-1"
-        >
-          <ArrowLeft className="h-3 w-3" /> Back
-        </button>
-      </div>
-
-      <div className="px-3 pb-4">
+    <CitizenScreenShell
+      onBack={() => setScreen({ type: "application_detail", applicationId: app.id })}
+      backLabel="Application"
+    >
+      <div className="pb-4">
         {/* Certificate sheet — formal document feel */}
         <div className="bg-white border border-slate-300 rounded-sm px-5 py-6 text-slate-900">
           {/* Header */}
@@ -149,7 +133,7 @@ const LicenseView: React.FC = () => {
           )}
         </div>
       </div>
-    </div>
+    </CitizenScreenShell>
   );
 };
 

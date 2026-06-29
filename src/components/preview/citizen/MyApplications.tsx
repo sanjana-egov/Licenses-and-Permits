@@ -3,6 +3,7 @@ import { usePreview } from "../PreviewContext";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, Download, ChevronRight, RefreshCw } from "lucide-react";
 import { copy } from "@/copy";
+import CitizenScreenShell from "./_shell/CitizenScreenShell";
 
 const statusTone = (status: string): string => {
   if (status === "License Issued") return "bg-green-100 text-green-700 border-green-300";
@@ -18,24 +19,8 @@ const MyApplications: React.FC = () => {
   const { applications, setScreen } = usePreview();
 
   return (
-    <div className="flex-1 overflow-y-auto flex flex-col bg-background">
-      <div className="bg-[#0b4f6c] text-white px-4 py-3 flex items-center gap-2 text-sm font-medium">
-        <span className="grid grid-cols-2 gap-0.5">
-          <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-          <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-          <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-          <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-        </span>
-        {copy.myApplications.header.brandName} <span className="text-white/60 ml-1">{copy.myApplications.header.brandEnv}</span>
-      </div>
-
-      <div className="px-4 py-2 text-xs">
-        <button onClick={() => setScreen({ type: "home" })} className="text-accent hover:underline">{copy.myApplications.breadcrumb.homeLink}</button>
-        <span className="mx-1 text-muted-foreground">{copy.myApplications.breadcrumb.separator}</span>
-        <span className="text-muted-foreground">{copy.myApplications.breadcrumb.currentPage}</span>
-      </div>
-
-      <div className="px-4 pb-4">
+    <CitizenScreenShell onBack={() => setScreen({ type: "home" })} backLabel="Home">
+      <div className="pb-4">
         <h2 className="font-bold text-foreground mb-4">{copy.myApplications.pageTitle.heading}</h2>
         {applications.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground text-sm">
@@ -107,7 +92,7 @@ const MyApplications: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
+    </CitizenScreenShell>
   );
 };
 

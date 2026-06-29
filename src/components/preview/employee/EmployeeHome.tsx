@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { usePreview } from "../PreviewContext";
-import EmployeeTopBar from "./EmployeeTopBar";
 import { useServiceRoles } from "@/lib/useServiceRoles";
 import {
   Table,
@@ -40,7 +39,7 @@ const BUCKET_META: Record<Bucket, { label: string; dot: string; text: string; bg
 };
 
 const EmployeeHome: React.FC = () => {
-  const { applications, activeRoleId, serviceName, setScreen, workflowTransitions } = usePreview();
+  const { applications, activeRoleId, serviceName, setScreen, workflowTransitions, workflowStates } = usePreview();
   const [serviceRoles] = useServiceRoles(useParams().id ?? "service");
 
   // Pending states = states with an outgoing transition assigned to the active role.
@@ -52,13 +51,21 @@ const EmployeeHome: React.FC = () => {
     return Array.from(set);
   }, [workflowTransitions, activeRoleId]);
 
+  const terminalApproved = useMemo(() =>
+    workflowStates.filter(s => s.type === "end" && !s.name.toLowerCase().includes("reject")).map(s => s.id),
+    [workflowStates]);
+
+  const terminalRejected = useMemo(() =>
+    workflowStates.filter(s => s.type === "end" && s.name.toLowerCase().includes("reject")).map(s => s.id),
+    [workflowStates]);
+
   const stats = useMemo(() => {
     const total = applications.length;
     const pending = applications.filter((a) => pendingStates.includes(a.currentStateId)).length;
-    const approved = applications.filter((a) => ["s6", "s9"].includes(a.currentStateId)).length;
-    const rejected = applications.filter((a) => a.currentStateId === "s8").length;
+    const approved = applications.filter((a) => terminalApproved.includes(a.currentStateId)).length;
+    const rejected = applications.filter((a) => terminalRejected.includes(a.currentStateId)).length;
     return { total, pending, approved, rejected };
-  }, [applications, pendingStates]);
+  }, [applications, pendingStates, terminalApproved, terminalRejected]);
 
   const activeRoleName = serviceRoles.find((r) => r.id === activeRoleId)?.name ?? "Employee";
 
@@ -102,7 +109,7 @@ const EmployeeHome: React.FC = () => {
       value: stats.approved,
       icon: CheckCircle2,
       iconColor: "text-emerald-600",
-      onClick: () => setScreen({ type: "inbox", filterStates: ["s6", "s9"], filterLabel: "Approved applications" }),
+      onClick: () => setScreen({ type: "inbox", filterStates: terminalApproved, filterLabel: "Approved applications" }),
     },
     {
       key: "rejected",
@@ -110,7 +117,7 @@ const EmployeeHome: React.FC = () => {
       value: stats.rejected,
       icon: XCircle,
       iconColor: "text-rose-600",
-      onClick: () => setScreen({ type: "inbox", filterStates: ["s8"], filterLabel: "Rejected applications" }),
+      onClick: () => setScreen({ type: "inbox", filterStates: terminalRejected, filterLabel: "Rejected applications" }),
     },
   ];
 
@@ -128,8 +135,6 @@ const EmployeeHome: React.FC = () => {
 
   return (
     <div className="flex-1 overflow-y-auto bg-background">
-      <EmployeeTopBar />
-
       <div className="max-w-7xl mx-auto px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -203,8 +208,9 @@ const EmployeeHome: React.FC = () => {
                   {s.active && (
                     <button
                       type="button"
+                      onClick={() => setScreen({ type: "reports" })}
                       className="h-9 w-9 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
-                      aria-label="View stats"
+                      aria-label="View reports"
                     >
                       <BarChart3 className="h-4 w-4" />
                     </button>

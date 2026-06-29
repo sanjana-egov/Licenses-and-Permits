@@ -17,17 +17,17 @@ const ServiceCatalogue: React.FC = () => {
   const [query, setQuery] = useState("");
 
   const services: CatalogueService[] = [
-    { id: "trade", title: serviceName, desc: copy.serviceCatalogue.serviceCards.tradeLicenseDescription, icon: Store, active: true },
-    { id: "building", title: copy.serviceCatalogue.serviceCards.buildingPermitTitle, desc: copy.serviceCatalogue.serviceCards.buildingPermitDescription, icon: Building2, active: false },
-    { id: "event", title: copy.serviceCatalogue.serviceCards.eventPermitTitle, desc: copy.serviceCatalogue.serviceCards.eventPermitDescription, icon: CalendarDays, active: false },
+    { id: "trade",    title: serviceName,                                          desc: copy.serviceCatalogue.serviceCards.tradeLicenseDescription,  icon: Store,      active: true  },
+    { id: "building", title: copy.serviceCatalogue.serviceCards.buildingPermitTitle, desc: copy.serviceCatalogue.serviceCards.buildingPermitDescription, icon: Building2,  active: false },
+    { id: "event",    title: copy.serviceCatalogue.serviceCards.eventPermitTitle,    desc: copy.serviceCatalogue.serviceCards.eventPermitDescription,    icon: CalendarDays,active: false },
   ];
 
-  const filtered = services
-    .filter((s) => s.active)
-    .filter((s) => s.title.toLowerCase().includes(query.toLowerCase()));
+  const filtered = services.filter(
+    (s) => s.title.toLowerCase().includes(query.toLowerCase())
+  );
 
   return (
-    <CitizenScreenShell showHeaderActions>
+    <CitizenScreenShell>
       {/* Welcome card */}
       <div className="bg-white rounded-xl shadow-sm p-4 mb-3" style={{ border: "1px solid #E0E0E0" }}>
         <span
@@ -63,21 +63,17 @@ const ServiceCatalogue: React.FC = () => {
       <div className="space-y-2">
         {filtered.map((s) => {
           const Icon = s.icon;
-          const onClick = s.active ? () => setScreen({ type: "home" }) : undefined;
           return (
             <button
               key={s.id}
-              onClick={onClick}
+              onClick={s.active ? () => setScreen({ type: "service_detail" }) : undefined}
               disabled={!s.active}
               className={`w-full text-left bg-white rounded-xl p-3.5 shadow-sm transition-all flex items-start gap-3 ${
                 s.active ? "hover:shadow-md cursor-pointer" : "opacity-60 cursor-not-allowed"
               }`}
               style={{ border: "1px solid #E0E0E0", borderLeft: s.active ? "3px solid #1D3557" : "1px solid #E0E0E0" }}
             >
-              <div
-                className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0"
-                style={{ backgroundColor: "#EAF2FB" }}
-              >
+              <div className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: "#EAF2FB" }}>
                 <Icon className="h-5 w-5" style={{ color: "#1D3557" }} />
               </div>
               <div className="flex-1 min-w-0">
@@ -96,7 +92,6 @@ const ServiceCatalogue: React.FC = () => {
           );
         })}
       </div>
-
     </CitizenScreenShell>
   );
 };

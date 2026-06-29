@@ -1,3 +1,4 @@
+import React from "react";
 import {
   LayoutDashboard,
   FileText,
@@ -16,6 +17,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import cityOfCapeTownLogo from "@/assets/city-of-cape-town-logo.png";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { MOCK_CREDENTIALS } from "@/data/mockCredentials";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 import {
   Sidebar,
@@ -32,30 +34,50 @@ import {
 } from "@/components/ui/sidebar";
 
 
-const mainItems = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Templates", url: "/services", icon: FileText },
-];
+const NAV_LABELS = {
+  en: {
+    main: "Main",
+    setup: "Setup",
+    configuration: "Configuration",
+    utilities: "Utilities",
+    dashboard: "Dashboard",
+    templates: "Templates",
+    orgProfile: "Organization Profile",
+    usersAccess: "Users & Access",
+    appAreas: "Application Areas",
+    auth: "Authentication",
+    branding: "Branding & Theme",
+    languages: "Languages",
+    integrations: "Integrations",
+    auditLog: "Audit Log",
+    adminConsole: "Admin Console",
+    superAdmin: "Super Admin",
+    admin: "Admin",
+    serviceOwner: "Service Owner",
+  },
+  pt: {
+    main: "Principal",
+    setup: "Configuração",
+    configuration: "Definições",
+    utilities: "Utilitários",
+    dashboard: "Painel",
+    templates: "Modelos",
+    orgProfile: "Perfil da Organização",
+    usersAccess: "Utilizadores e Acessos",
+    appAreas: "Áreas de Aplicação",
+    auth: "Autenticação",
+    branding: "Marca e Tema",
+    languages: "Idiomas",
+    integrations: "Integrações",
+    auditLog: "Registo de Auditoria",
+    adminConsole: "Consola de Administração",
+    superAdmin: "Super Administrador",
+    admin: "Administrador",
+    serviceOwner: "Responsável pelo Serviço",
+  },
+};
 
-const setupItems = [
-  { title: "Organization Profile", url: "/setup/organization", icon: Building2 },
-  { title: "Users & Access", url: "/setup/users", icon: Users },
-  { title: "Application Areas", url: "/setup/deployment", icon: MapPin },
-  { title: "Authentication", url: "/setup/auth", icon: Lock },
-];
-
-const configItems = [
-  { title: "Branding & Theme", url: "/config/branding", icon: Palette },
-  { title: "Languages", url: "/config/languages", icon: Languages },
-  
-  { title: "Integrations", url: "/config/integrations", icon: Plug },
-];
-
-const utilItems = [
-  { title: "Audit Log", url: "/audit-log", icon: ClipboardList },
-];
-
-function NavGroup({ label, items }: { label: string; items: typeof mainItems }) {
+function NavGroup({ label, items }: { label: string; items: { title: string; url: string; icon: React.ComponentType<{ className?: string }> }[] }) {
   const { state: sidebarState } = useSidebar();
   const collapsed = sidebarState === "collapsed";
   const location = useLocation();
@@ -87,17 +109,38 @@ function NavGroup({ label, items }: { label: string; items: typeof mainItems }) 
   );
 }
 
-const ROLE_LABEL: Record<string, string> = {
-  super_admin: "Super Admin",
-  admin: "Admin",
-  service_owner: "Service Owner",
-};
-
 export function AppSidebar() {
   const { state: sidebarState } = useSidebar();
   const collapsed = sidebarState === "collapsed";
   const { state: onboarding, signOut } = useOnboarding();
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const L = NAV_LABELS[language];
+
+  const ROLE_LABEL: Record<string, string> = {
+    super_admin: L.superAdmin,
+    admin: L.admin,
+    service_owner: L.serviceOwner,
+  };
+
+  const mainItems = [
+    { title: L.dashboard, url: "/dashboard", icon: LayoutDashboard },
+    { title: L.templates, url: "/services", icon: FileText },
+  ];
+  const setupItems = [
+    { title: L.orgProfile, url: "/setup/organization", icon: Building2 },
+    { title: L.usersAccess, url: "/setup/users", icon: Users },
+    { title: L.appAreas, url: "/setup/deployment", icon: MapPin },
+    { title: L.auth, url: "/setup/auth", icon: Lock },
+  ];
+  const configItems = [
+    { title: L.branding, url: "/config/branding", icon: Palette },
+    { title: L.languages, url: "/config/languages", icon: Languages },
+    { title: L.integrations, url: "/config/integrations", icon: Plug },
+  ];
+  const utilItems = [
+    { title: L.auditLog, url: "/audit-log", icon: ClipboardList },
+  ];
 
   const currentUser = MOCK_CREDENTIALS.find((c) => c.email === onboarding.email);
   const displayName = currentUser?.name || onboarding.email || "User";
@@ -123,17 +166,17 @@ export function AppSidebar() {
               <p className="text-sm font-semibold text-sidebar-foreground truncate">
                 City of Cape Town
               </p>
-              <p className="text-xs text-sidebar-foreground/60 truncate">Admin Console</p>
+              <p className="text-xs text-sidebar-foreground/60 truncate">{L.adminConsole}</p>
             </div>
           )}
         </div>
       </SidebarHeader>
 
       <SidebarContent>
-        <NavGroup label="Main" items={mainItems} />
-        <NavGroup label="Setup" items={setupItems} />
-        <NavGroup label="Configuration" items={configItems} />
-        <NavGroup label="Utilities" items={utilItems} />
+        <NavGroup label={L.main} items={mainItems} />
+        <NavGroup label={L.setup} items={setupItems} />
+        <NavGroup label={L.configuration} items={configItems} />
+        <NavGroup label={L.utilities} items={utilItems} />
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-3">

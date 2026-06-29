@@ -7,6 +7,7 @@ import { useOnboarding } from "@/contexts/OnboardingContext";
 import { useHelp } from "@/contexts/HelpContext";
 import { Button } from "@/components/ui/button";
 import { LogOut, HelpCircle } from "lucide-react";
+import { LanguageToggle } from "@/components/LanguageToggle";
 
 const AppLayout: React.FC = () => {
   const { signOut } = useOnboarding();
@@ -26,7 +27,8 @@ const AppLayout: React.FC = () => {
           <div className="flex-1 flex flex-col min-w-0">
             <header className="h-12 flex items-center justify-between border-b bg-card px-2">
               <SidebarTrigger className="ml-1" />
-              <div className="flex items-center gap-1 mr-2">
+              <div className="flex items-center gap-2 mr-2">
+                <LanguageToggle />
                 <Button
                   variant="ghost"
                   size="sm"

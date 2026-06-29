@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Banknote, CreditCard, Download, FileText, ShieldCheck } from "lucide-react";
 import TimelineList from "../TimelineList";
+import CitizenScreenShell from "./_shell/CitizenScreenShell";
 import DocumentPreviewSheet from "../employee/DocumentPreviewSheet";
 import { downloadApplicationPdf } from "@/lib/applicationPdf";
 import { copy } from "@/copy";
@@ -34,53 +35,38 @@ const ApplicationDetail: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto flex flex-col bg-background">
-      <div className="bg-[#0b4f6c] text-white px-4 py-3 flex items-center gap-2 text-sm font-medium">
-        <span className="grid grid-cols-2 gap-0.5">
-          <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-          <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-          <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-          <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-        </span>
-        {copy.applicationDetail.header.brandName} <span className="text-white/60 ml-1">{copy.applicationDetail.header.brandEnv}</span>
-      </div>
-
-      <div className="px-4 py-2 text-xs flex items-center justify-between">
-        <div>
-          <button onClick={() => setScreen({ type: "home" })} className="text-accent hover:underline">{copy.applicationDetail.breadcrumb.home}</button>
-          <span className="mx-1 text-muted-foreground">/</span>
-          <button onClick={() => setScreen({ type: "my_applications" })} className="text-accent hover:underline">{copy.applicationDetail.breadcrumb.myApplications}</button>
-          <span className="mx-1 text-muted-foreground">/</span>
-          <span className="text-muted-foreground">{copy.applicationDetail.breadcrumb.detail}</span>
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-6 gap-1 text-[11px] px-2">
-              <Download className="h-3 w-3" /> {copy.applicationDetail.downloadDropdown.buttonLabel}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuLabel className="text-xs">{copy.applicationDetail.downloadDropdown.menuHeading}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuCheckboxItem
-              checked={includeDocs}
-              onCheckedChange={(v) => setIncludeDocs(!!v)}
-              onSelect={(e) => e.preventDefault()}
-            >
-              {copy.applicationDetail.downloadDropdown.documentsListCheckbox}
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleDownload} className="text-accent font-medium">
-              <Download className="h-3 w-3 mr-1" /> {copy.applicationDetail.downloadDropdown.downloadPdfItem}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      <div className="px-4 pb-4 space-y-4">
+    <CitizenScreenShell
+      onBack={() => setScreen({ type: "my_applications" })}
+      backLabel="My Applications"
+    >
+      <div className="pb-4 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="font-bold text-foreground">{copy.applicationDetail.applicationSection.heading}</h2>
-          <Badge variant="outline">{app.status}</Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline">{app.status}</Badge>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-6 gap-1 text-[11px] px-2">
+                  <Download className="h-3 w-3" /> {copy.applicationDetail.downloadDropdown.buttonLabel}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel className="text-xs">{copy.applicationDetail.downloadDropdown.menuHeading}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem
+                  checked={includeDocs}
+                  onCheckedChange={(v) => setIncludeDocs(!!v)}
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  {copy.applicationDetail.downloadDropdown.documentsListCheckbox}
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleDownload} className="text-accent font-medium">
+                  <Download className="h-3 w-3 mr-1" /> {copy.applicationDetail.downloadDropdown.downloadPdfItem}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {/* Payment accordion */}
@@ -290,7 +276,7 @@ const ApplicationDetail: React.FC = () => {
         uploadedBy={uploadedBy}
         allowActions={false}
       />
-    </div>
+    </CitizenScreenShell>
   );
 };
 

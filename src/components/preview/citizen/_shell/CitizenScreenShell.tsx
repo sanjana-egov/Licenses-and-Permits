@@ -1,82 +1,79 @@
 import React from "react";
-import { ArrowLeft, Bell, MessageSquare } from "lucide-react";
+import { ArrowLeft, Bell, House, LayoutGrid, FileText, UserCircle } from "lucide-react";
 import { usePreview } from "../../PreviewContext";
 import { useBranding } from "@/hooks/useBranding";
 
 interface Props {
-  /** Back chip target screen, omit to hide back chip */
   onBack?: () => void;
   backLabel?: string;
-  /** Wizard progress slot (rendered below back chip) */
   progress?: React.ReactNode;
-  /** Sticky bottom CTA */
   footer?: React.ReactNode;
-  /** Show messages + bell? Defaults true on home/catalogue */
-  showHeaderActions?: boolean;
   children: React.ReactNode;
 }
+
+const NAV_ITEMS = [
+  { id: "home",            label: "Home",     Icon: House,       screens: ["home", "apply_intro", "apply", "renew", "success", "my_documents"] },
+  { id: "catalogue",       label: "Services", Icon: LayoutGrid,  screens: ["catalogue", "service_detail"] },
+  { id: "my_applications", label: "My Applications",  Icon: FileText,    screens: ["my_applications", "application_detail", "payment", "license", "demand_notice", "invoice"] },
+  { id: "profile",         label: "Profile",  Icon: UserCircle,  screens: ["profile", "notifications"] },
+] as const;
 
 const CitizenScreenShell: React.FC<Props> = ({
   onBack,
   backLabel = "Back",
   progress,
   footer,
-  showHeaderActions = false,
   children,
 }) => {
   const {
-    unreadCount, markNotificationsRead,
-    unreadMessagesCount, markMessagesRead, setMessagesDrawerOpen,
+    unreadCount,
+    screen, setScreen, role,
+    isAuthenticated, signIn,
   } = usePreview();
   const { branding } = useBranding();
 
+  const showBottomNav = role === "citizen" && isAuthenticated;
+  const activeTab = NAV_ITEMS.find(n => (n.screens as readonly string[]).includes(screen.type))?.id ?? "home";
+
   return (
     <div className="flex-1 overflow-hidden flex flex-col" style={{ backgroundColor: "#F5F7FA" }}>
-      {/* Portal header — branded */}
-      <div
-        className="text-primary-foreground px-4 py-3 flex items-center justify-between text-sm font-medium shrink-0 bg-primary"
-      >
+      {/* Portal header */}
+      <div className="text-primary-foreground px-4 py-3 flex items-center justify-between text-sm font-medium shrink-0 bg-primary">
         <div className="flex items-center gap-2 min-w-0">
           {branding.logoDataUrl ? (
             <img src={branding.logoDataUrl} alt="" className="h-5 w-5 object-contain rounded-sm bg-white/10" />
           ) : (
             <span className="grid grid-cols-2 gap-0.5">
-              <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-              <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-              <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
-              <span className="w-1.5 h-1.5 rounded-sm bg-white/80" />
+              {[0,1,2,3].map(i => <span key={i} className="w-1.5 h-1.5 rounded-sm bg-white/80" />)}
             </span>
           )}
           <span className="truncate">{branding.portalName}</span>
         </div>
-        {showHeaderActions && (
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => { setMessagesDrawerOpen(true); markMessagesRead(); }}
-              className="relative p-1 -m-1 rounded-md hover:bg-white/10 transition-colors"
-              aria-label="Messages"
-            >
-              <MessageSquare className="h-4 w-4 text-white/80" />
-              {unreadMessagesCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 h-3.5 min-w-3.5 px-1 rounded-full text-[9px] font-bold flex items-center justify-center text-white"
-                  style={{ backgroundColor: "#F4A261" }}>
-                  {unreadMessagesCount}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => markNotificationsRead()}
-              className="relative p-1 -m-1 rounded-md hover:bg-white/10 transition-colors"
-              aria-label="Notifications"
-            >
-              <Bell className="h-4 w-4 text-white/80" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 h-3.5 min-w-3.5 px-1 rounded-full bg-destructive text-[9px] font-bold flex items-center justify-center text-white">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-          </div>
+
+        {/* Unauthenticated: Sign In button */}
+        {!isAuthenticated && (
+          <button
+            onClick={signIn}
+            className="text-[11px] font-semibold px-3 py-1 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+          >
+            Sign In
+          </button>
+        )}
+
+        {/* Authenticated: bell with unread count */}
+        {isAuthenticated && (
+          <button
+            onClick={() => setScreen({ type: "notifications" })}
+            className="relative p-1 -m-1 rounded-md hover:bg-white/10 transition-colors"
+            aria-label="Notifications"
+          >
+            <Bell className="h-4 w-4 text-white/80" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 h-3.5 min-w-3.5 px-1 rounded-full bg-destructive text-[9px] font-bold flex items-center justify-center text-white">
+                {unreadCount}
+              </span>
+            )}
+          </button>
         )}
       </div>
 
@@ -99,11 +96,11 @@ const CitizenScreenShell: React.FC<Props> = ({
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-4 py-3">{children}</div>
 
-      {/* Sticky footer */}
+      {/* Sticky footer CTA */}
       {footer && (
         <div className="shrink-0 bg-white border-t" style={{ borderColor: "#E0E0E0" }}>
           <div className="px-4 py-3">{footer}</div>
-          {branding.copyright && (
+          {branding.copyright && !showBottomNav && (
             <div className="px-4 pb-2 text-center text-[10px] text-muted-foreground">
               {branding.copyright}
             </div>
@@ -111,10 +108,49 @@ const CitizenScreenShell: React.FC<Props> = ({
         </div>
       )}
 
-      {!footer && branding.copyright && (
+      {/* Copyright (no footer, no bottom nav) */}
+      {!footer && !showBottomNav && branding.copyright && (
         <div className="shrink-0 px-4 py-2 text-center text-[10px] text-muted-foreground bg-white/60 border-t" style={{ borderColor: "#E0E0E0" }}>
           {branding.copyright}
         </div>
+      )}
+
+      {/* Bottom navigation */}
+      {showBottomNav && (
+        <nav className="shrink-0 bg-white border-t flex items-stretch" style={{ borderColor: "#E0E0E0" }}>
+          {NAV_ITEMS.map(({ id, label, Icon }) => {
+            const active = activeTab === id;
+            return (
+              <button
+                key={id}
+                onClick={() => setScreen({ type: id as any })}
+                className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 relative transition-colors ${
+                  active ? "" : "hover:bg-gray-50"
+                }`}
+              >
+                <div className="relative">
+                  <Icon
+                    className="h-5 w-5"
+                    style={{ color: active ? "#1D3557" : "#9CA3AF" }}
+                    strokeWidth={active ? 2.5 : 1.75}
+                  />
+                </div>
+                <span
+                  className="text-[9px] font-medium"
+                  style={{ color: active ? "#1D3557" : "#9CA3AF" }}
+                >
+                  {label}
+                </span>
+                {active && (
+                  <span
+                    className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-6 rounded-full"
+                    style={{ backgroundColor: "#1D3557" }}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </nav>
       )}
     </div>
   );

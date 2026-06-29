@@ -175,6 +175,7 @@ export interface PreviewApplication {
   timeline: TimelineEntry[];
   license: LicenseInfo | null;
   createdAt: number;
+  stateEnteredAt: number;
   assignee?: string;
 }
 
@@ -196,7 +197,11 @@ export interface PreviewScreen {
     | "employee_home"
     | "inbox"
     | "search"
-    | "application_review";
+    | "application_review"
+    | "reports"
+    | "service_detail"
+    | "notifications"
+    | "profile";
   applicationId?: string;
   parentLicenseId?: string;
   filterStates?: string[];
@@ -217,6 +222,7 @@ interface PreviewContextValue {
   notifications: PreviewNotification[];
   unreadCount: number;
   markNotificationsRead: () => void;
+  clearReadNotifications: () => void;
   // Simulated SMS / EMAIL — citizen channel only
   messages: SimulatedMessage[];
   unreadMessagesCount: number;
@@ -248,6 +254,9 @@ interface PreviewContextValue {
    */
   isAwaitingPayment: (app: PreviewApplication) => boolean;
   resetDemo: () => void;
+  isAuthenticated: boolean;
+  signIn: () => void;
+  signOut: () => void;
 }
 
 const PreviewContext = createContext<PreviewContextValue | null>(null);
@@ -386,6 +395,7 @@ export const PreviewProvider: React.FC<PreviewProviderProps> = ({ children, serv
   const [activeRoleId, setActiveRoleId] = useState<string>("citizen");
   const [deviceMode, setDeviceMode] = useState<DeviceMode>("mobile");
   const [screen, setScreen] = useState<PreviewScreen>({ type: "catalogue" });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [applications, setApplications] = useState<PreviewApplication[]>([]);
   const [notifications, setNotifications] = useState<PreviewNotification[]>([]);
   const [userDocuments, setUserDocuments] = useState<UserDocument[]>([]);
@@ -720,6 +730,12 @@ export const PreviewProvider: React.FC<PreviewProviderProps> = ({ children, serv
     );
   }, []);
 
+  const clearReadNotifications = useCallback(() => {
+    setNotifications(prev =>
+      prev.filter(n => !n.read || (n.recipientRole && n.recipientRole !== roleRef.current))
+    );
+  }, []);
+
   const unreadCount = useMemo(
     () => notifications.filter(n => !n.read && (!n.recipientRole || n.recipientRole === role)).length,
     [notifications, role]
@@ -780,6 +796,7 @@ export const PreviewProvider: React.FC<PreviewProviderProps> = ({ children, serv
       timeline: [{ state: "Submitted", actor: "Citizen", note: "Application created", at: Date.now() }],
       license: null,
       createdAt: Date.now(),
+      stateEnteredAt: Date.now(),
     };
     setApplications(prev => [app, ...prev]);
     dispatchByState(app, "Submitted");
@@ -805,6 +822,7 @@ export const PreviewProvider: React.FC<PreviewProviderProps> = ({ children, serv
       timeline: [{ state: "Submitted", actor: "Citizen", note: "Renewal request created", at: Date.now() }],
       license: null,
       createdAt: Date.now(),
+      stateEnteredAt: Date.now(),
     };
     setApplications(prev => [app, ...prev]);
     dispatchByState(app, "Submitted");
@@ -828,6 +846,7 @@ export const PreviewProvider: React.FC<PreviewProviderProps> = ({ children, serv
         ...a,
         currentStateId: transition.toStateId,
         status: targetState.name,
+        stateEnteredAt: Date.now(),
         timeline: [
           ...a.timeline,
           { state: targetState.name, actor, note: transition.name, at: Date.now() },
@@ -1103,8 +1122,19 @@ export const PreviewProvider: React.FC<PreviewProviderProps> = ({ children, serv
     toast.success("Demo reset", { description: "All applications, documents and notifications cleared." });
   }, [role]);
 
+  const signIn = useCallback(() => {
+    setIsAuthenticated(true);
+    setScreen({ type: "home" });
+  }, []);
+
+  const signOut = useCallback(() => {
+    setIsAuthenticated(false);
+    setScreen({ type: "catalogue" });
+  }, []);
+
   const handleSetRole = useCallback((r: PreviewRole, roleId?: string) => {
     setRole(r);
+    setIsAuthenticated(false);
     // Default the canonical role id from the persona when the caller doesn't pass one.
     setActiveRoleId(
       roleId
@@ -1139,7 +1169,7 @@ export const PreviewProvider: React.FC<PreviewProviderProps> = ({ children, serv
     <PreviewContext.Provider value={{
       role, activeRoleId, setRole: handleSetRole, deviceMode, setDeviceMode,
       screen, setScreen,
-      applications, notifications, unreadCount, markNotificationsRead,
+      applications, notifications, unreadCount, markNotificationsRead, clearReadNotifications,
       messages, unreadMessagesCount, markMessagesRead,
       messagesDrawerOpen, setMessagesDrawerOpen,
       formSections,
@@ -1151,6 +1181,7 @@ export const PreviewProvider: React.FC<PreviewProviderProps> = ({ children, serv
       submitApplication, submitRenewal,
       transitionApplication, payApplication, issueLicense, completeRenewal,
       assignApplication, toggleChecklist, setDocumentStatus, isAwaitingPayment, resetDemo,
+      isAuthenticated, signIn, signOut,
     }}>
       {children}
     </PreviewContext.Provider>
